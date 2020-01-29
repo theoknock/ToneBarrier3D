@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <device id="retina6_5" orientation="portrait" appearance="dark"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15509"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" alpha="0.14999999999999999" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="waveform.path" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="sDA-gg-liq">
+                                <rect key="frame" x="0.0" y="44" width="414" height="819"/>
+                                <color key="tintColor" systemColor="systemRedColor" red="1" green="0.23137254900000001" blue="0.18823529410000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            </imageView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="mR4-IJ-DcO">
+                                <rect key="frame" x="165.66666666666666" y="401.66666666666669" width="83" height="93"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="93" id="bai-6o-Zb0"/>
+                                    <constraint firstAttribute="width" constant="83" id="zIF-LG-AtE"/>
+                                </constraints>
+                                <state key="normal" image="play" catalog="system">
+                                    <preferredSymbolConfiguration key="preferredSymbolConfiguration" configurationType="pointSize" pointSize="96" weight="thin"/>
+                                </state>
+                                <connections>
+                                    <action selector="play:" destination="BYZ-38-t0r" eventType="touchUpInside" id="jbI-4a-2zb"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="mR4-IJ-DcO" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="CV3-A9-KHD"/>
+                            <constraint firstItem="Uee-0j-aNJ" firstAttribute="bottom" secondItem="sDA-gg-liq" secondAttribute="bottom" id="D8f-eh-z0H"/>
+                            <constraint firstItem="sDA-gg-liq" firstAttribute="leading" secondItem="Uee-0j-aNJ" secondAttribute="leading" id="Rqu-fA-TfU"/>
+                            <constraint firstItem="sDA-gg-liq" firstAttribute="top" secondItem="Uee-0j-aNJ" secondAttribute="top" id="g2Q-EM-UFO"/>
+                            <constraint firstItem="Uee-0j-aNJ" firstAttribute="trailing" secondItem="sDA-gg-liq" secondAttribute="trailing" id="hWT-Pb-DbG"/>
+                            <constraint firstItem="mR4-IJ-DcO" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="kPM-c1-jye"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="Uee-0j-aNJ"/>
+                    </view>
+                    <connections>
+                        <outlet property="playButton" destination="mR4-IJ-DcO" id="R3G-cj-FIn"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="139" y="138"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="play" catalog="system" width="60" height="64"/>
+        <image name="waveform.path" catalog="system" width="64" height="58"/>
+    </resources>
+</document>

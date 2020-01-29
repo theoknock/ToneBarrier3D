@@ -1,0 +1,639 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		8A12D27E23E107090088463B /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8A12D27D23E107090088463B /* AppDelegate.m */; };
+		8A12D28123E107090088463B /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8A12D28023E107090088463B /* SceneDelegate.m */; };
+		8A12D28423E107090088463B /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8A12D28323E107090088463B /* ViewController.m */; };
+		8A12D28723E107090088463B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8A12D28523E107090088463B /* Main.storyboard */; };
+		8A12D28923E107180088463B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8A12D28823E107180088463B /* Assets.xcassets */; };
+		8A12D28C23E107180088463B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8A12D28A23E107180088463B /* LaunchScreen.storyboard */; };
+		8A12D28F23E107180088463B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 8A12D28E23E107180088463B /* main.m */; };
+		8A12D29323E107190088463B /* ToneBarrier3D WatchKit App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 8A12D29223E107190088463B /* ToneBarrier3D WatchKit App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		8A12D29923E107190088463B /* Interface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8A12D29723E107190088463B /* Interface.storyboard */; };
+		8A12D29B23E1071C0088463B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8A12D29A23E1071C0088463B /* Assets.xcassets */; };
+		8A12D2A223E1071C0088463B /* ToneBarrier3D WatchKit Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 8A12D2A123E1071C0088463B /* ToneBarrier3D WatchKit Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		8A12D2A823E1071C0088463B /* InterfaceController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8A12D2A723E1071C0088463B /* InterfaceController.m */; };
+		8A12D2AB23E1071C0088463B /* ExtensionDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8A12D2AA23E1071C0088463B /* ExtensionDelegate.m */; };
+		8A12D2AE23E1071C0088463B /* NotificationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8A12D2AD23E1071C0088463B /* NotificationController.m */; };
+		8A12D2B123E1071C0088463B /* ComplicationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8A12D2B023E1071C0088463B /* ComplicationController.m */; };
+		8A12D2B323E1071D0088463B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8A12D2B223E1071D0088463B /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		8A12D29423E107190088463B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8A12D27123E107080088463B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8A12D29123E107190088463B;
+			remoteInfo = "ToneBarrier3D WatchKit App";
+		};
+		8A12D2A323E1071C0088463B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8A12D27123E107080088463B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8A12D2A023E1071C0088463B;
+			remoteInfo = "ToneBarrier3D WatchKit Extension";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8A12D2BB23E1071E0088463B /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				8A12D2A223E1071C0088463B /* ToneBarrier3D WatchKit Extension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8A12D2BF23E1071E0088463B /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				8A12D29323E107190088463B /* ToneBarrier3D WatchKit App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		8A12D27923E107090088463B /* ToneBarrier3D.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ToneBarrier3D.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8A12D27C23E107090088463B /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		8A12D27D23E107090088463B /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		8A12D27F23E107090088463B /* SceneDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SceneDelegate.h; sourceTree = "<group>"; };
+		8A12D28023E107090088463B /* SceneDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SceneDelegate.m; sourceTree = "<group>"; };
+		8A12D28223E107090088463B /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		8A12D28323E107090088463B /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; wrapsLines = 0; };
+		8A12D28623E107090088463B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		8A12D28823E107180088463B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		8A12D28B23E107180088463B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		8A12D28D23E107180088463B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8A12D28E23E107180088463B /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		8A12D29223E107190088463B /* ToneBarrier3D WatchKit App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ToneBarrier3D WatchKit App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		8A12D29823E107190088463B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Interface.storyboard; sourceTree = "<group>"; };
+		8A12D29A23E1071C0088463B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		8A12D29C23E1071C0088463B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8A12D2A123E1071C0088463B /* ToneBarrier3D WatchKit Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "ToneBarrier3D WatchKit Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		8A12D2A623E1071C0088463B /* InterfaceController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = InterfaceController.h; sourceTree = "<group>"; };
+		8A12D2A723E1071C0088463B /* InterfaceController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = InterfaceController.m; sourceTree = "<group>"; };
+		8A12D2A923E1071C0088463B /* ExtensionDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExtensionDelegate.h; sourceTree = "<group>"; };
+		8A12D2AA23E1071C0088463B /* ExtensionDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ExtensionDelegate.m; sourceTree = "<group>"; };
+		8A12D2AC23E1071C0088463B /* NotificationController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NotificationController.h; sourceTree = "<group>"; };
+		8A12D2AD23E1071C0088463B /* NotificationController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NotificationController.m; sourceTree = "<group>"; };
+		8A12D2AF23E1071C0088463B /* ComplicationController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ComplicationController.h; sourceTree = "<group>"; };
+		8A12D2B023E1071C0088463B /* ComplicationController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ComplicationController.m; sourceTree = "<group>"; };
+		8A12D2B223E1071D0088463B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		8A12D2B423E1071E0088463B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8A12D2B523E1071E0088463B /* PushNotificationPayload.apns */ = {isa = PBXFileReference; lastKnownFileType = text; path = PushNotificationPayload.apns; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8A12D27623E107090088463B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8A12D29E23E1071C0088463B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		8A12D27023E107080088463B = {
+			isa = PBXGroup;
+			children = (
+				8A12D27B23E107090088463B /* ToneBarrier3D */,
+				8A12D29623E107190088463B /* ToneBarrier3D WatchKit App */,
+				8A12D2A523E1071C0088463B /* ToneBarrier3D WatchKit Extension */,
+				8A12D27A23E107090088463B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		8A12D27A23E107090088463B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8A12D27923E107090088463B /* ToneBarrier3D.app */,
+				8A12D29223E107190088463B /* ToneBarrier3D WatchKit App.app */,
+				8A12D2A123E1071C0088463B /* ToneBarrier3D WatchKit Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		8A12D27B23E107090088463B /* ToneBarrier3D */ = {
+			isa = PBXGroup;
+			children = (
+				8A12D27C23E107090088463B /* AppDelegate.h */,
+				8A12D27D23E107090088463B /* AppDelegate.m */,
+				8A12D27F23E107090088463B /* SceneDelegate.h */,
+				8A12D28023E107090088463B /* SceneDelegate.m */,
+				8A12D28223E107090088463B /* ViewController.h */,
+				8A12D28323E107090088463B /* ViewController.m */,
+				8A12D28523E107090088463B /* Main.storyboard */,
+				8A12D28823E107180088463B /* Assets.xcassets */,
+				8A12D28A23E107180088463B /* LaunchScreen.storyboard */,
+				8A12D28D23E107180088463B /* Info.plist */,
+				8A12D28E23E107180088463B /* main.m */,
+			);
+			path = ToneBarrier3D;
+			sourceTree = "<group>";
+		};
+		8A12D29623E107190088463B /* ToneBarrier3D WatchKit App */ = {
+			isa = PBXGroup;
+			children = (
+				8A12D29723E107190088463B /* Interface.storyboard */,
+				8A12D29A23E1071C0088463B /* Assets.xcassets */,
+				8A12D29C23E1071C0088463B /* Info.plist */,
+			);
+			path = "ToneBarrier3D WatchKit App";
+			sourceTree = "<group>";
+		};
+		8A12D2A523E1071C0088463B /* ToneBarrier3D WatchKit Extension */ = {
+			isa = PBXGroup;
+			children = (
+				8A12D2A623E1071C0088463B /* InterfaceController.h */,
+				8A12D2A723E1071C0088463B /* InterfaceController.m */,
+				8A12D2A923E1071C0088463B /* ExtensionDelegate.h */,
+				8A12D2AA23E1071C0088463B /* ExtensionDelegate.m */,
+				8A12D2AC23E1071C0088463B /* NotificationController.h */,
+				8A12D2AD23E1071C0088463B /* NotificationController.m */,
+				8A12D2AF23E1071C0088463B /* ComplicationController.h */,
+				8A12D2B023E1071C0088463B /* ComplicationController.m */,
+				8A12D2B223E1071D0088463B /* Assets.xcassets */,
+				8A12D2B423E1071E0088463B /* Info.plist */,
+				8A12D2B523E1071E0088463B /* PushNotificationPayload.apns */,
+			);
+			path = "ToneBarrier3D WatchKit Extension";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8A12D27823E107090088463B /* ToneBarrier3D */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8A12D2C023E1071E0088463B /* Build configuration list for PBXNativeTarget "ToneBarrier3D" */;
+			buildPhases = (
+				8A12D27523E107090088463B /* Sources */,
+				8A12D27623E107090088463B /* Frameworks */,
+				8A12D27723E107090088463B /* Resources */,
+				8A12D2BF23E1071E0088463B /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8A12D29523E107190088463B /* PBXTargetDependency */,
+			);
+			name = ToneBarrier3D;
+			productName = ToneBarrier3D;
+			productReference = 8A12D27923E107090088463B /* ToneBarrier3D.app */;
+			productType = "com.apple.product-type.application";
+		};
+		8A12D29123E107190088463B /* ToneBarrier3D WatchKit App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8A12D2BC23E1071E0088463B /* Build configuration list for PBXNativeTarget "ToneBarrier3D WatchKit App" */;
+			buildPhases = (
+				8A12D29023E107190088463B /* Resources */,
+				8A12D2BB23E1071E0088463B /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8A12D2A423E1071C0088463B /* PBXTargetDependency */,
+			);
+			name = "ToneBarrier3D WatchKit App";
+			productName = "ToneBarrier3D WatchKit App";
+			productReference = 8A12D29223E107190088463B /* ToneBarrier3D WatchKit App.app */;
+			productType = "com.apple.product-type.application.watchapp2";
+		};
+		8A12D2A023E1071C0088463B /* ToneBarrier3D WatchKit Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8A12D2B823E1071E0088463B /* Build configuration list for PBXNativeTarget "ToneBarrier3D WatchKit Extension" */;
+			buildPhases = (
+				8A12D29D23E1071C0088463B /* Sources */,
+				8A12D29E23E1071C0088463B /* Frameworks */,
+				8A12D29F23E1071C0088463B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "ToneBarrier3D WatchKit Extension";
+			productName = "ToneBarrier3D WatchKit Extension";
+			productReference = 8A12D2A123E1071C0088463B /* ToneBarrier3D WatchKit Extension.appex */;
+			productType = "com.apple.product-type.watchkit2-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		8A12D27123E107080088463B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1120;
+				ORGANIZATIONNAME = "James Bush";
+				TargetAttributes = {
+					8A12D27823E107090088463B = {
+						CreatedOnToolsVersion = 11.2.1;
+					};
+					8A12D29123E107190088463B = {
+						CreatedOnToolsVersion = 11.2.1;
+					};
+					8A12D2A023E1071C0088463B = {
+						CreatedOnToolsVersion = 11.2.1;
+					};
+				};
+			};
+			buildConfigurationList = 8A12D27423E107080088463B /* Build configuration list for PBXProject "ToneBarrier3D" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 8A12D27023E107080088463B;
+			productRefGroup = 8A12D27A23E107090088463B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8A12D27823E107090088463B /* ToneBarrier3D */,
+				8A12D29123E107190088463B /* ToneBarrier3D WatchKit App */,
+				8A12D2A023E1071C0088463B /* ToneBarrier3D WatchKit Extension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8A12D27723E107090088463B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8A12D28C23E107180088463B /* LaunchScreen.storyboard in Resources */,
+				8A12D28923E107180088463B /* Assets.xcassets in Resources */,
+				8A12D28723E107090088463B /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8A12D29023E107190088463B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8A12D29B23E1071C0088463B /* Assets.xcassets in Resources */,
+				8A12D29923E107190088463B /* Interface.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8A12D29F23E1071C0088463B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8A12D2B323E1071D0088463B /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8A12D27523E107090088463B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8A12D28423E107090088463B /* ViewController.m in Sources */,
+				8A12D27E23E107090088463B /* AppDelegate.m in Sources */,
+				8A12D28F23E107180088463B /* main.m in Sources */,
+				8A12D28123E107090088463B /* SceneDelegate.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8A12D29D23E1071C0088463B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8A12D2AB23E1071C0088463B /* ExtensionDelegate.m in Sources */,
+				8A12D2B123E1071C0088463B /* ComplicationController.m in Sources */,
+				8A12D2A823E1071C0088463B /* InterfaceController.m in Sources */,
+				8A12D2AE23E1071C0088463B /* NotificationController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8A12D29523E107190088463B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8A12D29123E107190088463B /* ToneBarrier3D WatchKit App */;
+			targetProxy = 8A12D29423E107190088463B /* PBXContainerItemProxy */;
+		};
+		8A12D2A423E1071C0088463B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8A12D2A023E1071C0088463B /* ToneBarrier3D WatchKit Extension */;
+			targetProxy = 8A12D2A323E1071C0088463B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		8A12D28523E107090088463B /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				8A12D28623E107090088463B /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		8A12D28A23E107180088463B /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				8A12D28B23E107180088463B /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		8A12D29723E107190088463B /* Interface.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				8A12D29823E107190088463B /* Base */,
+			);
+			name = Interface.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		8A12D2B623E1071E0088463B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		8A12D2B723E1071E0088463B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		8A12D2B923E1071E0088463B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = N9987K9442;
+				INFOPLIST_FILE = "ToneBarrier3D WatchKit Extension/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.blogspot.demonicactivity.bush.alan.james.JABPlanetaryHourWatch.ToneBarrier3D.watchkitapp.watchkitextension;
+				PRODUCT_NAME = "${TARGET_NAME}";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 6.1;
+			};
+			name = Debug;
+		};
+		8A12D2BA23E1071E0088463B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = N9987K9442;
+				INFOPLIST_FILE = "ToneBarrier3D WatchKit Extension/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.blogspot.demonicactivity.bush.alan.james.JABPlanetaryHourWatch.ToneBarrier3D.watchkitapp.watchkitextension;
+				PRODUCT_NAME = "${TARGET_NAME}";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 6.1;
+			};
+			name = Release;
+		};
+		8A12D2BD23E1071E0088463B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = N9987K9442;
+				IBSC_MODULE = ToneBarrier3D_WatchKit_Extension;
+				INFOPLIST_FILE = "ToneBarrier3D WatchKit App/Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = com.blogspot.demonicactivity.bush.alan.james.JABPlanetaryHourWatch.ToneBarrier3D.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 6.1;
+			};
+			name = Debug;
+		};
+		8A12D2BE23E1071E0088463B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = N9987K9442;
+				IBSC_MODULE = ToneBarrier3D_WatchKit_Extension;
+				INFOPLIST_FILE = "ToneBarrier3D WatchKit App/Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = com.blogspot.demonicactivity.bush.alan.james.JABPlanetaryHourWatch.ToneBarrier3D.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 6.1;
+			};
+			name = Release;
+		};
+		8A12D2C123E1071E0088463B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = N9987K9442;
+				INFOPLIST_FILE = ToneBarrier3D/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.blogspot.demonicactivity.bush.alan.james.JABPlanetaryHourWatch.ToneBarrier3D;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		8A12D2C223E1071E0088463B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = N9987K9442;
+				INFOPLIST_FILE = ToneBarrier3D/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.blogspot.demonicactivity.bush.alan.james.JABPlanetaryHourWatch.ToneBarrier3D;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		8A12D27423E107080088463B /* Build configuration list for PBXProject "ToneBarrier3D" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8A12D2B623E1071E0088463B /* Debug */,
+				8A12D2B723E1071E0088463B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8A12D2B823E1071E0088463B /* Build configuration list for PBXNativeTarget "ToneBarrier3D WatchKit Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8A12D2B923E1071E0088463B /* Debug */,
+				8A12D2BA23E1071E0088463B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8A12D2BC23E1071E0088463B /* Build configuration list for PBXNativeTarget "ToneBarrier3D WatchKit App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8A12D2BD23E1071E0088463B /* Debug */,
+				8A12D2BE23E1071E0088463B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8A12D2C023E1071E0088463B /* Build configuration list for PBXNativeTarget "ToneBarrier3D" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8A12D2C123E1071E0088463B /* Debug */,
+				8A12D2C223E1071E0088463B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 8A12D27123E107080088463B /* Project object */;
+}
