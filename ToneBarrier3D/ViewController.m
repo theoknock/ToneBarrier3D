@@ -70,15 +70,18 @@
     return (error) ? FALSE : TRUE;
 }
 
-#define high_position 5.0
-#define low_position -5.0
-
-double GenerateRandomNumber()
+double GenerateRandomXPosition()
 {
     double randomNum = arc4random_uniform(40) - 20.0;
-    NSLog(@"Random\t%f", randomNum);
     
     return randomNum;
+}
+
+double GenerateRandomReverb()
+{
+    double randomNum = arc4random_uniform(100);
+    
+    return randomNum / 100;
 }
 
 typedef void (^DataPlayedBackCompletionBlock)(void);
@@ -104,7 +107,7 @@ typedef void (^DataRenderedCompletionBlock)(AVAudioPCMBuffer * _Nonnull buffer, 
                 [self->_playerNode scheduleBuffer:buffer atTime:nil options:AVAudioPlayerNodeBufferInterruptsAtLoop completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
                     if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
                     {
-                        [self->_playerNode setPosition:AVAudioMake3DPoint(GenerateRandomNumber(), 0, 0)];
+                        [self->_playerNode setPosition:AVAudioMake3DPoint(GenerateRandomXPosition(), 0, 0)];
                         dataPlayedBackCompletionBlock();
                     }
                 }];
