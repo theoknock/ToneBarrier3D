@@ -15,6 +15,7 @@
 @property (nonatomic, readonly) AVAudioPlayerNode * _Nullable playerNode;
 @property (nonatomic, readonly) AVAudioEnvironmentNode * _Nullable environmentNode;
 @property (nonatomic, readonly) AVAudioMixerNode * _Nullable mainNode;
+@property (nonatomic, readonly) AVAudioTime * _Nullable time;
 
 @end
 
@@ -23,6 +24,11 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    [self setupEngine];
+}
+
+- (void)setupEngine
+{
     _audioEngine = [[AVAudioEngine alloc] init];
     
     _mainNode = _audioEngine.mainMixerNode;
@@ -33,7 +39,7 @@
     [_playerNode setRenderingAlgorithm:AVAudio3DMixingRenderingAlgorithmAuto];
     [_playerNode setSourceMode:AVAudio3DMixingSourceModeAmbienceBed];
     [_playerNode setPosition:AVAudioMake3DPoint(0.0, 0.0, 0.0)];
-
+    
     _environmentNode = [[AVAudioEnvironmentNode alloc] init];
     [_environmentNode setOutputVolume:1.0];
     
@@ -58,6 +64,8 @@
             if (error)
             {
                 NSLog(@"%@", [error description]);
+            } else {
+                _time = [[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(CMClockGetTime(CMClockGetHostTimeClock()))];
             }
         }
     } else {
@@ -104,11 +112,15 @@ typedef void (^DataRenderedCompletionBlock)(AVAudioPCMBuffer * _Nonnull buffer, 
             });
             
             [self createAudioBufferWithCompletionBlock:^(AVAudioPCMBuffer * _Nonnull buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
-                [self->_playerNode scheduleBuffer:buffer atTime:nil options:AVAudioPlayerNodeBufferInterruptsAtLoop completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
+                
+                CMTime cmtime = CMTimeAdd(CMTimeMakeWithSeconds([AVAudioTime secondsForHostTime:[self->_time hostTime]], NSEC_PER_SEC), CMTimeMakeWithSeconds(1.0, NSEC_PER_SEC));
+                self->_time   = [[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(cmtime)];
+                [self->_playerNode scheduleBuffer:buffer atTime:self->_time options:AVAudioPlayerNodeBufferInterruptsAtLoop completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
                     if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
                     {
                         [self->_playerNode setPosition:AVAudioMake3DPoint(GenerateRandomXPosition(), 0, 0)];
                         dataPlayedBackCompletionBlock();
+                        NSLog(@"dataPlayedBackCompletionBlock()");
                     }
                 }];
             }];
@@ -136,7 +148,7 @@ double Amplitude(double x)
 
 - (void)createAudioBufferWithCompletionBlock:(DataRenderedCompletionBlock)dataRenderedCompletionBlock
 {
-    static AVAudioPCMBuffer * (^createAudioBuffer)(double);
+    AVAudioPCMBuffer * (^createAudioBuffer)(double);
     createAudioBuffer = ^AVAudioPCMBuffer * (double frequency)
     {
         AVAudioFrameCount frameCount = self->_audioFormat.sampleRate;
@@ -151,7 +163,7 @@ double Amplitude(double x)
             if (l_channel) l_channel[index] = Frequency(normalized_index, frequency) * Amplitude(normalized_index);
             if (r_channel) r_channel[index] = Frequency(normalized_index, frequency) * Amplitude(normalized_index);
         }
-
+        
         return pcmBuffer;
     };
     
