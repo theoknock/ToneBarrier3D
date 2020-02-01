@@ -7,6 +7,8 @@
 //
 
 #import "AppDelegate.h"
+#import "ToneGenerator.h"
+#import <BackgroundTasks/BackgroundTasks.h>
 
 @interface AppDelegate ()
 
@@ -35,6 +37,18 @@
     // Called when the user discards a scene session.
     // If any sessions were discarded while the application was not running, this will be called shortly after application:didFinishLaunchingWithOptions.
     // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
+}
+
+- (void)applicationDidEnterBackground:(UIApplication *)application
+{
+     [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+        
+        MPRemoteCommandCenter *remoteCommandCenter = [MPRemoteCommandCenter sharedCommandCenter];
+        
+        [[remoteCommandCenter togglePlayPauseCommand] addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+            [[ToneGenerator sharedGenerator] play];
+            return MPRemoteCommandHandlerStatusSuccess;
+        }];
 }
 
 
