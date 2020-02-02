@@ -8,7 +8,6 @@
 
 #import "AppDelegate.h"
 #import "ToneGenerator.h"
-#import <BackgroundTasks/BackgroundTasks.h>
 
 @interface AppDelegate ()
 
