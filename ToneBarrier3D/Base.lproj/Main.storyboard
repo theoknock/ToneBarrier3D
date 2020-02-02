@@ -4,6 +4,7 @@
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15703"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="Stack View standard spacing" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -32,30 +33,56 @@
                                     <action selector="play:" destination="BYZ-38-t0r" eventType="touchUpInside" id="jbI-4a-2zb"/>
                                 </connections>
                             </button>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="headphones" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="3rj-Bo-8BN">
-                                <rect key="frame" x="360.66666666666669" y="840.66666666666674" width="24" height="21.666666666666629"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="24" id="Xn7-dw-uc8"/>
-                                    <constraint firstAttribute="width" constant="24" id="gqG-hA-S2h"/>
-                                </constraints>
-                            </imageView>
+                            <stackView opaque="NO" contentMode="scaleToFill" distribution="equalCentering" alignment="center" spacingType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="ERg-b5-6m2">
+                                <rect key="frame" x="142.33333333333331" y="838" width="129.33333333333331" height="24"/>
+                                <subviews>
+                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="thermometer" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="6PF-MA-wgS">
+                                        <rect key="frame" x="0.0" y="0.6666666666666643" width="24" height="24.333333333333336"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="24" id="8rA-sL-Jvb"/>
+                                            <constraint firstAttribute="height" constant="24" id="KA7-of-8Ks"/>
+                                        </constraints>
+                                    </imageView>
+                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="battery.0" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="Wei-3l-fSH">
+                                        <rect key="frame" x="32" y="4.3333333333333321" width="30.333333333333329" height="15.333333333333332"/>
+                                    </imageView>
+                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="bolt" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="D5t-9U-1D6">
+                                        <rect key="frame" x="70.333333333333314" y="-0.33333333333333215" width="24" height="25"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="24" id="3pA-Ki-gAy"/>
+                                            <constraint firstAttribute="width" constant="24" id="Ped-ZF-2p4"/>
+                                        </constraints>
+                                    </imageView>
+                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="headphones" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="3rj-Bo-8BN">
+                                        <rect key="frame" x="105.33333333333331" y="1.3333333333333321" width="24" height="21.666666666666668"/>
+                                        <color key="tintColor" systemColor="systemBlueColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="24" id="Xn7-dw-uc8"/>
+                                            <constraint firstAttribute="width" constant="24" id="gqG-hA-S2h"/>
+                                        </constraints>
+                                    </imageView>
+                                </subviews>
+                            </stackView>
                         </subviews>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
                             <constraint firstItem="mR4-IJ-DcO" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="CV3-A9-KHD"/>
                             <constraint firstItem="Uee-0j-aNJ" firstAttribute="bottom" secondItem="sDA-gg-liq" secondAttribute="bottom" id="D8f-eh-z0H"/>
-                            <constraint firstItem="3rj-Bo-8BN" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" multiplier="1.8" id="Gjt-Wc-xEP"/>
-                            <constraint firstItem="3rj-Bo-8BN" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" multiplier="1.9" id="Qun-HH-hah"/>
+                            <constraint firstItem="ERg-b5-6m2" firstAttribute="centerX" secondItem="Uee-0j-aNJ" secondAttribute="centerX" id="IkM-xG-wjU"/>
                             <constraint firstItem="sDA-gg-liq" firstAttribute="leading" secondItem="Uee-0j-aNJ" secondAttribute="leading" id="Rqu-fA-TfU"/>
                             <constraint firstItem="sDA-gg-liq" firstAttribute="top" secondItem="Uee-0j-aNJ" secondAttribute="top" id="g2Q-EM-UFO"/>
                             <constraint firstItem="Uee-0j-aNJ" firstAttribute="trailing" secondItem="sDA-gg-liq" secondAttribute="trailing" id="hWT-Pb-DbG"/>
+                            <constraint firstItem="Uee-0j-aNJ" firstAttribute="bottom" secondItem="ERg-b5-6m2" secondAttribute="bottom" id="k1s-2A-wqs"/>
                             <constraint firstItem="mR4-IJ-DcO" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="kPM-c1-jye"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="Uee-0j-aNJ"/>
                     </view>
                     <connections>
+                        <outlet property="batteryLevelImageView" destination="Wei-3l-fSH" id="gDu-rN-DuL"/>
+                        <outlet property="batteryStateImageView" destination="D5t-9U-1D6" id="6ZB-4R-sf7"/>
                         <outlet property="headphonesImageView" destination="3rj-Bo-8BN" id="hmM-jx-tMf"/>
                         <outlet property="playButton" destination="mR4-IJ-DcO" id="R3G-cj-FIn"/>
+                        <outlet property="thermalStateImageView" destination="6PF-MA-wgS" id="kRR-lv-Isf"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
@@ -64,8 +91,11 @@
         </scene>
     </scenes>
     <resources>
+        <image name="battery.0" catalog="system" width="64" height="32"/>
+        <image name="bolt" catalog="system" width="50" height="64"/>
         <image name="headphones" catalog="system" width="64" height="52"/>
         <image name="play" catalog="system" width="60" height="64"/>
+        <image name="thermometer" catalog="system" width="42" height="64"/>
         <image name="waveform.path" catalog="system" width="64" height="58"/>
     </resources>
 </document>

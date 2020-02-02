@@ -13,7 +13,11 @@
 @interface ViewController : UIViewController
 
 @property (weak, nonatomic) IBOutlet UIImageView *headphonesImageView;
+@property (weak, nonatomic) IBOutlet UIImageView *thermalStateImageView;
+@property (weak, nonatomic) IBOutlet UIImageView *batteryStateImageView;
+@property (weak, nonatomic) IBOutlet UIImageView *batteryLevelImageView;
 @property (weak, nonatomic) IBOutlet UIButton *playButton;
+
 
 @end
 
