@@ -20,25 +20,25 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    [self changeAudioRouteStatus];
-    [self changeBatteryLevelStatus];
-    [self changeBatteryStateStatus];
-    [self cnangeThermalStateStatus];
+    [self audioRouteStatus];
+    [self batteryLevelStatus];
+    [self batteryStateStatus];
+    [self thermalStateStatus];
     
     [[NSNotificationCenter defaultCenter] addObserverForName:AVAudioSessionRouteChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull note) {
-        [self changeAudioRouteStatus];
+        [self audioRouteStatus];
     }];
     
     [[NSNotificationCenter defaultCenter] addObserverForName:NSProcessInfoThermalStateDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull note) {
-        [self cnangeThermalStateStatus];
+        [self thermalStateStatus];
     }];
     
     [[NSNotificationCenter defaultCenter] addObserverForName:UIDeviceBatteryLevelDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull note) {
-        [self changeBatteryLevelStatus];
+        [self batteryLevelStatus];
     }];
     
     [[NSNotificationCenter defaultCenter] addObserverForName:UIDeviceBatteryStateDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull note) {
-        [self changeBatteryStateStatus];
+        [self batteryStateStatus];
     }];
     
     self->_device = [UIDevice currentDevice];
@@ -61,7 +61,7 @@
     }
 }
 
-- (void)changeAudioRouteStatus
+- (BOOL)audioRouteStatus
 {
     AVAudioSession *session = [AVAudioSession sharedInstance];
     for (AVAudioSessionPortDescription *output in [session currentRoute].outputs)
@@ -70,14 +70,19 @@
         {
             
             [self.headphonesImageView setTintColor:[UIColor systemGreenColor]];
+            
+            return TRUE;
         } else {
             [self.headphonesImageView setTintColor:[UIColor systemRedColor]];
+            
+            return FALSE;
         }
     }
     
+    return FALSE;
 }
 
-- (void)changeBatteryLevelStatus
+- (void)batteryLevelStatus
 {
     float batteryLevel = [self->_device batteryLevel];
     if (batteryLevel <= 1.0 || batteryLevel > .66)
@@ -96,7 +101,7 @@
     }
 }
 
-- (void)changeBatteryStateStatus
+- (void)batteryStateStatus
 {
     switch ([self->_device batteryState]) {
         case UIDeviceBatteryStateUnknown:
@@ -136,7 +141,7 @@
     }
 }
 
-- (void)cnangeThermalStateStatus
+- (void)thermalStateStatus
 {
     switch ([[NSProcessInfo processInfo] thermalState]) {
         case NSProcessInfoThermalStateNominal:
