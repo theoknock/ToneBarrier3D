@@ -23,13 +23,14 @@
     [self changeAudioRouteStatus];
     [self changeBatteryLevelStatus];
     [self changeBatteryStateStatus];
+    [self cnangeThermalStateStatus];
     
     [[NSNotificationCenter defaultCenter] addObserverForName:AVAudioSessionRouteChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull note) {
         [self changeAudioRouteStatus];
     }];
     
     [[NSNotificationCenter defaultCenter] addObserverForName:NSProcessInfoThermalStateDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull note) {
-        
+        [self cnangeThermalStateStatus];
     }];
     
     [[NSNotificationCenter defaultCenter] addObserverForName:UIDeviceBatteryLevelDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull note) {
