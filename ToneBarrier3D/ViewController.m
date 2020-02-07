@@ -43,43 +43,42 @@
     
     self->_device = [UIDevice currentDevice];
     [self->_device setBatteryMonitoringEnabled:TRUE];
-    [self->_device setProximityMonitoringEnabled:TRUE];
+    
+    // TO-DO: Request permission for access to app controls on Watch when touch is attempted;
+    //        Sound an alarm on Watch when activated
+//    [self->_device setProximityMonitoringEnabled:TRUE];
 }
 
 - (IBAction)play:(UIButton *)sender
 {
-    [[ToneGenerator sharedGenerator] play];
-    if ([[[ToneGenerator sharedGenerator] audioEngine] isRunning])
-    {
-        dispatch_async(dispatch_get_main_queue(), ^{
+    dispatch_queue_t playSerialQueue = dispatch_queue_create("com.blogspot.demonicactivity.serialqueue", DISPATCH_QUEUE_SERIAL);
+    dispatch_block_t playTonesBlock = dispatch_block_create(0, ^{
+        [[ToneGenerator sharedGenerator] play];
+    });
+    dispatch_async(playSerialQueue, playTonesBlock);
+    dispatch_block_t playButtonBlock = dispatch_block_create(0, ^{
+        if ([[[ToneGenerator sharedGenerator] audioEngine] isRunning])
+        {
             [self->_playButton setImage:[UIImage systemImageNamed:@"stop"] forState:UIControlStateNormal];
-        });
-    } else {
-        dispatch_async(dispatch_get_main_queue(), ^{
+        } else {
             [self->_playButton setImage:[UIImage systemImageNamed:@"play"] forState:UIControlStateNormal];
-        });
-    }
+        }
+    });
+    dispatch_block_notify(playTonesBlock, dispatch_get_main_queue(), playButtonBlock);
 }
 
-- (BOOL)audioRouteStatus
+- (void)audioRouteStatus
 {
     AVAudioSession *session = [AVAudioSession sharedInstance];
     for (AVAudioSessionPortDescription *output in [session currentRoute].outputs)
     {
         if ([[output portName] isEqualToString:@"Headphones"])
         {
-            
             [self.headphonesImageView setTintColor:[UIColor systemGreenColor]];
-            
-            return TRUE;
         } else {
             [self.headphonesImageView setTintColor:[UIColor systemRedColor]];
-            
-            return FALSE;
         }
     }
-    
-    return FALSE;
 }
 
 - (void)batteryLevelStatus

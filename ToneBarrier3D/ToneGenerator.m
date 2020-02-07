@@ -6,6 +6,9 @@
 //  Copyright © 2020 James Bush. All rights reserved.
 //
 
+// TO-DO: Create moving sound (velocity) to stimulate instinctive sound localizaton; cues for sound source localization: time- and level-differences (or intensity-difference) between both ears
+//
+
 #import "ToneGenerator.h"
 
 @interface ToneGenerator ()
@@ -64,16 +67,16 @@ static ToneGenerator *sharedGenerator = NULL;
     
     _environmentNode = [[AVAudioEnvironmentNode alloc] init];
     [_environmentNode setOutputVolume:1.0];
-
+    
     _reverb = [[AVAudioUnitReverb alloc] init];
     [_reverb loadFactoryPreset:AVAudioUnitReverbPresetLargeHall];
-    [_reverb setWetDryMix:50];
+    [_reverb setWetDryMix:100.0];
     [_audioEngine attachNode:_reverb];
     
     [_audioEngine attachNode:_playerNode];
     [_audioEngine attachNode:_environmentNode];
     
-    [_audioEngine connect:_playerNode      to:_reverb          format:_audioFormat];
+    [_audioEngine connect:_playerNode     to:_reverb         format:_audioFormat];
     [_audioEngine connect:_reverb          to:_environmentNode format:_audioFormat];
     [_audioEngine connect:_environmentNode to:_mainNode        format:_audioFormat];
 }
@@ -139,7 +142,7 @@ typedef void (^DataRenderedCompletionBlock)(AVAudioPCMBuffer * _Nonnull buffer, 
                 [self->_playerNode scheduleBuffer:buffer atTime:self->_time options:AVAudioPlayerNodeBufferInterruptsAtLoop completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
                     if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
                     {
-                        [self->_playerNode setPosition:AVAudioMake3DPoint(GenerateRandomXPosition(), 0, 0)];
+                        //                        [self->_playerNode setPosition:AVAudioMake3DPoint(GenerateRandomXPosition(), 0, 0)];
                         dataPlayedBackCompletionBlock();
                     }
                 }];
@@ -180,8 +183,9 @@ double Amplitude(double x)
         for (int index = 0; index < frameCount; index++)
         {
             double normalized_index         = Normalize(index, frameCount);
-            if (l_channel) l_channel[index] = Frequency(normalized_index, frequency) * Amplitude(normalized_index);
-            if (r_channel) r_channel[index] = Frequency(normalized_index, frequency) * Amplitude(normalized_index);
+            
+            if (l_channel) l_channel[index] = Frequency(normalized_index, frequency) * (normalized_index * Amplitude(normalized_index));
+            if (r_channel) r_channel[index] = Frequency(normalized_index, frequency) * ((1.0 - normalized_index) * Amplitude(normalized_index));
         }
         
         return pcmBuffer;
