@@ -7,11 +7,16 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <WatchConnectivity/WatchConnectivity.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <AVFoundation/AVFoundation.h>
 
-@interface ViewController : UIViewController
+@interface ViewController : UIViewController <WCSessionDelegate>
 
+@property (strong, nonatomic) WCSession *watchConnectivitySession;
+
+@property (weak, nonatomic) IBOutlet UIImageView *watchConnectivitySessionImageView;
+@property (weak, nonatomic) IBOutlet UIImageView *sessionWatchStateImageView;  
 @property (weak, nonatomic) IBOutlet UIImageView *headphonesImageView;
 @property (weak, nonatomic) IBOutlet UIImageView *thermalStateImageView;
 @property (weak, nonatomic) IBOutlet UIImageView *batteryStateImageView;

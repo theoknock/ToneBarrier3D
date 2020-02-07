@@ -1,14 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder.WatchKit.Storyboard" version="3.0" toolsVersion="14256" targetRuntime="watchKit" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="AgC-eL-Hgc">
+<document type="com.apple.InterfaceBuilder.WatchKit.Storyboard" version="3.0" toolsVersion="15705" targetRuntime="watchKit" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="AgC-eL-Hgc">
+    <device id="watch38"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14243"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBWatchKitPlugin" version="14219"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15706"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBWatchKitPlugin" version="15501"/>
     </dependencies>
     <scenes>
         <!--Interface Controller-->
         <scene sceneID="aou-V4-d1y">
             <objects>
-                <controller id="AgC-eL-Hgc" customClass="InterfaceController" customModuleProvider=""/>
+                <controller id="AgC-eL-Hgc" customClass="InterfaceController">
+                    <items>
+                        <group width="1" height="1" alignment="center" verticalAlignment="center" contentMode="scaleAspectFit" layout="overlap" id="ebJ-HE-Dnw">
+                            <items>
+                                <imageView width="1" height="1" alignment="center" verticalAlignment="center" alpha="0.14999999999999999" image="waveform.path" catalog="system" contentMode="scaleAspectFit" id="s8A-lZ-HkR">
+                                    <color key="tintColor" red="1" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                </imageView>
+                                <group alignment="center" verticalAlignment="center" contentMode="scaleAspectFit" id="gcA-Z8-N3W">
+                                    <items>
+                                        <button alignment="center" verticalAlignment="center" id="RCQ-Th-LTr">
+                                            <group key="contentGroup" width="0.55000000000000004" height="0.55000000000000004" alignment="left" backgroundImage="play" catalog="system" contentMode="scaleAspectFit" id="FyD-rf-Fba"/>
+                                        </button>
+                                    </items>
+                                </group>
+                                <group alignment="center" verticalAlignment="bottom" spacing="8" id="zXZ-de-jmE">
+                                    <items>
+                                        <imageView alignment="center" verticalAlignment="center" image="radiowaves.right" catalog="system" id="cm8-sR-eYz">
+                                            <color key="tintColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        </imageView>
+                                        <imageView alignment="center" verticalAlignment="center" image="radiowaves.left" catalog="system" id="mj2-L9-2wp">
+                                            <color key="tintColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        </imageView>
+                                        <imageView alignment="center" verticalAlignment="center" image="thermometer" catalog="system" id="6Q5-3j-28x">
+                                            <color key="tintColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        </imageView>
+                                        <imageView alignment="center" verticalAlignment="center" image="bolt.slash" catalog="system" id="Ncz-ID-wy4">
+                                            <color key="tintColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        </imageView>
+                                        <imageView alignment="center" verticalAlignment="center" image="battery.0" catalog="system" id="a6Z-XZ-3q8">
+                                            <color key="tintColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        </imageView>
+                                        <volumeControlView alignment="center" verticalAlignment="center" hidden="YES" controlsLocalVolume="NO" id="Ejh-cN-xXT">
+                                            <color key="tintColor" red="0.016804177310000001" green="0.19835099580000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        </volumeControlView>
+                                    </items>
+                                </group>
+                            </items>
+                        </group>
+                    </items>
+                    <connections>
+                        <outlet property="sessionWatchStateImageView" destination="mj2-L9-2wp" id="Xny-0v-kBQ"/>
+                        <outlet property="watchConnectivitySessionImageView" destination="cm8-sR-eYz" id="Uds-pe-hXD"/>
+                    </connections>
+                </controller>
             </objects>
             <point key="canvasLocation" x="220" y="345"/>
         </scene>
@@ -32,16 +76,25 @@
         <!--Notification Controller-->
         <scene sceneID="ZPc-GJ-vnh">
             <objects>
-                <controller id="4sK-HA-Art" customClass="NotificationController" customModuleProvider=""/>
+                <controller id="4sK-HA-Art" customClass="NotificationController"/>
             </objects>
             <point key="canvasLocation" x="468" y="643"/>
         </scene>
         <!--Notification Controller-->
         <scene sceneID="Niz-AI-uX2">
             <objects>
-                <controller id="eXb-UN-Cd0" customClass="NotificationController" customModuleProvider=""/>
+                <controller id="eXb-UN-Cd0" customClass="NotificationController"/>
             </objects>
             <point key="canvasLocation" x="468" y="345"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="battery.0" catalog="system" width="64" height="32"/>
+        <image name="bolt.slash" catalog="system" width="50" height="64"/>
+        <image name="play" catalog="system" width="58" height="64"/>
+        <image name="radiowaves.left" catalog="system" width="46" height="64"/>
+        <image name="radiowaves.right" catalog="system" width="46" height="64"/>
+        <image name="thermometer" catalog="system" width="44" height="64"/>
+        <image name="waveform.path" catalog="system" width="64" height="58"/>
+    </resources>
 </document>
