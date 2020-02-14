@@ -20,6 +20,7 @@
     [super awakeWithContext:context];
 
     // Configure interface objects here.
+    [self activateWatchConnectivitySession];
 }
 
 - (void)willActivate {
@@ -55,64 +56,55 @@
 - (void)session:(WCSession *)session activationDidCompleteWithState:(WCSessionActivationState)activationState error:(NSError *)error
 {
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (activationState != WCSessionActivationStateActivated) [self.watchConnectivitySession activateSession];
+        if (activationState != WCSessionActivationStateActivated) [session activateSession];
         switch (activationState) {
             case WCSessionActivationStateInactive:
             {
-                [self.watchConnectivitySessionImageView setTintColor:[UIColor systemGrayColor]];
+                [self.watchConnectivitySessionImageView setTintColor:[UIColor grayColor]];
                 break;
             }
                 
             case WCSessionActivationStateNotActivated:
             {
-                [self.watchConnectivitySessionImageView setTintColor:[UIColor systemRedColor]];
+                [self.watchConnectivitySessionImageView setTintColor:[UIColor redColor]];
                 break;
             }
                 
             case WCSessionActivationStateActivated:
             {
-                
-                [self.watchConnectivitySessionImageView setTintColor:[UIColor systemGreenColor]];
+                [session sendMessage:@{@"" : @""} replyHandler:^(NSDictionary<NSString *,id> * _Nonnull replyMessage) {
+                    NSLog(@"%s", __PRETTY_FUNCTION__);
+                } errorHandler:^(NSError * _Nonnull error) {
+                    NSLog(@"%s %@", __PRETTY_FUNCTION__, error.description);
+                }];
+                [self.watchConnectivitySessionImageView setTintColor:[UIColor greenColor]];
                 break;
             }
                 
             default:
             {
-                [self.watchConnectivitySessionImageView setTintColor:[UIColor systemGrayColor]];
+                [self.watchConnectivitySessionImageView setTintColor:[UIColor grayColor]];
                 break;
             }
         }
     });
 }
 
-- (void)sessionWatchStateDidChange:(WCSession *)session
+- (void)session:(WCSession *)session didReceiveMessage:(NSDictionary<NSString *,id> *)message replyHandler:(void (^)(NSDictionary<NSString *,id> * _Nonnull))replyHandler
 {
-    BOOL paired = [session isPaired];
-    BOOL reachable = [session isReachable];
-    [self.sessionWatchStateImageView setTintColor:(paired) ? [UIColor systemGreenColor] : (reachable) ? [UIColor systemBlueColor] : [UIColor systemRedColor]];
+    NSLog(@"%s", __PRETTY_FUNCTION__);
 }
 
 - (void)session:(WCSession *)session didReceiveMessage:(NSDictionary<NSString *,id> *)message
 {
-    
+    NSLog(@"%s", __PRETTY_FUNCTION__);
 }
 
 - (void)sessionReachabilityDidChange:(WCSession *)session
 {
-    BOOL reachable = self.watchConnectivitySession.isReachable;
-    [self.sessionWatchStateImageView setTintColor:(reachable) ? [UIColor systemBlueColor] : [UIColor systemRedColor]];
+    BOOL reachable = session.isReachable;
+    [self.sessionWatchStateImageView setTintColor:(reachable) ? [UIColor grayColor] : [UIColor redColor]];
 }
-
-- (void)sessionDidDeactivate:(WCSession *)session
-{
-    [self.watchConnectivitySessionImageView setTintColor:[UIColor systemRedColor]];
-}
-
-- (void)sessionDidBecomeInactive:(WCSession *)session
-{
-    [self.watchConnectivitySessionImageView setTintColor:[UIColor systemGrayColor]];
-}
-
 
 @end
 

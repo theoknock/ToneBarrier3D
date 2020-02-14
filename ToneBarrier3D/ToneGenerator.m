@@ -12,10 +12,13 @@
 #import "ToneGenerator.h"
 
 @interface ToneGenerator ()
+{
+    bool _multichannelOutputEnabled;
+
+}
 
 @property (nonatomic, readonly) AVAudioFormat * _Nullable audioFormat;
 @property (nonatomic, readonly) AVAudioPlayerNode * _Nullable playerNode;
-@property (nonatomic, readonly) AVAudioEnvironmentNode * _Nullable environmentNode;
 @property (nonatomic, readonly) AVAudioUnitReverb *reverb;
 @property (nonatomic, readonly) AVAudioMixerNode * _Nullable mainNode;
 @property (nonatomic, readonly) AVAudioTime * _Nullable time;
@@ -58,40 +61,37 @@ static ToneGenerator *sharedGenerator = NULL;
     
     _mainNode = _audioEngine.mainMixerNode;
     
-    _audioFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:[_mainNode outputFormatForBus:0].sampleRate channels:2];
+    _audioFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:[_mainNode outputFormatForBus:0].sampleRate channels:[_mainNode outputFormatForBus:0].channelCount];
     
     _playerNode = [[AVAudioPlayerNode alloc] init];
     [_playerNode setRenderingAlgorithm:AVAudio3DMixingRenderingAlgorithmAuto];
     [_playerNode setSourceMode:AVAudio3DMixingSourceModeAmbienceBed];
     [_playerNode setPosition:AVAudioMake3DPoint(0.0, 0.0, 0.0)];
     
-    _environmentNode = [[AVAudioEnvironmentNode alloc] init];
-    [_environmentNode setOutputVolume:1.0];
+//    _reverb = [[AVAudioUnitReverb alloc] init];
+//    [_reverb loadFactoryPreset:AVAudioUnitReverbPresetLargeHall];
+//    [_reverb setWetDryMix:100.0];
     
-    _reverb = [[AVAudioUnitReverb alloc] init];
-    [_reverb loadFactoryPreset:AVAudioUnitReverbPresetLargeHall];
-    [_reverb setWetDryMix:100.0];
-    [_audioEngine attachNode:_reverb];
-    
+//    [_audioEngine attachNode:_reverb];
     [_audioEngine attachNode:_playerNode];
-    [_audioEngine attachNode:_environmentNode];
     
-    [_audioEngine connect:_playerNode     to:_reverb         format:_audioFormat];
-    [_audioEngine connect:_reverb          to:_environmentNode format:_audioFormat];
-    [_audioEngine connect:_environmentNode to:_mainNode        format:_audioFormat];
+//    [_audioEngine connect:_playerNode to:_reverb   format:_audioFormat];
+//    [_audioEngine connect:_reverb     to:_mainNode format:_audioFormat];
+    [_audioEngine connect:_playerNode     to:_mainNode format:_audioFormat];
 }
 
 - (BOOL)startEngine
 {
+    AVAudioSession *session = [AVAudioSession sharedInstance];
     __autoreleasing NSError *error = nil;
     if ([_audioEngine startAndReturnError:&error])
     {
-        [[AVAudioSession sharedInstance] setActive:YES error:&error];
+        [session setActive:YES error:&error];
         if (error)
         {
             NSLog(@"%@", [error description]);
         } else {
-            [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:&error];
+            [session setCategory:AVAudioSessionCategoryPlayback mode:AVAudioSessionModeDefault routeSharingPolicy:AVAudioSessionRouteSharingPolicyLongFormAudio options:nil error:&error];
             if (error)
             {
                 NSLog(@"%@", [error description]);
@@ -109,18 +109,12 @@ static ToneGenerator *sharedGenerator = NULL;
     return (error) ? FALSE : TRUE;
 }
 
-double GenerateRandomXPosition()
+AVAudio3DPoint GenerateRandomXPosition()
 {
-    double randomNum = arc4random_uniform(40) - 20.0;
+    double randomX = arc4random_uniform(40) - 20.0;
+    AVAudio3DPoint point = AVAudioMake3DPoint(randomX, 0.0, 0.0);
     
-    return randomNum;
-}
-
-double GenerateRandomReverb()
-{
-    double randomNum = arc4random_uniform(100);
-    
-    return randomNum / 100;
+    return point;
 }
 
 typedef void (^DataPlayedBackCompletionBlock)(void);
@@ -142,7 +136,6 @@ typedef void (^DataRenderedCompletionBlock)(AVAudioPCMBuffer * _Nonnull buffer, 
                 [self->_playerNode scheduleBuffer:buffer atTime:self->_time options:AVAudioPlayerNodeBufferInterruptsAtLoop completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
                     if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
                     {
-                        //                        [self->_playerNode setPosition:AVAudioMake3DPoint(GenerateRandomXPosition(), 0, 0)];
                         dataPlayedBackCompletionBlock();
                     }
                 }];
@@ -163,22 +156,37 @@ double Frequency(double x, int ordinary_frequency)
 
 double Amplitude(double x)
 {
-    return sinf((x * 2 * M_PI) / 2.0);
+    return sinf(x * 2 * (M_PI / 2.0));
 }
 
 #define high_frequency 2000.0
 #define low_frequency  500.0
+
+// Elements of an effective tone:
+// High-pitched
+// Modulating amplitude
+// Alternating channel output
+// Loud
+// Non-natural (no spatialization)
+//
+// Elements of an effective score:
+// Random frequencies
+// Random duration
+// Random tonality
+
+// To-Do: Divide a tone into three parts: attack, sustain and release
+//
 
 - (void)createAudioBufferWithCompletionBlock:(DataRenderedCompletionBlock)dataRenderedCompletionBlock
 {
     AVAudioPCMBuffer * (^createAudioBuffer)(double);
     createAudioBuffer = ^AVAudioPCMBuffer * (double frequency)
     {
-        AVAudioFrameCount frameCount = self->_audioFormat.sampleRate;
+        AVAudioFrameCount frameCount = [self->_audioFormat sampleRate];
         AVAudioPCMBuffer *pcmBuffer  = [[AVAudioPCMBuffer alloc] initWithPCMFormat:self->_audioFormat frameCapacity:frameCount];
         pcmBuffer.frameLength        = frameCount;
         float *l_channel             = pcmBuffer.floatChannelData[0];
-        float *r_channel             = (self->_audioFormat.channelCount == 2) ? pcmBuffer.floatChannelData[1] : nil;
+        float *r_channel             = ([self->_audioFormat channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil;
         
         for (int index = 0; index < frameCount; index++)
         {

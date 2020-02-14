@@ -10,12 +10,13 @@
 #import <Foundation/Foundation.h>
 #import <WatchConnectivity/WatchConnectivity.h>
 
+#import "ExtensionDelegate.h"
+
 @interface InterfaceController : WKInterfaceController <WCSessionDelegate>
 
 @property (strong, nonatomic) WCSession *watchConnectivitySession;
 
 @property (weak, nonatomic) IBOutlet WKInterfaceImage *watchConnectivitySessionImageView;
 @property (weak, nonatomic) IBOutlet WKInterfaceImage *sessionWatchStateImageView;
-
 
 @end

@@ -24,6 +24,7 @@
 		8A12D2B123E1071C0088463B /* ComplicationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8A12D2B023E1071C0088463B /* ComplicationController.m */; };
 		8A12D2B323E1071D0088463B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8A12D2B223E1071D0088463B /* Assets.xcassets */; };
 		B93D77BD23E61CCB0099DF63 /* ToneGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = B93D77BC23E61CCB0099DF63 /* ToneGenerator.m */; };
+		B9AA64E623F19AE100C1DC10 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B9AA64E523F19AE100C1DC10 /* AudioToolbox.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -87,9 +88,9 @@
 		8A12D29C23E1071C0088463B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8A12D2A123E1071C0088463B /* ToneBarrier3D WatchKit Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "ToneBarrier3D WatchKit Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8A12D2A623E1071C0088463B /* InterfaceController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = InterfaceController.h; sourceTree = "<group>"; };
-		8A12D2A723E1071C0088463B /* InterfaceController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = InterfaceController.m; sourceTree = "<group>"; };
+		8A12D2A723E1071C0088463B /* InterfaceController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = InterfaceController.m; sourceTree = "<group>"; wrapsLines = 0; };
 		8A12D2A923E1071C0088463B /* ExtensionDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExtensionDelegate.h; sourceTree = "<group>"; };
-		8A12D2AA23E1071C0088463B /* ExtensionDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ExtensionDelegate.m; sourceTree = "<group>"; };
+		8A12D2AA23E1071C0088463B /* ExtensionDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ExtensionDelegate.m; sourceTree = "<group>"; wrapsLines = 0; };
 		8A12D2AC23E1071C0088463B /* NotificationController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NotificationController.h; sourceTree = "<group>"; };
 		8A12D2AD23E1071C0088463B /* NotificationController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NotificationController.m; sourceTree = "<group>"; };
 		8A12D2AF23E1071C0088463B /* ComplicationController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ComplicationController.h; sourceTree = "<group>"; };
@@ -99,6 +100,8 @@
 		8A12D2B523E1071E0088463B /* PushNotificationPayload.apns */ = {isa = PBXFileReference; lastKnownFileType = text; path = PushNotificationPayload.apns; sourceTree = "<group>"; };
 		B93D77BB23E61CCB0099DF63 /* ToneGenerator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ToneGenerator.h; sourceTree = "<group>"; };
 		B93D77BC23E61CCB0099DF63 /* ToneGenerator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ToneGenerator.m; sourceTree = "<group>"; wrapsLines = 0; };
+		B9AA64E323F19AE100C1DC10 /* ToneBarrier3D.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ToneBarrier3D.entitlements; sourceTree = "<group>"; };
+		B9AA64E523F19AE100C1DC10 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,6 +109,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B9AA64E623F19AE100C1DC10 /* AudioToolbox.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -126,6 +130,7 @@
 				8A12D29623E107190088463B /* ToneBarrier3D WatchKit App */,
 				8A12D2A523E1071C0088463B /* ToneBarrier3D WatchKit Extension */,
 				8A12D27A23E107090088463B /* Products */,
+				B9AA64E423F19AE100C1DC10 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -142,6 +147,7 @@
 		8A12D27B23E107090088463B /* ToneBarrier3D */ = {
 			isa = PBXGroup;
 			children = (
+				B9AA64E323F19AE100C1DC10 /* ToneBarrier3D.entitlements */,
 				8A12D27C23E107090088463B /* AppDelegate.h */,
 				8A12D27D23E107090088463B /* AppDelegate.m */,
 				8A12D27F23E107090088463B /* SceneDelegate.h */,
@@ -185,6 +191,14 @@
 				8A12D2B523E1071E0088463B /* PushNotificationPayload.apns */,
 			);
 			path = "ToneBarrier3D WatchKit Extension";
+			sourceTree = "<group>";
+		};
+		B9AA64E423F19AE100C1DC10 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				B9AA64E523F19AE100C1DC10 /* AudioToolbox.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -570,6 +584,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ToneBarrier3D/ToneBarrier3D.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = N9987K9442;
 				INFOPLIST_FILE = ToneBarrier3D/Info.plist;
@@ -587,6 +602,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ToneBarrier3D/ToneBarrier3D.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = N9987K9442;
 				INFOPLIST_FILE = ToneBarrier3D/Info.plist;

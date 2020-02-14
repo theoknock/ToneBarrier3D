@@ -215,7 +215,11 @@
                 
             case WCSessionActivationStateActivated:
             {
-                
+                [session sendMessage:@{@"" : @""} replyHandler:^(NSDictionary<NSString *,id> * _Nonnull replyMessage) {
+                    NSLog(@"%s", __PRETTY_FUNCTION__);
+                } errorHandler:^(NSError * _Nonnull error) {
+                    NSLog(@"%s %@", __PRETTY_FUNCTION__, error.description);
+                }];
                 [self.watchConnectivitySessionImageView setTintColor:[UIColor systemGreenColor]];
                 break;
             }
@@ -231,30 +235,45 @@
 
 - (void)sessionWatchStateDidChange:(WCSession *)session
 {
-    BOOL paired = [session isPaired];
-    BOOL reachable = [session isReachable];
-    [self.sessionWatchStateImageView setTintColor:(paired) ? [UIColor systemGreenColor] : (reachable) ? [UIColor systemBlueColor] : [UIColor systemRedColor]];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        BOOL paired = [session isPaired];
+        BOOL reachable = [session isReachable];
+        [self.sessionWatchStateImageView setTintColor:(paired) ? [UIColor systemGreenColor] : (reachable) ? [UIColor systemBlueColor] : [UIColor systemRedColor]];
+    });
 }
 
 - (void)session:(WCSession *)session didReceiveMessage:(NSDictionary<NSString *,id> *)message
 {
-    
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+}
+
+- (void)session:(WCSession *)session didReceiveMessageData:(NSData *)messageData replyHandler:(void (^)(NSData * _Nonnull))replyHandler
+{
+    NSLog(@"%s", __PRETTY_FUNCTION__);
 }
 
 - (void)sessionReachabilityDidChange:(WCSession *)session
 {
-    BOOL reachable = self.watchConnectivitySession.isReachable;
-    [self.sessionWatchStateImageView setTintColor:(reachable) ? [UIColor systemBlueColor] : [UIColor systemRedColor]];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        BOOL reachable = session.isReachable;
+        [self.sessionWatchStateImageView setTintColor:(reachable) ? [UIColor systemGrayColor] : [UIColor systemRedColor]];
+    });
 }
 
 - (void)sessionDidDeactivate:(WCSession *)session
 {
-    [self.watchConnectivitySessionImageView setTintColor:[UIColor systemRedColor]];
+    [session activateSession]; // To-Do: Verify whether session should be activated
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.watchConnectivitySessionImageView setTintColor:[UIColor systemRedColor]];
+    });
 }
 
 - (void)sessionDidBecomeInactive:(WCSession *)session
 {
-    [self.watchConnectivitySessionImageView setTintColor:[UIColor systemGrayColor]];
+    [session activateSession]; // To-Do: Verify whether session should be activated
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.watchConnectivitySessionImageView setTintColor:[UIColor systemGrayColor]];
+    });
 }
 
 @end
