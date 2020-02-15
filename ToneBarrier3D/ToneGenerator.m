@@ -82,16 +82,16 @@ static ToneGenerator *sharedGenerator = NULL;
 
 - (BOOL)startEngine
 {
-    AVAudioSession *session = [AVAudioSession sharedInstance];
+//    AVAudioSession *session = [AVAudioSession sharedInstance];
     __autoreleasing NSError *error = nil;
     if ([_audioEngine startAndReturnError:&error])
     {
-        [session setActive:YES error:&error];
+        [[AVAudioSession sharedInstance] setActive:YES error:&error];
         if (error)
         {
             NSLog(@"%@", [error description]);
         } else {
-            [session setCategory:AVAudioSessionCategoryPlayback mode:AVAudioSessionModeDefault routeSharingPolicy:AVAudioSessionRouteSharingPolicyLongFormAudio options:nil error:&error];
+            [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback mode:AVAudioSessionModeDefault routeSharingPolicy:AVAudioSessionRouteSharingPolicyLongFormAudio options:nil error:&error];
             if (error)
             {
                 NSLog(@"%@", [error description]);
@@ -130,7 +130,6 @@ typedef void (^DataRenderedCompletionBlock)(AVAudioPCMBuffer * _Nonnull buffer, 
         {
             if (![_playerNode isPlaying]) [_playerNode play];
             [self createAudioBufferWithCompletionBlock:^(AVAudioPCMBuffer * _Nonnull buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
-                
                 CMTime cmtime = CMTimeAdd(CMTimeMakeWithSeconds([AVAudioTime secondsForHostTime:[self->_time hostTime]], NSEC_PER_SEC), CMTimeMakeWithSeconds(1.0, NSEC_PER_SEC));
                 self->_time   = [[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(cmtime)];
                 [self->_playerNode scheduleBuffer:buffer atTime:self->_time options:AVAudioPlayerNodeBufferInterruptsAtLoop completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
@@ -174,8 +173,76 @@ double Amplitude(double x)
 // Random duration
 // Random tonality
 
-// To-Do: Divide a tone into three parts: attack, sustain and release
-//
+// To-Do: Multiply the frequency by a random number between 1.01 and 1.1)
+
+typedef NS_ENUM(NSUInteger, TonalHarmony) {
+    TonalHarmonyConsonance,
+    TonalHarmonyDissonance
+};
+
+typedef NS_ENUM(NSUInteger, TonalInterval) {
+    TonalIntervalUnison,
+    TonalIntervalOctave,
+    TonalIntervalMajorSixth,
+    TonalIntervalPerfectFifth,
+    TonalIntervalPerfectFourth,
+    TonalIntervalMajorThird,
+    TonalIntervalMinorThird
+};
+
+double Interval(double frequency, TonalInterval pitchInterval)
+{
+    double new_frequency = frequency;
+    switch (pitchInterval) {
+        case TonalIntervalUnison:
+            new_frequency *= 1.0;
+            break;
+            
+        case TonalIntervalOctave:
+            new_frequency *= 2.0;
+            break;
+            
+        case TonalIntervalMajorSixth:
+            new_frequency *= 5.0/3.0;
+            break;
+            
+        case TonalIntervalPerfectFifth:
+            new_frequency *= 4.0/3.0;
+            break;
+            
+        case TonalIntervalMajorThird:
+            new_frequency *= 5.0/4.0;
+            break;
+            
+        case TonalIntervalMinorThird:
+            new_frequency *= 6.0/5.0;
+            break;
+            
+        default:
+            break;
+    }
+    
+    return new_frequency;
+};
+
+double Tonality(double frequency, TonalHarmony harmony)
+{
+    double new_frequency = frequency;
+    switch (harmony) {
+        case TonalHarmonyDissonance:
+            new_frequency *= (1.01 + drand48());
+            break;
+            
+        case TonalHarmonyConsonance:
+            new_frequency = Interval(frequency, (TonalInterval)arc4random_uniform(7));
+            break;
+            
+        default:
+            break;
+    }
+    
+    return new_frequency;
+}
 
 - (void)createAudioBufferWithCompletionBlock:(DataRenderedCompletionBlock)dataRenderedCompletionBlock
 {
@@ -188,12 +255,14 @@ double Amplitude(double x)
         float *l_channel             = pcmBuffer.floatChannelData[0];
         float *r_channel             = ([self->_audioFormat channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil;
         
+        double harmonized_frequency = Tonality(frequency, (TonalHarmony)arc4random_uniform(2));
+        
         for (int index = 0; index < frameCount; index++)
         {
             double normalized_index         = Normalize(index, frameCount);
             
             if (l_channel) l_channel[index] = Frequency(normalized_index, frequency) * (normalized_index * Amplitude(normalized_index));
-            if (r_channel) r_channel[index] = Frequency(normalized_index, frequency) * ((1.0 - normalized_index) * Amplitude(normalized_index));
+            if (r_channel) r_channel[index] = Frequency(normalized_index, harmonized_frequency) * (normalized_index * Amplitude(normalized_index));
         }
         
         return pcmBuffer;

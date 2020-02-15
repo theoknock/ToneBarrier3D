@@ -7,6 +7,7 @@
 //
 
 #import <WatchKit/WatchKit.h>
+#import <MediaPlayer/MediaPlayer.h>
 
 @interface ExtensionDelegate : NSObject <WKExtensionDelegate>
 

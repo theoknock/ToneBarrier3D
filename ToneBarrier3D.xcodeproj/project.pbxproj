@@ -24,6 +24,7 @@
 		8A12D2B123E1071C0088463B /* ComplicationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8A12D2B023E1071C0088463B /* ComplicationController.m */; };
 		8A12D2B323E1071D0088463B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8A12D2B223E1071D0088463B /* Assets.xcassets */; };
 		B93D77BD23E61CCB0099DF63 /* ToneGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = B93D77BC23E61CCB0099DF63 /* ToneGenerator.m */; };
+		B9510E2923F6FC0A00BFAFC1 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B9510E2823F6FC0A00BFAFC1 /* MediaPlayer.framework */; };
 		B9AA64E623F19AE100C1DC10 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B9AA64E523F19AE100C1DC10 /* AudioToolbox.framework */; };
 /* End PBXBuildFile section */
 
@@ -100,6 +101,7 @@
 		8A12D2B523E1071E0088463B /* PushNotificationPayload.apns */ = {isa = PBXFileReference; lastKnownFileType = text; path = PushNotificationPayload.apns; sourceTree = "<group>"; };
 		B93D77BB23E61CCB0099DF63 /* ToneGenerator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ToneGenerator.h; sourceTree = "<group>"; };
 		B93D77BC23E61CCB0099DF63 /* ToneGenerator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ToneGenerator.m; sourceTree = "<group>"; wrapsLines = 0; };
+		B9510E2823F6FC0A00BFAFC1 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 		B9AA64E323F19AE100C1DC10 /* ToneBarrier3D.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ToneBarrier3D.entitlements; sourceTree = "<group>"; };
 		B9AA64E523F19AE100C1DC10 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -109,6 +111,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B9510E2923F6FC0A00BFAFC1 /* MediaPlayer.framework in Frameworks */,
 				B9AA64E623F19AE100C1DC10 /* AudioToolbox.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -196,6 +199,7 @@
 		B9AA64E423F19AE100C1DC10 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				B9510E2823F6FC0A00BFAFC1 /* MediaPlayer.framework */,
 				B9AA64E523F19AE100C1DC10 /* AudioToolbox.framework */,
 			);
 			name = Frameworks;

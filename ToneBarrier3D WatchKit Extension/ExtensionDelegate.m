@@ -21,6 +21,18 @@
 - (void)applicationWillResignActive {
     // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
     // Use this method to pause ongoing tasks, disable timers, etc.
+    
+    MPRemoteCommandCenter *remoteCommandCenter = [MPRemoteCommandCenter sharedCommandCenter];
+    [[remoteCommandCenter togglePlayPauseCommand] addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+//            if (![WatchToneGenerator.sharedGenerator.playerOneNode isPlaying]) {
+//                [WatchToneGenerator.sharedGenerator start];
+//            } else if ([WatchToneGenerator.sharedGenerator.playerOneNode isPlaying]) {
+//                [WatchToneGenerator.sharedGenerator stop];
+//            }
+        });
+        return MPRemoteCommandHandlerStatusSuccess;
+    }];
 }
 
 - (void)handleBackgroundTasks:(NSSet<WKRefreshBackgroundTask *> *)backgroundTasks {

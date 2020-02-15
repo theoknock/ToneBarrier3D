@@ -41,13 +41,14 @@
 - (void)applicationWillResignActive:(UIApplication *)application
 {
     [application beginReceivingRemoteControlEvents];
-        
-        MPRemoteCommandCenter *remoteCommandCenter = [MPRemoteCommandCenter sharedCommandCenter];
-        
-        [[remoteCommandCenter togglePlayPauseCommand] addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+    
+    MPRemoteCommandCenter *remoteCommandCenter = [MPRemoteCommandCenter sharedCommandCenter];
+    [[remoteCommandCenter togglePlayPauseCommand] addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+        dispatch_async(dispatch_get_main_queue(), ^{
             [[ToneGenerator sharedGenerator] play];
-            return MPRemoteCommandHandlerStatusSuccess;
-        }];
+        });
+        return MPRemoteCommandHandlerStatusSuccess;
+    }];
 }
 
 
