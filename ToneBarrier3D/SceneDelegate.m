@@ -1,5 +1,6 @@
 #import "SceneDelegate.h"
 #import "AppDelegate.h"
+#import "ToneGenerator.h"
 
 @interface SceneDelegate ()
 
@@ -32,6 +33,15 @@
 - (void)sceneWillResignActive:(UIScene *)scene {
     // Called when the scene will move from an active state to an inactive state.
     // This may occur due to temporary interruptions (ex. an incoming phone call).
+    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+    
+    MPRemoteCommandCenter *remoteCommandCenter = [MPRemoteCommandCenter sharedCommandCenter];
+    [[remoteCommandCenter togglePlayPauseCommand] addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [[ToneGenerator sharedGenerator] play];
+        });
+        return MPRemoteCommandHandlerStatusSuccess;
+    }];
 }
 
 

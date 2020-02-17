@@ -38,18 +38,4 @@
     // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
 }
 
-- (void)applicationWillResignActive:(UIApplication *)application
-{
-    [application beginReceivingRemoteControlEvents];
-    
-    MPRemoteCommandCenter *remoteCommandCenter = [MPRemoteCommandCenter sharedCommandCenter];
-    [[remoteCommandCenter togglePlayPauseCommand] addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [[ToneGenerator sharedGenerator] play];
-        });
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-}
-
-
 @end
