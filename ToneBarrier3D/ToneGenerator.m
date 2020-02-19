@@ -177,7 +177,8 @@ double Amplitude(double x)
 
 typedef NS_ENUM(NSUInteger, TonalHarmony) {
     TonalHarmonyConsonance,
-    TonalHarmonyDissonance
+    TonalHarmonyDissonance,
+    TonalHarmonyRandom
 };
 
 typedef NS_ENUM(NSUInteger, TonalInterval) {
@@ -187,13 +188,14 @@ typedef NS_ENUM(NSUInteger, TonalInterval) {
     TonalIntervalPerfectFifth,
     TonalIntervalPerfectFourth,
     TonalIntervalMajorThird,
-    TonalIntervalMinorThird
+    TonalIntervalMinorThird,
+    TonalIntervalRandom
 };
 
-double Interval(double frequency, TonalInterval pitchInterval)
+double Interval(double frequency, TonalInterval interval)
 {
     double new_frequency = frequency;
-    switch (pitchInterval) {
+    switch (interval) {
         case TonalIntervalUnison:
             new_frequency *= 1.0;
             break;
@@ -218,6 +220,9 @@ double Interval(double frequency, TonalInterval pitchInterval)
             new_frequency *= 6.0/5.0;
             break;
             
+        case TonalIntervalRandom:
+            new_frequency = Interval(frequency, (TonalInterval)arc4random_uniform(7));
+            
         default:
             break;
     }
@@ -225,7 +230,7 @@ double Interval(double frequency, TonalInterval pitchInterval)
     return new_frequency;
 };
 
-double Tonality(double frequency, TonalHarmony harmony)
+double Tonality(double frequency, TonalInterval interval, TonalHarmony harmony)
 {
     double new_frequency = frequency;
     switch (harmony) {
@@ -234,8 +239,11 @@ double Tonality(double frequency, TonalHarmony harmony)
             break;
             
         case TonalHarmonyConsonance:
-            new_frequency = Interval(frequency, (TonalInterval)arc4random_uniform(7));
+            new_frequency = Interval(frequency, interval);
             break;
+            
+        case TonalHarmonyRandom:
+            new_frequency = Tonality(frequency, interval, (TonalHarmony)arc4random_uniform(2));
             
         default:
             break;
@@ -255,7 +263,7 @@ double Tonality(double frequency, TonalHarmony harmony)
         float *l_channel             = pcmBuffer.floatChannelData[0];
         float *r_channel             = ([self->_audioFormat channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil;
         
-        double harmonized_frequency = Tonality(frequency, (TonalHarmony)arc4random_uniform(2));
+        double harmonized_frequency = Tonality(frequency, TonalIntervalRandom, TonalHarmonyRandom);
         
         for (int index = 0; index < frameCount; index++)
         {
