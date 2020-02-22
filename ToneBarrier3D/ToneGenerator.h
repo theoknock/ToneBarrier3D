@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
 
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface ToneGenerator : NSObject
@@ -16,6 +17,12 @@ NS_ASSUME_NONNULL_BEGIN
 + (nonnull ToneGenerator *)sharedGenerator;
 
 @property (nonatomic, readonly) AVAudioEngine * _Nonnull audioEngine;
+
++ (double)maxFrequency;
++ (double)minFrequency;
+
++ (void)setMaxFrequency:(double)maxFrequency;
++ (void)setMinFrequency:(double)minFrequency;
 
 - (void)play;
 
