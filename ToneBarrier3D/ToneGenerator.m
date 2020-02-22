@@ -194,7 +194,7 @@ double Normalize(double a, double b)
 
 #define high_frequency 2000.0
 #define low_frequency  500.0
-#define max_trill_interval 
+#define max_trill_interval
 
 // Elements of an effective tone:
 // High-pitched
@@ -297,19 +297,19 @@ typedef NS_ENUM(NSUInteger, Trill) {
     };
 }
 
-+ (double(^)(double))Trill
++ (double(^)(double, double))Trill
 {
-    return ^double(double time)
+    return ^double(double time, double trill)
     {
-        return pow(2.0 * pow(sinf(M_PI * time * 2.0), 2.0) * 0.5, 3.0);
+        return pow(2.0 * pow(sinf(M_PI * time * trill), 2.0) * 0.5, 4.0);
     };
 }
 
-+ (double(^)(double))TrillInverse
++ (double(^)(double, double))TrillInverse
 {
-    return ^double(double time)
+    return ^double(double time, double trill)
     {
-        return pow(-(2.0 * pow(sinf(M_PI * time * 2.0), 2.0) * 0.5) + 1.0, 3.0);
+        return pow(-(2.0 * pow(sinf(M_PI * time * trill), 2.0) * 0.5) + 1.0, 4.0);
     };
 }
 
@@ -379,12 +379,12 @@ typedef NS_ENUM(NSUInteger, Trill) {
         for (int index = 0; index < frameCount; index++)
         {
             double normalized_index  = Normalize(index, frameCount);
-            double trill             = ToneGenerator.Trill(normalized_index);
-            double trill_inverse     = ToneGenerator.TrillInverse(normalized_index);
+            double trill             = ToneGenerator.Trill(normalized_index, 8.0);
+            double trill_inverse     = ToneGenerator.TrillInverse(normalized_index, 8.0);
             double amplitude         = ToneGenerator.Amplitude(normalized_index);
             
             if (l_channel) l_channel[index] = ToneGenerator.Frequency(normalized_index, frequency) * amplitude * trill;
-            if (r_channel) r_channel[index] = ToneGenerator.Frequency(normalized_index, frequency) * amplitude * trill_inverse;
+            if (r_channel) r_channel[index] = ToneGenerator.Frequency(normalized_index, harmonized_frequency) * amplitude * trill_inverse;
         }
         
         return pcmBuffer;
