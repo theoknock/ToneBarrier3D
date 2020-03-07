@@ -59,6 +59,7 @@
     });
     dispatch_async(playSerialQueue, playTonesBlock);
     dispatch_block_t playButtonBlock = dispatch_block_create(0, ^{
+        
         if ([[[ToneGenerator sharedGenerator] audioEngine] isRunning])
         {
             [self->_playButton setImage:[UIImage systemImageNamed:@"stop"] forState:UIControlStateNormal];
