@@ -18,12 +18,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) AVAudioEngine * _Nonnull audioEngine;
 
-+ (double)maxFrequency;
-+ (double)minFrequency;
-
-+ (void)setMaxFrequency:(double)maxFrequency;
-+ (void)setMinFrequency:(double)minFrequency;
-
 - (void)play;
 
 @end
