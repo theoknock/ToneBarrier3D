@@ -14,7 +14,6 @@
 #import "ToneGenerator.h"
 
 #define max_frequency      2000.0
-#define mid_frequency      1500.0
 #define min_frequency       500.0
 #define max_trill_interval   12.0
 #define min_trill_interval    2.0
@@ -60,10 +59,14 @@ static void (^renderData)(double, DataRenderedCompletionBlock);
 
 @interface ToneGenerator ()
 {
+    double(^Normalize)(double, double);
+    double(^Scale)(double, double, double, double, double);
+    double(^Tone)(double, double, double);
     double(^Interval)(double, TonalInterval);
     double(^TrillInterval)(double);
     double(^Amplitude)(double);
     double(^Frequency)(double, double);
+    double(^Tonality)(double, TonalInterval, TonalHarmony);
     double(^Trill)(double, double);
     double(^TrillInverse)(double, double);
     double(^RandomDurationInterval)(void);
@@ -83,29 +86,6 @@ static void (^renderData)(double, DataRenderedCompletionBlock);
 @end
 
 @implementation ToneGenerator
-
-double Tonality(double frequency, TonalInterval interval, TonalHarmony harmony)
-{
-    double new_frequency = frequency;
-    switch (harmony) {
-        case TonalHarmonyDissonance:
-            new_frequency *= (1.1 + drand48());
-            break;
-            
-        case TonalHarmonyConsonance:
-            //            new_frequency = Interval(frequency, interval);
-            break;
-            
-        case TonalHarmonyRandom:
-            new_frequency = Tonality(frequency, interval, (TonalHarmony)arc4random_uniform(2));
-            break;
-            
-        default:
-            break;
-    }
-    
-    return new_frequency;
-}
 
 static ToneGenerator *sharedGenerator = NULL;
 + (nonnull ToneGenerator *)sharedGenerator
@@ -128,9 +108,40 @@ static ToneGenerator *sharedGenerator = NULL;
     
     if (self)
     {
+        Normalize = ^double(double a, double b)
+        {
+            return (double)(a / b);
+        };
+
+        Scale = ^double(double value, double min, double max, double new_min, double new_max)
+        {
+            return (new_max - new_min) * (value - min) / (max - min) + new_min;
+        };
+        
+        // TO-DO: Rename to "Frequency" and rename current "Frequency" to something related to audio buffer data
+        Tone = ^double(double min, double max, double weight)
+        {
+            double frequency = (((double)arc4random() / UINT_MAX) * (max - min) + min);
+            frequency = pow(Scale(frequency, min_frequency, max_frequency, 0.0, 1.0), weight);
+            frequency = Scale(frequency, 0.0, 1.0, min_frequency, max_frequency);
+            
+            return frequency;
+        };
+        
         Frequency = ^double(double time, double frequency)
         {
             return pow(sinf(M_PI * time * frequency), 2.0);
+        };
+        
+        Tonality = ^double(double frequency, TonalInterval interval, TonalHarmony harmony)
+        {
+            double new_frequency = frequency;
+            new_frequency *= (harmony == TonalHarmonyDissonance) ? (1.1 + drand48()) :
+            (harmony == TonalHarmonyConsonance) ? Interval(frequency, interval) :
+            (harmony == TonalHarmonyRandom) ? Tonality(frequency, interval, (TonalHarmony)arc4random_uniform(2)) :
+            frequency;
+//
+            return new_frequency;
         };
         
         Amplitude = ^double(double time)
@@ -151,42 +162,6 @@ static ToneGenerator *sharedGenerator = NULL;
             frequency;
             
             return new_frequency;
-            
-//            double new_frequency = frequency;
-//            switch (interval)
-//            {
-//                case TonalIntervalUnison:
-//                    new_frequency *= 1.0;
-//                    break;
-//
-//                case TonalIntervalOctave:
-//                    new_frequency *= 2.0;
-//                    break;
-//
-//                case TonalIntervalMajorSixth:
-//                    new_frequency *= 5.0/3.0;
-//                    break;
-//
-//                case TonalIntervalPerfectFifth:
-//                    new_frequency *= 4.0/3.0;
-//                    break;
-//
-//                case TonalIntervalMajorThird:
-//                    new_frequency *= 5.0/4.0;
-//                    break;
-//
-//                case TonalIntervalMinorThird:
-//                    new_frequency *= 6.0/5.0;
-//                    break;
-//
-//                case TonalIntervalRandom:
-//                    new_frequency = Interval(frequency, (TonalInterval)arc4random_uniform(7));
-//
-//                default:
-//                    break;
-//            }
-//
-//            return new_frequency;
         };
         
         RandomDurationInterval = ^double()
@@ -366,18 +341,14 @@ AVAudio3DPoint GenerateRandomXPosition()
 {
     if ([_audioEngine isRunning])
     {
-        double v = 1.0;
-        for (int x = 1; x < 100; x++)
-        {
-            v -= (x * .00);
-            [self->_playerNode setVolume:v];
-        }
+        // TO-DO: play a "closing" buffer before pausing audio engine
         [_audioEngine pause];
     } else {
         if ([self startEngine])
         {
             if (![_playerNode isPlaying]) [_playerNode play];
-            renderData((((double)arc4random() / UINT_MAX) * (max_frequency - mid_frequency) + mid_frequency), ^(AVAudioPCMBuffer * _Nonnull buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
+            // TO-DO: Normalize randomly generated frequency, apply exponent, and then recalculate frequency
+            renderData(Tone(min_frequency, max_frequency, 10.0), ^(AVAudioPCMBuffer * _Nonnull buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
                 [self->_playerNode scheduleBuffer:buffer atTime:[[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(CMClockGetTime(CMClockGetHostTimeClock()))] options:AVAudioPlayerNodeBufferInterruptsAtLoop completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
                     if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
                     {
@@ -388,7 +359,7 @@ AVAudio3DPoint GenerateRandomXPosition()
             });
             
             if (![_playerNodeAux isPlaying]) [_playerNodeAux play];
-            renderData((((double)arc4random() / UINT_MAX) * (mid_frequency - min_frequency) + min_frequency), ^(AVAudioPCMBuffer * _Nonnull buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
+            renderData(Tone(min_frequency, max_frequency, 1.0/10.0), ^(AVAudioPCMBuffer * _Nonnull buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
                 [self->_playerNodeAux scheduleBuffer:buffer atTime:[[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(CMClockGetTime(CMClockGetHostTimeClock()))] options:AVAudioPlayerNodeBufferInterruptsAtLoop completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
                     if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
                     {
@@ -399,11 +370,6 @@ AVAudio3DPoint GenerateRandomXPosition()
             });
         }
     }
-}
-
-double Normalize(double a, double b)
-{
-    return (double)(a / b);
 }
 
 
