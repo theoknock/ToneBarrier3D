@@ -18,17 +18,11 @@
 #define max_trill_interval   12.00
 #define min_trill_interval    2.00
 #define duration_interval     2.00
-#define duration_maximum      4.00
-#define duration_minimum      1.00
+#define duration_maximum      2.00
+#define duration_minimum      0.25
 
-typedef struct {
-    AVAudioPCMBuffer * _Nonnull buffer;
-    AVAudioTime *startTime;
-    double duration;
-} TonePlayerNodeData;
-
-typedef void (^DataPlayedBackCompletionBlock)(AVAudioTime *, NSString *);
-typedef void (^DataRenderedCompletionBlock)(TonePlayerNodeData *tonePlayerNodeData, DataPlayedBackCompletionBlock);
+typedef void (^DataPlayedBackCompletionBlock)(NSString *);
+typedef void (^DataRenderedCompletionBlock)(AVAudioPCMBuffer *, DataPlayedBackCompletionBlock);
 
 typedef NS_ENUM(NSUInteger, TonalHarmony) {
     TonalHarmonyConsonance,
@@ -53,36 +47,26 @@ typedef NS_ENUM(NSUInteger, TonalEnvelope) {
     TonalEnvelopeShortSustain
 };
 
-typedef struct {
-    double frequency;
-    double harmonized_frequency;
-} Frequencies;
-Frequencies *(^harmonizeFrequencies)(double, TonalInterval, TonalHarmony);
-static void (^renderData)(double, AVAudioTime *, DataRenderedCompletionBlock);
+static void (^renderData)(double, DataRenderedCompletionBlock);
 
 @interface ToneGenerator ()
 {
     double(^Normalize)(double, double);
     double(^Scale)(double, double, double, double, double);
-    double(^Tone)(double, double, double);
+    double(^Frequency)(double);
     double(^Interval)(double, TonalInterval);
     double(^TrillInterval)(double);
     double(^Amplitude)(double);
-    double(^Frequency)(double, double);
+    double(^BufferData)(double, double);
     double(^Tonality)(double, TonalInterval, TonalHarmony);
     double(^Trill)(double, double);
     double(^TrillInverse)(double, double);
     double(^RandomDurationInterval)(void);
-    AVAudioTime *(^AVAudioTimeWithCMTime)(CMTime);
-    CMTime(^CMTimeWithAVAudioTime)(AVAudioTime *);
-    AVAudioTime *(^AdjustBufferScheduleTime)(AVAudioTime *);
-    AVAudioTime *(^ValidateBufferScheduleTime)(AVAudioTime *);
 }
 
 @property (nonatomic, readonly) AVAudioMixerNode * _Nullable mainNode;
 @property (nonatomic, readonly) AVAudioMixerNode * _Nullable mixerNode;
 @property (nonatomic, readonly) AVAudioFormat * _Nullable audioFormat;
-
 @property (nonatomic, readonly) AVAudioPlayerNode * _Nullable playerNode;
 @property (nonatomic, readonly) AVAudioPlayerNode * _Nullable playerNodeAux;
 @property (nonatomic, readonly) AVAudioUnitReverb * _Nullable reverb;
@@ -115,6 +99,8 @@ static ToneGenerator *sharedGenerator = NULL;
     
     if (self)
     {
+        srand48(time(0));
+        
         Normalize = ^double(double a, double b)
         {
             return (double)(a / b);
@@ -126,16 +112,14 @@ static ToneGenerator *sharedGenerator = NULL;
         };
         
         // TO-DO: Rename to "Frequency" and rename current "Frequency" to something related to audio buffer data
-        Tone = ^double(double min, double max, double weight)
+        Frequency = ^double(double weight)
         {
-            double frequency = (((double)arc4random() / UINT_MAX) * (max - min) + min);
-            frequency = pow(Scale(frequency, min_frequency, max_frequency, 0.0, 1.0), weight);
-            frequency = Scale(frequency, 0.0, 1.0, min_frequency, max_frequency);
+            double frequency = Scale(pow(drand48(), weight), 0.0, 1.0, min_frequency, max_frequency);
             
             return frequency;
         };
         
-        Frequency = ^double(double time, double frequency)
+        BufferData = ^double(double time, double frequency)
         {
             return pow(sinf(M_PI * time * frequency), 2.0);
         };
@@ -174,9 +158,9 @@ static ToneGenerator *sharedGenerator = NULL;
         
         RandomDurationInterval = ^double()
         {
-            double multiplier = (((double)arc4random() / UINT_MAX) * (duration_maximum - duration_minimum) + duration_minimum);
+            double r = Scale(drand48(), 0.0, 1.0, duration_minimum, duration_maximum);
             
-            return multiplier;
+            return (double)r;
         };
         
         TrillInterval = ^double(double frequency)
@@ -189,74 +173,28 @@ static ToneGenerator *sharedGenerator = NULL;
             return pow(-(2.0 * pow(sinf(M_PI * time * trill), 2.0) * 0.5) + 1.0, 4.0);
         };
         
-        harmonizeFrequencies = ^Frequencies *(double frequency, TonalInterval interval, TonalHarmony harmony) {
-            Frequencies *f = (Frequencies *)calloc(2, sizeof(Frequencies));
-            f->frequency = frequency;
-            f->harmonized_frequency = Tonality(frequency, TonalIntervalRandom, TonalHarmonyRandom);
-            
-            TrillInterval(frequency);
-            return f;
-        };
-        
         Trill = ^double(double time, double trill)
         {
             return pow(2.0 * pow(sinf(M_PI * time * trill), 2.0) * 0.5, 4.0);
         };
         
-        CMTimeWithAVAudioTime = ^CMTime(AVAudioTime *time)
+        renderData = ^void(double frequency, DataRenderedCompletionBlock dataRenderedCompletionBlock)
         {
-            CMTime cm_time  = CMTimeMakeWithSeconds([AVAudioTime secondsForHostTime:[time hostTime]], NSEC_PER_SEC);
-            
-            return cm_time;
-        };
-        
-        AVAudioTimeWithCMTime = ^AVAudioTime *(CMTime cm_time)
-        {
-            AVAudioTime *time = [[AVAudioTime alloc] initWithHostTime:CMTimeGetSeconds(cm_time)];
-                                            
-            return time;
-        };
-        
-        AdjustBufferScheduleTime = ^AVAudioTime *(AVAudioTime *time)
-        {
-            CMTime difference = CMTimeSubtract(CMClockGetTime(CMClockGetHostTimeClock()), CMTimeWithAVAudioTime(time));
-            CMTime new_time = CMTimeAdd(CMClockGetTime(CMClockGetHostTimeClock()), difference);
-            AVAudioTime *offsetTime = AVAudioTimeWithCMTime(new_time);
-            
-            return offsetTime;
-        };
-        
-        ValidateBufferScheduleTime = ^AVAudioTime *(AVAudioTime *time)
-        {
-            // If the buffer schedule time is less than the current time,
-            // subtract the difference between the two times,
-            // multiply the product by two,
-            // convert the product to seconds,
-            // add the product to the current time and
-            // return the new time;
-            // otherwise, return the buffer schedule time
-
-            uint64_t current_host_time = CMClockConvertHostTimeToSystemUnits(CMClockGetTime(CMClockGetHostTimeClock()));
-            uint64_t host_time       = [time hostTime];
-            AVAudioTime *new_time = (host_time > current_host_time) ? time : [[AVAudioTime alloc] initWithHostTime:current_host_time + (current_host_time - host_time)];
-            
-            return new_time;
-        };
-        
-        renderData = ^void(double frequency, AVAudioTime *lastEndTime, DataRenderedCompletionBlock dataRenderedCompletionBlock)
-        {
-            TonePlayerNodeData * (^createTonePlayerNodeData)(AVAudioFormat *, AVAudioTime *);
-            createTonePlayerNodeData = ^TonePlayerNodeData * (AVAudioFormat * audioFormat, AVAudioTime *startTime)
+            frequency = Frequency(1.0/5.0);
+            double duration_weight = RandomDurationInterval();
+            NSLog(@"%f * %f == %f", frequency, duration_weight, frequency * duration_weight);
+            frequency = frequency * duration_weight;
+            AVAudioPCMBuffer * (^createBuffer)(AVAudioFormat *);
+            createBuffer = ^AVAudioPCMBuffer * (AVAudioFormat * audioFormat)
             {
                 double sampleRate = [audioFormat sampleRate];
-                double duration_weight = RandomDurationInterval();
-                AVAudioFrameCount frameCount = sampleRate * duration_weight;
+                AVAudioFrameCount frameCount = (sampleRate * duration_interval) * duration_weight;
                 AVAudioPCMBuffer *pcmBuffer  = [[AVAudioPCMBuffer alloc] initWithPCMFormat:audioFormat frameCapacity:frameCount];
-                pcmBuffer.frameLength        = frameCount / duration_weight;
+                pcmBuffer.frameLength        = pcmBuffer.frameCapacity; //(sampleRate * duration_interval)(duration_weight < 1.0) ? frameCount : sampleRate;
                 float *l_channel             = pcmBuffer.floatChannelData[0];
-                float *r_channel             = pcmBuffer.floatChannelData[1]; //([audioFormat channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil;
+                float *r_channel             = ([audioFormat channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil;
                 
-                double harmonized_frequency = Tonality(frequency, TonalIntervalRandom, TonalHarmonyRandom);
+//                double harmonized_frequency = Tonality(frequency, TonalIntervalRandom, TonalHarmonyRandom);
                 double trill_interval       = TrillInterval(frequency);
                 for (int index = 0; index < frameCount; index++)
                 {
@@ -265,30 +203,22 @@ static ToneGenerator *sharedGenerator = NULL;
                     double trill_inverse    = TrillInverse(normalized_index, trill_interval);
                     double amplitude        = Amplitude(normalized_index);
                     
-                    double f = Frequency(normalized_index, frequency) * amplitude * trill;
-                    double h = Frequency(normalized_index, harmonized_frequency) * amplitude * trill_inverse;
+                    double buffer_data = BufferData(normalized_index, frequency);
+                    double f = buffer_data * amplitude * trill;
+                    double h = buffer_data * amplitude * trill_inverse;
                     
                     if (l_channel) l_channel[index] = f;
-                    if (r_channel) r_channel[index] = f;
+                    if (r_channel) r_channel[index] = h;
                 }
                 
-                TonePlayerNodeData *tonePlayerNodeData = calloc(1, sizeof(TonePlayerNodeData));
-                tonePlayerNodeData->buffer    = pcmBuffer;
-                tonePlayerNodeData->startTime = startTime;
-                
-//                NSTimeInterval difference = frameCount / sampleRate;
-//                CMTime newStartTime = CMTimeAdd(CMTimeMakeWithSeconds(0.25, NSEC_PER_SEC), CMTimeWithAVAudioTime(startTime));
-//                tonePlayerNodeData->duration  = [AVAudioTime hostTimeForSeconds:CMTimeGetSeconds(newStartTime)];
-                
-                return tonePlayerNodeData;
+                return pcmBuffer;
             };
             
             // Returns audio buffers via DataRenderedCompletionBlock (recursive until STOP)
-            dataRenderedCompletionBlock(createTonePlayerNodeData(_audioFormat, lastEndTime), ^(AVAudioTime *lastEndTime, NSString *playerNodeID)
-                                        {
+            dataRenderedCompletionBlock(createBuffer(_audioFormat), ^(NSString *playerNodeID)
+            {
                 NSLog(playerNodeID);
-                
-                renderData(frequency, lastEndTime, dataRenderedCompletionBlock);
+                renderData(frequency, dataRenderedCompletionBlock);
             });
         };
         
@@ -388,7 +318,7 @@ static ToneGenerator *sharedGenerator = NULL;
     
     _reverb = [[AVAudioUnitReverb alloc] init];
     [_reverb loadFactoryPreset:AVAudioUnitReverbPresetLargeChamber];
-    [_reverb setWetDryMix:100.0];
+    [_reverb setWetDryMix:0.0];
     
     [_audioEngine attachNode:_reverb];
     [_audioEngine attachNode:_playerNode];
@@ -447,8 +377,6 @@ AVAudio3DPoint GenerateRandomXPosition()
     {
         // TO-DO: play a "closing" buffer before pausing audio engine
         [_audioEngine pause];
-        
-//
     } else {
         if ([self startEngine])
         {
@@ -476,28 +404,13 @@ AVAudio3DPoint GenerateRandomXPosition()
 //            });
 //            dispatch_async(buffer_serial_queue, render_buffer_block);
             
-            AVAudioTime *(^currentAVAudioTime)(void) = ^AVAudioTime *(void)
-            {
-//                CMTime newStartTime = CMTimeAdd(CMTimeMakeWithSeconds(1.0, NSEC_PER_SEC), CMClockGetTime(CMClockGetHostTimeClock()));
-//                AVAudioTime *startTime = [AVAudioTime timeWithHostTime:[AVAudioTime hostTimeForSeconds:CMTimeGetSeconds(newStartTime)]];
-                
-                AVAudioTime *currentTime = [[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(CMClockGetTime(CMClockGetHostTimeClock()))];
-                
-                return currentTime;
-            };
-        
             if (![_playerNode isPlaying]) [_playerNode play];
-            renderData(Tone(min_frequency, max_frequency, 5.0), currentAVAudioTime(), ^(TonePlayerNodeData *tonePlayerNodeData, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
-                [self->_playerNode scheduleBuffer:tonePlayerNodeData->buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
+            renderData(Frequency(5.0), ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
+                [self->_playerNode scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
                     if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
                     {
                         [self->_playerNode setPosition:GenerateRandomXPosition()];
-//                        AVAudioTime *newStartTime = [[AVAudioTime alloc] initWithHostTime:(time.hostTime + tonePlayerNodeData->duration)];
-
-                        dataPlayedBackCompletionBlock(currentAVAudioTime(), [NSString stringWithFormat:@"AVAudioPlayerNodeCompletionDataPlayedBack"]);
-                        tonePlayerNodeData->buffer    = nil;
-                        tonePlayerNodeData->startTime = nil;
-                        free(tonePlayerNodeData);
+                        dataPlayedBackCompletionBlock([NSString stringWithFormat:@"AVAudioPlayerNodeCompletionDataPlayedBack"]);
                     }
                 }];
             });
