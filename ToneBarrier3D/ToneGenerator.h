@@ -8,15 +8,24 @@
 
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
+#import <UIKit/UIKit.h>
 
 
 NS_ASSUME_NONNULL_BEGIN
+
+@protocol ToneGeneratorDelegate <NSObject>
+
+@required
+- (IBAction)play:(UIButton *)sender;
+
+@end
 
 @interface ToneGenerator : NSObject
 
 + (nonnull ToneGenerator *)sharedGenerator;
 
 @property (nonatomic, readonly) AVAudioEngine * _Nonnull audioEngine;
+@property (weak) id<ToneGeneratorDelegate> delegate;
 
 - (void)play;
 

@@ -20,6 +20,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    [ToneGenerator.sharedGenerator setDelegate:(id<ToneGeneratorDelegate> _Nullable)self];
+    
     [self audioRouteStatus];
     [self batteryLevelStatus];
     [self batteryStateStatus];
