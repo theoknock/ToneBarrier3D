@@ -47,7 +47,8 @@ typedef NS_ENUM(NSUInteger, TonalEnvelope) {
     TonalEnvelopeShortSustain
 };
 
-static void (^renderData)(NSNumber *, DataRenderedCompletionBlock);
+static void (^renderDataForToneBarrierScoreA)(NSNumber *, DataRenderedCompletionBlock);
+static void (^renderDataForToneBarrierScoreB)(NSNumber *, DataRenderedCompletionBlock);
 
 @interface ToneGenerator ()
 {
@@ -182,7 +183,7 @@ static ToneGenerator *sharedGenerator = NULL;
             return pow(2.0 * pow(sinf(M_PI * time * trill), 2.0) * 0.5, 4.0);
         };
         
-        renderData = ^void(NSNumber *frequency_weight, DataRenderedCompletionBlock dataRenderedCompletionBlock)
+        renderDataForToneBarrierScoreA = ^void(NSNumber *frequency_weight, DataRenderedCompletionBlock dataRenderedCompletionBlock)
         {
             double frequency = Frequency(frequency_weight.doubleValue);
             double harmonic_frequency = Frequency(frequency_weight.doubleValue);
@@ -223,9 +224,53 @@ static ToneGenerator *sharedGenerator = NULL;
             dataRenderedCompletionBlock(createBuffer(_audioFormat), ^(NSString *playerNodeID)
             {
                 NSLog(playerNodeID);
-                renderData(frequency_weight, dataRenderedCompletionBlock);
+                renderDataForToneBarrierScoreA(frequency_weight, dataRenderedCompletionBlock);
             });
         };
+        
+        renderDataForToneBarrierScoreB = ^void(NSNumber *frequency_weight, DataRenderedCompletionBlock dataRenderedCompletionBlock)
+                {
+                    double frequency = Frequency(frequency_weight.doubleValue);
+                    double harmonic_frequency = Frequency(frequency_weight.doubleValue);
+                    double duration_weight = RandomDurationInterval();
+                    frequency = frequency * duration_weight;
+                    AVAudioPCMBuffer * (^createBuffer)(AVAudioFormat *);
+                    createBuffer = ^AVAudioPCMBuffer * (AVAudioFormat * audioFormat)
+                    {
+                        double sampleRate = [audioFormat sampleRate];
+                        AVAudioFrameCount frameCount = (sampleRate * duration_interval) * duration_weight;
+                        AVAudioPCMBuffer *pcmBuffer  = [[AVAudioPCMBuffer alloc] initWithPCMFormat:audioFormat frameCapacity:frameCount];
+                        pcmBuffer.frameLength        = pcmBuffer.frameCapacity; //(sampleRate * duration_interval)(duration_weight < 1.0) ? frameCount : sampleRate;
+                        float *l_channel             = pcmBuffer.floatChannelData[0];
+                        float *r_channel             = ([audioFormat channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil;
+                        
+        //                double harmonized_frequency = Tonality(frequency, TonalIntervalRandom, TonalHarmonyRandom);
+                        double trill_interval        = TrillInterval(frequency);
+                        double trill_increment       = (max_trill_interval - min_trill_interval) / frameCount;
+                        for (int index = 0; index < frameCount; index++)
+                        {
+                            double normalized_index = Normalize(index, frameCount);
+                            double trill            = Trill(normalized_index, trill_increment * index);
+                            double trill_inverse    = TrillInverse(normalized_index, trill_increment * index);
+                            double amplitude        = Amplitude(normalized_index);
+                            
+                            double f = BufferData(normalized_index, frequency) * amplitude * trill;
+                            double h = BufferData(normalized_index, harmonic_frequency) * amplitude * trill_inverse;
+                            
+                            if (l_channel) l_channel[index] = f;
+                            if (r_channel) r_channel[index] = h;
+                        }
+                        
+                        return pcmBuffer;
+                    };
+                    
+                    // Returns audio buffers via DataRenderedCompletionBlock (recursive until STOP)
+                    dataRenderedCompletionBlock(createBuffer(_audioFormat), ^(NSString *playerNodeID)
+                    {
+                        NSLog(playerNodeID);
+                        renderDataForToneBarrierScoreB(frequency_weight, dataRenderedCompletionBlock);
+                    });
+                };
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterruption:) name:AVAudioEngineConfigurationChangeNotification object:_audioEngine];
 
@@ -410,7 +455,7 @@ AVAudio3DPoint GenerateRandomXPosition()
 //            dispatch_async(buffer_serial_queue, render_buffer_block);
             
             if (![_playerNode isPlaying]) [_playerNode play];
-            renderData([NSNumber numberWithDouble:(double)(1.0/3.0)], ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
+            renderDataForToneBarrierScoreA([NSNumber numberWithDouble:(double)(1.0/3.0)], ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
                 [self->_playerNode scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
                     if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
                     {
@@ -421,7 +466,7 @@ AVAudio3DPoint GenerateRandomXPosition()
             });
             
             if (![_playerNodeAux isPlaying]) [_playerNodeAux play];
-            renderData([NSNumber numberWithDouble:(double)3.0], ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
+            renderDataForToneBarrierScoreB([NSNumber numberWithDouble:(double)3.0], ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
                 [self->_playerNodeAux scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
                     if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
                     {
