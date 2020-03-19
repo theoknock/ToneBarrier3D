@@ -181,7 +181,7 @@ static ToneGenerator *sharedGenerator = NULL;
         
         glissandro = ^AVAudioPCMBuffer * (double frequency, double harmonic_frequency, AVAudioFormat * audioFormat)
         {
-            frequency          = Frequency(1.0);
+            frequency          = Frequency(1.0/20.0);
             harmonic_frequency = frequency * (5.0/4.0);
             
             double duration_weight = 2.0; //RandomDurationInterval();
@@ -207,7 +207,7 @@ static ToneGenerator *sharedGenerator = NULL;
                 
                 double trill            = Trill(normalized_index, trill_interval);
                 double trill_inverse    = TrillInverse(normalized_index, trill_interval);
-                double amplitude        = Amplitude(normalized_index);
+                double amplitude        = Amplitude(normalized_index) + 0.5;
                 
                 double f = BufferData(normalized_index, Scale(normalized_index, 0.0, 1.0, frequency, harmonic_frequency)) * amplitude * trill;
                 double h = BufferData(normalized_index, Scale(normalized_index, 0.0, 1.0, frequency, harmonic_frequency)) * amplitude * trill_inverse;
@@ -259,7 +259,11 @@ static ToneGenerator *sharedGenerator = NULL;
             // Returns audio buffers via DataRenderedCompletionBlock (recursive until STOP)
             dataRenderedCompletionBlock(glissandro(min_frequency, min_frequency * (5.0/4.0), _audioFormat), ^(NSString *playerNodeID) {
                 NSLog(playerNodeID);
-                renderDataForToneBarrierScoreWithGlissandro(dataRenderedCompletionBlock);
+                double frequency = Frequency(10.0);
+                double harmonic_frequency = frequency * (double)(5.0/4.0);
+                dataRenderedCompletionBlock(harmony(frequency, harmonic_frequency, _audioFormat), ^(NSString *playerNodeID) {
+                    renderDataForToneBarrierScoreWithGlissandro(dataRenderedCompletionBlock);
+                });
             });
         };
         
@@ -267,7 +271,7 @@ static ToneGenerator *sharedGenerator = NULL;
         harmony = ^AVAudioPCMBuffer * (double frequency, double harmonic_frequency, AVAudioFormat * audioFormat)
         {
             // TO-DO: Create two-tone harmony by adding the sinusoids and assigning the sum to each channel
-            double duration_weight = RandomDurationInterval();
+            double duration_weight = 0.5;//RandomDurationInterval();
             frequency = frequency * duration_weight;
             harmonic_frequency = harmonic_frequency * duration_weight;
 
