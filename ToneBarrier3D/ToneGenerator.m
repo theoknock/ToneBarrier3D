@@ -47,7 +47,9 @@ typedef NS_ENUM(NSUInteger, TonalEnvelope) {
     TonalEnvelopeShortSustain
 };
 
+static AVAudioPCMBuffer * (^createBufferForToneBarrierScoreA)(double, double, AVAudioFormat *);
 static void (^renderDataForToneBarrierScoreA)(NSNumber *, DataRenderedCompletionBlock);
+static AVAudioPCMBuffer * (^createBufferForToneBarrierScoreB)(double, AVAudioFormat *);
 static void (^renderDataForToneBarrierScoreB)(NSNumber *, DataRenderedCompletionBlock);
 
 @interface ToneGenerator ()
@@ -146,13 +148,13 @@ static ToneGenerator *sharedGenerator = NULL;
         Interval = ^double(double frequency, TonalInterval interval)
         {
             double factorialx = (interval == TonalIntervalRandom)       ? Interval(frequency, (TonalInterval)arc4random_uniform(7)) :
-                                (interval == TonalIntervalUnison)       ? 1.0     :
-                                (interval == TonalIntervalOctave)       ? 2.0     :
-                                (interval == TonalIntervalMajorSixth)   ? 5.0/3.0 :
-                                (interval == TonalIntervalPerfectFifth) ? 4.0/3.0 :
-                                (interval == TonalIntervalMajorThird)   ? 5.0/4.0 :
-                                (interval == TonalIntervalMinorThird)   ? 6.0/5.0 :
-                                frequency;
+            (interval == TonalIntervalUnison)       ? 1.0     :
+            (interval == TonalIntervalOctave)       ? 2.0     :
+            (interval == TonalIntervalMajorSixth)   ? 5.0/3.0 :
+            (interval == TonalIntervalPerfectFifth) ? 4.0/3.0 :
+            (interval == TonalIntervalMajorThird)   ? 5.0/4.0 :
+            (interval == TonalIntervalMinorThird)   ? 6.0/5.0 :
+            frequency;
             
             double new_frequency = frequency * factorialx;
             
@@ -162,7 +164,7 @@ static ToneGenerator *sharedGenerator = NULL;
         RandomDurationInterval = ^double()
         {
             double random = drand48();
-//            double curved = pow(random, 3.0);
+            //            double curved = pow(random, 3.0);
             double r = Scale(random, 0.0, 1.0, duration_minimum, duration_maximum);
             
             return (double)r;
@@ -183,97 +185,169 @@ static ToneGenerator *sharedGenerator = NULL;
             return pow(2.0 * pow(sinf(M_PI * time * trill), 2.0) * 0.5, 4.0);
         };
         
-        renderDataForToneBarrierScoreA = ^void(NSNumber *frequency_weight, DataRenderedCompletionBlock dataRenderedCompletionBlock)
+        createBufferForToneBarrierScoreA = ^AVAudioPCMBuffer * (double frequency, double harmonic_frequency, AVAudioFormat * audioFormat)
         {
-            double frequency = Frequency(frequency_weight.doubleValue);
-            double harmonic_frequency = Frequency(frequency_weight.doubleValue);
             double duration_weight = RandomDurationInterval();
             frequency = frequency * duration_weight;
-            AVAudioPCMBuffer * (^createBuffer)(AVAudioFormat *);
-            createBuffer = ^AVAudioPCMBuffer * (AVAudioFormat * audioFormat)
+            double sampleRate = [audioFormat sampleRate];
+            AVAudioFrameCount frameCount = (sampleRate * duration_interval) * duration_weight;
+            AVAudioPCMBuffer *pcmBuffer  = [[AVAudioPCMBuffer alloc] initWithPCMFormat:audioFormat frameCapacity:frameCount];
+            pcmBuffer.frameLength        = pcmBuffer.frameCapacity; //(sampleRate * duration_interval)(duration_weight < 1.0) ? frameCount : sampleRate;
+            float *l_channel             = pcmBuffer.floatChannelData[0];
+            float *r_channel             = ([audioFormat channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil;
+            
+            //                double harmonized_frequency = Tonality(frequency, TonalIntervalRandom, TonalHarmonyRandom);
+//            double trill_interval        = TrillInterval(frequency);
+            double trill_increment       = (max_trill_interval - min_trill_interval) / frameCount;
+            double frequency_increment   = fabs(frequency - harmonic_frequency) / frameCount;
+            for (int index = 0; index < frameCount; index++)
             {
-                double sampleRate = [audioFormat sampleRate];
-                AVAudioFrameCount frameCount = (sampleRate * duration_interval) * duration_weight;
-                AVAudioPCMBuffer *pcmBuffer  = [[AVAudioPCMBuffer alloc] initWithPCMFormat:audioFormat frameCapacity:frameCount];
-                pcmBuffer.frameLength        = pcmBuffer.frameCapacity; //(sampleRate * duration_interval)(duration_weight < 1.0) ? frameCount : sampleRate;
-                float *l_channel             = pcmBuffer.floatChannelData[0];
-                float *r_channel             = ([audioFormat channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil;
+                double normalized_index = Normalize(index, frameCount);
+                double trill            = Trill(normalized_index, trill_increment * index);
+                double trill_inverse    = TrillInverse(normalized_index, trill_increment * index);
+                double amplitude        = Amplitude(normalized_index);
                 
-//                double harmonized_frequency = Tonality(frequency, TonalIntervalRandom, TonalHarmonyRandom);
-                double trill_interval        = TrillInterval(frequency);
-                double trill_increment       = (max_trill_interval - min_trill_interval) / frameCount;
-                double frequency_increment   = (frequency - harmonic_frequency) / frameCount;
-                for (int index = 0; index < frameCount; index++)
-                {
-                    double normalized_index = Normalize(index, frameCount);
-                    double trill            = Trill(normalized_index, trill_increment * index);
-                    double trill_inverse    = TrillInverse(normalized_index, trill_increment * index);
-                    double amplitude        = Amplitude(normalized_index);
-                    
-                    double f = BufferData(normalized_index, frequency + (frequency_increment * index)) * amplitude * trill;
-                    double h = BufferData(normalized_index, frequency + (frequency_increment * index)) * amplitude * trill_inverse;
-                    
-                    if (l_channel) l_channel[index] = f;
-                    if (r_channel) r_channel[index] = h;
-                }
+                double f = BufferData(normalized_index, MIN(frequency, harmonic_frequency) + (fabs(frequency - harmonic_frequency) * normalized_index)) * amplitude * trill;
+                double h = BufferData(normalized_index, MIN(frequency, harmonic_frequency) + (fabs(frequency - harmonic_frequency) * normalized_index)) * amplitude * trill_inverse;
                 
-                return pcmBuffer;
-            };
+                if (l_channel) l_channel[index] = f;
+                if (r_channel) r_channel[index] = h;
+            }
+            
+            return pcmBuffer;
+        };
+        
+        renderDataForToneBarrierScoreA = ^void(NSNumber *frequency_weight, DataRenderedCompletionBlock dataRenderedCompletionBlock)
+        {
+            //            double frequency = Frequency(frequency_weight.doubleValue);
+            //            double harmonic_frequency = Frequency(frequency_weight.doubleValue);
+            //            double duration_weight = RandomDurationInterval();
+            //            frequency = frequency * duration_weight;
+            //            AVAudioPCMBuffer * (^createBuffer)(AVAudioFormat *);
+            //            createBuffer = ^AVAudioPCMBuffer * (AVAudioFormat * audioFormat)
+            //            {
+            //                double sampleRate = [audioFormat sampleRate];
+            //                AVAudioFrameCount frameCount = (sampleRate * duration_interval) * duration_weight;
+            //                AVAudioPCMBuffer *pcmBuffer  = [[AVAudioPCMBuffer alloc] initWithPCMFormat:audioFormat frameCapacity:frameCount];
+            //                pcmBuffer.frameLength        = pcmBuffer.frameCapacity; //(sampleRate * duration_interval)(duration_weight < 1.0) ? frameCount : sampleRate;
+            //                float *l_channel             = pcmBuffer.floatChannelData[0];
+            //                float *r_channel             = ([audioFormat channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil;
+            //
+            //                //                double harmonized_frequency = Tonality(frequency, TonalIntervalRandom, TonalHarmonyRandom);
+            //                double trill_interval        = TrillInterval(frequency);
+            //                double trill_increment       = (max_trill_interval - min_trill_interval) / frameCount;
+            //                double frequency_increment   = (frequency - harmonic_frequency) / frameCount;
+            //                for (int index = 0; index < frameCount; index++)
+            //                {
+            //                    double normalized_index = Normalize(index, frameCount);
+            //                    double trill            = Trill(normalized_index, trill_increment * index);
+            //                    double trill_inverse    = TrillInverse(normalized_index, trill_increment * index);
+            //                    double amplitude        = Amplitude(normalized_index);
+            //
+            //                    double f = BufferData(normalized_index, frequency + (frequency_increment * index)) * amplitude * trill;
+            //                    double h = BufferData(normalized_index, frequency + (frequency_increment * index)) * amplitude * trill_inverse;
+            //
+            //                    if (l_channel) l_channel[index] = f;
+            //                    if (r_channel) r_channel[index] = h;
+            //                }
+            //
+            //                return pcmBuffer;
+            //            };
             
             // Returns audio buffers via DataRenderedCompletionBlock (recursive until STOP)
-            dataRenderedCompletionBlock(createBuffer(_audioFormat), ^(NSString *playerNodeID)
-            {
+            double frequency          = Frequency(1.0);
+            double harmonic_frequency = Frequency(1.0);
+            dataRenderedCompletionBlock(createBufferForToneBarrierScoreA(frequency, harmonic_frequency, _audioFormat), ^(NSString *playerNodeID) {
+                NSLog(playerNodeID);
+            });
+            
+            dataRenderedCompletionBlock(createBufferForToneBarrierScoreB(MAX(frequency, harmonic_frequency), _audioFormat), ^(NSString *playerNodeID) {
                 NSLog(playerNodeID);
                 renderDataForToneBarrierScoreA(frequency_weight, dataRenderedCompletionBlock);
             });
         };
         
+        
+        createBufferForToneBarrierScoreB = ^AVAudioPCMBuffer * (double frequency, AVAudioFormat * audioFormat)
+        {
+            double harmonic_frequency = Frequency(1.0);
+            double duration_weight = RandomDurationInterval();
+            frequency = frequency * duration_weight;
+            AVAudioPCMBuffer * (^createBuffer)(AVAudioFormat *);
+            double sampleRate = [audioFormat sampleRate];
+            AVAudioFrameCount frameCount = (sampleRate * duration_interval) * duration_weight;
+            AVAudioPCMBuffer *pcmBuffer  = [[AVAudioPCMBuffer alloc] initWithPCMFormat:audioFormat frameCapacity:frameCount];
+            pcmBuffer.frameLength        = pcmBuffer.frameCapacity; //(sampleRate * duration_interval)(duration_weight < 1.0) ? frameCount : sampleRate;
+            float *l_channel             = pcmBuffer.floatChannelData[0];
+            float *r_channel             = ([audioFormat channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil;
+            
+            //                double harmonized_frequency = Tonality(frequency, TonalIntervalRandom, TonalHarmonyRandom);
+            double trill_interval        = TrillInterval(frequency);
+            double trill_increment       = (max_trill_interval - min_trill_interval) / frameCount;
+            for (int index = 0; index < frameCount; index++)
+            {
+                double normalized_index = Normalize(index, frameCount);
+                double trill            = Trill(normalized_index, trill_increment * index);
+                double trill_inverse    = TrillInverse(normalized_index, trill_increment * index);
+                double amplitude        = Amplitude(normalized_index);
+                
+                double f = BufferData(normalized_index, frequency) * amplitude * trill;
+                double h = BufferData(normalized_index, frequency) * amplitude * trill_inverse;
+                
+                if (l_channel) l_channel[index] = f;
+                if (r_channel) r_channel[index] = h;
+            }
+            
+            return pcmBuffer;
+        };
+        
+        
         renderDataForToneBarrierScoreB = ^void(NSNumber *frequency_weight, DataRenderedCompletionBlock dataRenderedCompletionBlock)
-                {
-                    double frequency = Frequency(frequency_weight.doubleValue);
-                    double harmonic_frequency = Frequency(frequency_weight.doubleValue);
-                    double duration_weight = RandomDurationInterval();
-                    frequency = frequency * duration_weight;
-                    AVAudioPCMBuffer * (^createBuffer)(AVAudioFormat *);
-                    createBuffer = ^AVAudioPCMBuffer * (AVAudioFormat * audioFormat)
-                    {
-                        double sampleRate = [audioFormat sampleRate];
-                        AVAudioFrameCount frameCount = (sampleRate * duration_interval) * duration_weight;
-                        AVAudioPCMBuffer *pcmBuffer  = [[AVAudioPCMBuffer alloc] initWithPCMFormat:audioFormat frameCapacity:frameCount];
-                        pcmBuffer.frameLength        = pcmBuffer.frameCapacity; //(sampleRate * duration_interval)(duration_weight < 1.0) ? frameCount : sampleRate;
-                        float *l_channel             = pcmBuffer.floatChannelData[0];
-                        float *r_channel             = ([audioFormat channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil;
-                        
-        //                double harmonized_frequency = Tonality(frequency, TonalIntervalRandom, TonalHarmonyRandom);
-                        double trill_interval        = TrillInterval(frequency);
-                        double trill_increment       = (max_trill_interval - min_trill_interval) / frameCount;
-                        for (int index = 0; index < frameCount; index++)
-                        {
-                            double normalized_index = Normalize(index, frameCount);
-                            double trill            = Trill(normalized_index, trill_increment * index);
-                            double trill_inverse    = TrillInverse(normalized_index, trill_increment * index);
-                            double amplitude        = Amplitude(normalized_index);
-                            
-                            double f = BufferData(normalized_index, frequency) * amplitude * trill;
-                            double h = BufferData(normalized_index, harmonic_frequency) * amplitude * trill_inverse;
-                            
-                            if (l_channel) l_channel[index] = f;
-                            if (r_channel) r_channel[index] = h;
-                        }
-                        
-                        return pcmBuffer;
-                    };
-                    
-                    // Returns audio buffers via DataRenderedCompletionBlock (recursive until STOP)
-                    dataRenderedCompletionBlock(createBuffer(_audioFormat), ^(NSString *playerNodeID)
-                    {
-                        NSLog(playerNodeID);
-                        renderDataForToneBarrierScoreB(frequency_weight, dataRenderedCompletionBlock);
-                    });
-                };
+        {
+//            double frequency = Frequency(frequency_weight.doubleValue);
+//            double harmonic_frequency = Frequency(frequency_weight.doubleValue);
+//            double duration_weight = RandomDurationInterval();
+//            frequency = frequency * duration_weight;
+//            AVAudioPCMBuffer * (^createBuffer)(AVAudioFormat *);
+//            createBuffer = ^AVAudioPCMBuffer * (AVAudioFormat * audioFormat)
+//            {
+//                double sampleRate = [audioFormat sampleRate];
+//                AVAudioFrameCount frameCount = (sampleRate * duration_interval) * duration_weight;
+//                AVAudioPCMBuffer *pcmBuffer  = [[AVAudioPCMBuffer alloc] initWithPCMFormat:audioFormat frameCapacity:frameCount];
+//                pcmBuffer.frameLength        = pcmBuffer.frameCapacity; //(sampleRate * duration_interval)(duration_weight < 1.0) ? frameCount : sampleRate;
+//                float *l_channel             = pcmBuffer.floatChannelData[0];
+//                float *r_channel             = ([audioFormat channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil;
+//
+//                //                double harmonized_frequency = Tonality(frequency, TonalIntervalRandom, TonalHarmonyRandom);
+//                double trill_interval        = TrillInterval(frequency);
+//                double trill_increment       = (max_trill_interval - min_trill_interval) / frameCount;
+//                for (int index = 0; index < frameCount; index++)
+//                {
+//                    double normalized_index = Normalize(index, frameCount);
+//                    double trill            = Trill(normalized_index, trill_increment * index);
+//                    double trill_inverse    = TrillInverse(normalized_index, trill_increment * index);
+//                    double amplitude        = Amplitude(normalized_index);
+//
+//                    double f = BufferData(normalized_index, frequency) * amplitude * trill;
+//                    double h = BufferData(normalized_index, harmonic_frequency) * amplitude * trill_inverse;
+//
+//                    if (l_channel) l_channel[index] = f;
+//                    if (r_channel) r_channel[index] = h;
+//                }
+//
+//                return pcmBuffer;
+//            };
+//
+            // Returns audio buffers via DataRenderedCompletionBlock (recursive until STOP)
+            dataRenderedCompletionBlock(createBufferForToneBarrierScoreB(Frequency(1.0), _audioFormat), ^(NSString *playerNodeID)
+                                        {
+                NSLog(playerNodeID);
+                renderDataForToneBarrierScoreB(frequency_weight, dataRenderedCompletionBlock);
+            });
+        };
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterruption:) name:AVAudioEngineConfigurationChangeNotification object:_audioEngine];
-
+        
     }
     
     [self setupEngine];
@@ -430,32 +504,33 @@ AVAudio3DPoint GenerateRandomXPosition()
     } else {
         if ([self startEngine])
         {
-//            dispatch_queue_t buffer_serial_queue = dispatch_queue_create("com.blogspot.demonicactivity.serialqueue", DISPATCH_QUEUE_SERIAL);
-//            dispatch_block_t render_buffer_block = dispatch_block_create(0, ^{
-//                if (![_playerNode isPlaying]) [_playerNode play];
-//                AVAudioTime *time = [[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(CMClockGetTime(CMClockGetHostTimeClock()))];
-//                renderData(Tone(min_frequency, max_frequency, 10.0), time, ^(TonePlayerNodeData *tonePlayerNodeData, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
-//                    [self->_playerNode scheduleBuffer:tonePlayerNodeData->buffer atTime:tonePlayerNodeData->time options:AVAudioPlayerNodeBufferInterruptsAtLoop completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
-//                        if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
-//                        {
-//                            [self->_playerNode setPosition:GenerateRandomXPosition()];
-//                            double bufferDuration = tonePlayerNodeData->buffer.frameLength / _audioFormat.sampleRate;
-//                            CMTime cmtime  = CMTimeAdd(CMTimeMakeWithSeconds([AVAudioTime secondsForHostTime:[tonePlayerNodeData->time hostTime]], NSEC_PER_SEC), CMTimeMakeWithSeconds(bufferDuration, NSEC_PER_SEC));
-//                            AVAudioTime *endTime = [[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(cmtime)];
-//
-//                            dataPlayedBackCompletionBlock((!tonePlayerNodeData->time) ? time : endTime, [NSString stringWithFormat:@"playerNode %llu - %llu", time.hostTime, endTime.hostTime]);
-//                            tonePlayerNodeData->buffer = nil;
-//                            free(tonePlayerNodeData);
-//                        }
-//                    }];
-//
-//
-//                });
-//            });
-//            dispatch_async(buffer_serial_queue, render_buffer_block);
+            //            dispatch_queue_t buffer_serial_queue = dispatch_queue_create("com.blogspot.demonicactivity.serialqueue", DISPATCH_QUEUE_SERIAL);
+            //            dispatch_block_t render_buffer_block = dispatch_block_create(0, ^{
+            //                if (![_playerNode isPlaying]) [_playerNode play];
+            //                AVAudioTime *time = [[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(CMClockGetTime(CMClockGetHostTimeClock()))];
+            //                renderData(Tone(min_frequency, max_frequency, 10.0), time, ^(TonePlayerNodeData *tonePlayerNodeData, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
+            //                    [self->_playerNode scheduleBuffer:tonePlayerNodeData->buffer atTime:tonePlayerNodeData->time options:AVAudioPlayerNodeBufferInterruptsAtLoop completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
+            //                        if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
+            //                        {
+            //                            [self->_playerNode setPosition:GenerateRandomXPosition()];
+            //                            double bufferDuration = tonePlayerNodeData->buffer.frameLength / _audioFormat.sampleRate;
+            //                            CMTime cmtime  = CMTimeAdd(CMTimeMakeWithSeconds([AVAudioTime secondsForHostTime:[tonePlayerNodeData->time hostTime]], NSEC_PER_SEC), CMTimeMakeWithSeconds(bufferDuration, NSEC_PER_SEC));
+            //                            AVAudioTime *endTime = [[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(cmtime)];
+            //
+            //                            dataPlayedBackCompletionBlock((!tonePlayerNodeData->time) ? time : endTime, [NSString stringWithFormat:@"playerNode %llu - %llu", time.hostTime, endTime.hostTime]);
+            //                            tonePlayerNodeData->buffer = nil;
+            //                            free(tonePlayerNodeData);
+            //                        }
+            //                    }];
+            //
+            //
+            //                });
+            //            });
+            //            dispatch_async(buffer_serial_queue, render_buffer_block);
             
+            // TO-DO: sustain the last frequency of the glissandro for the same duration as the glissandro
             if (![_playerNode isPlaying]) [_playerNode play];
-            renderDataForToneBarrierScoreA([NSNumber numberWithDouble:(double)(1.0/3.0)], ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
+            renderDataForToneBarrierScoreA([NSNumber numberWithDouble:1.0], ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
                 [self->_playerNode scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
                     if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
                     {
@@ -466,7 +541,7 @@ AVAudio3DPoint GenerateRandomXPosition()
             });
             
             if (![_playerNodeAux isPlaying]) [_playerNodeAux play];
-            renderDataForToneBarrierScoreB([NSNumber numberWithDouble:(double)3.0], ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
+            renderDataForToneBarrierScoreB([NSNumber numberWithDouble:1.0], ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
                 [self->_playerNodeAux scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
                     if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
                     {
@@ -476,24 +551,24 @@ AVAudio3DPoint GenerateRandomXPosition()
                 }];
             });
             
-//            if (![_playerNodeAux isPlaying]) [_playerNodeAux play];
-//            AVAudioTime *timeAux = [[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(CMClockGetTime(CMClockGetHostTimeClock()))];
-//            renderData(Tone(min_frequency, max_frequency, 1.0/5.5), timeAux, ^(TonePlayerNodeData *tonePlayerNodeData, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
-//                [self->_playerNodeAux scheduleBuffer:tonePlayerNodeData->buffer atTime:tonePlayerNodeData->time options:AVAudioPlayerNodeBufferInterruptsAtLoop completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
-//                    if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
-//                    {
-//                        [self->_playerNodeAux setPosition:GenerateRandomXPosition()];
-//                        double bufferDuration = tonePlayerNodeData->buffer.frameLength / _audioFormat.sampleRate;
-//                        CMTime cmtime  = CMTimeAdd(CMTimeMakeWithSeconds([AVAudioTime secondsForHostTime:[tonePlayerNodeData->time hostTime]], NSEC_PER_SEC), CMTimeMakeWithSeconds(bufferDuration, NSEC_PER_SEC));
-//                        AVAudioTime *endTime = [[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(cmtime)];
-//
-//                        dataPlayedBackCompletionBlock((!tonePlayerNodeData->time) ? timeAux : endTime, [NSString stringWithFormat:@"playerNodeAux %llu - %llu", timeAux.hostTime, endTime.hostTime]);
-//                        tonePlayerNodeData->buffer = nil;
-//                        tonePlayerNodeData->time = nil;
-//                        free(tonePlayerNodeData);
-//                    }
-//                }];
-//            });
+            //            if (![_playerNodeAux isPlaying]) [_playerNodeAux play];
+            //            AVAudioTime *timeAux = [[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(CMClockGetTime(CMClockGetHostTimeClock()))];
+            //            renderData(Tone(min_frequency, max_frequency, 1.0/5.5), timeAux, ^(TonePlayerNodeData *tonePlayerNodeData, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
+            //                [self->_playerNodeAux scheduleBuffer:tonePlayerNodeData->buffer atTime:tonePlayerNodeData->time options:AVAudioPlayerNodeBufferInterruptsAtLoop completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
+            //                    if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
+            //                    {
+            //                        [self->_playerNodeAux setPosition:GenerateRandomXPosition()];
+            //                        double bufferDuration = tonePlayerNodeData->buffer.frameLength / _audioFormat.sampleRate;
+            //                        CMTime cmtime  = CMTimeAdd(CMTimeMakeWithSeconds([AVAudioTime secondsForHostTime:[tonePlayerNodeData->time hostTime]], NSEC_PER_SEC), CMTimeMakeWithSeconds(bufferDuration, NSEC_PER_SEC));
+            //                        AVAudioTime *endTime = [[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(cmtime)];
+            //
+            //                        dataPlayedBackCompletionBlock((!tonePlayerNodeData->time) ? timeAux : endTime, [NSString stringWithFormat:@"playerNodeAux %llu - %llu", timeAux.hostTime, endTime.hostTime]);
+            //                        tonePlayerNodeData->buffer = nil;
+            //                        tonePlayerNodeData->time = nil;
+            //                        free(tonePlayerNodeData);
+            //                    }
+            //                }];
+            //            });
         }
     }
 }
