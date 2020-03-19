@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder.WatchKit.Storyboard" version="3.0" toolsVersion="15705" targetRuntime="watchKit" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="AgC-eL-Hgc">
+<document type="com.apple.InterfaceBuilder.WatchKit.Storyboard" version="3.0" toolsVersion="16095" targetRuntime="watchKit" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="AgC-eL-Hgc">
     <device id="watch44"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15706"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBWatchKitPlugin" version="15501"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16084.1"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBWatchKitPlugin" version="16012"/>
     </dependencies>
     <scenes>
         <!--Interface Controller-->
@@ -40,6 +40,9 @@
                                         <imageView alignment="center" verticalAlignment="center" image="battery.0" catalog="system" id="a6Z-XZ-3q8">
                                             <color key="tintColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         </imageView>
+                                        <imageView alignment="center" verticalAlignment="center" image="shield" catalog="system" id="iLm-tG-Bi8">
+                                            <color key="tintColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        </imageView>
                                         <volumeControlView alignment="center" verticalAlignment="center" hidden="YES" controlsLocalVolume="NO" id="Ejh-cN-xXT">
                                             <color key="tintColor" red="0.016804177310000001" green="0.19835099580000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                         </volumeControlView>
@@ -49,6 +52,7 @@
                         </group>
                     </items>
                     <connections>
+                        <outlet property="proximitySensorStateImageView" destination="iLm-tG-Bi8" id="zWC-dW-nci"/>
                         <outlet property="sessionWatchStateImageView" destination="mj2-L9-2wp" id="Xny-0v-kBQ"/>
                         <outlet property="watchConnectivitySessionImageView" destination="cm8-sR-eYz" id="Uds-pe-hXD"/>
                     </connections>
@@ -89,12 +93,13 @@
         </scene>
     </scenes>
     <resources>
-        <image name="battery.0" catalog="system" width="64" height="32"/>
-        <image name="bolt.slash" catalog="system" width="50" height="64"/>
-        <image name="play" catalog="system" width="58" height="64"/>
-        <image name="radiowaves.left" catalog="system" width="46" height="64"/>
-        <image name="radiowaves.right" catalog="system" width="46" height="64"/>
-        <image name="thermometer" catalog="system" width="44" height="64"/>
-        <image name="waveform.path" catalog="system" width="64" height="58"/>
+        <image name="battery.0" catalog="system" width="128" height="64"/>
+        <image name="bolt.slash" catalog="system" width="103" height="128"/>
+        <image name="play" catalog="system" width="119" height="128"/>
+        <image name="radiowaves.left" catalog="system" width="92" height="128"/>
+        <image name="radiowaves.right" catalog="system" width="92" height="128"/>
+        <image name="shield" catalog="system" width="128" height="118"/>
+        <image name="thermometer" catalog="system" width="88" height="128"/>
+        <image name="waveform.path" catalog="system" width="128" height="116"/>
     </resources>
 </document>

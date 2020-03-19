@@ -18,5 +18,6 @@
 
 @property (weak, nonatomic) IBOutlet WKInterfaceImage *watchConnectivitySessionImageView;
 @property (weak, nonatomic) IBOutlet WKInterfaceImage *sessionWatchStateImageView;
+@property (weak, nonatomic) IBOutlet WKInterfaceImage *proximitySensorStateImageView;
 
 @end

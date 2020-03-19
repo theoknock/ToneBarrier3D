@@ -26,6 +26,7 @@
     [self batteryLevelStatus];
     [self batteryStateStatus];
     [self thermalStateStatus];
+    [self proximitySensorStateStatus];
     
     [[NSNotificationCenter defaultCenter] addObserverForName:AVAudioSessionRouteChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull note) {
         [self audioRouteStatus];
@@ -43,12 +44,13 @@
         [self batteryStateStatus];
     }];
     
+    [[NSNotificationCenter defaultCenter] addObserverForName:UIDeviceProximityStateDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull note) {
+        [self proximitySensorStateStatus];
+    }];
+    
     self->_device = [UIDevice currentDevice];
     [self->_device setBatteryMonitoringEnabled:TRUE];
-    
-    // TO-DO: Request permission for access to app controls on Watch when touch is attempted;
-    //        Sound an alarm on Watch when activated
-    //    [self->_device setProximityMonitoringEnabled:TRUE];
+    [self->_device setProximityMonitoringEnabled:TRUE];
     
     [self activateWatchConnectivitySession];
 }
@@ -178,6 +180,43 @@
         }
             break;
     }
+}
+
+// TO-DO: Read user info dictionary from NSNotification to detect changes to the proximity sensor
+- (void)proximitySensorStateStatus
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if ([[UIDevice currentDevice] proximityState])
+        {
+            // sound alarm
+            NSLog(@"proximityState == %@", ([[UIDevice currentDevice] proximityState]) ? @"TRUE" : @"FALSE");
+            [self.proximityMonitorImageView setImage:[UIImage systemImageNamed:@"xmark.shield.fill"]];
+            [self.proximityMonitorImageView setTintColor:[UIColor systemRedColor]];
+        } else {
+            if ([[UIDevice currentDevice] isProximityMonitoringEnabled]) {
+                [self.proximityMonitorImageView setImage:[UIImage systemImageNamed:@"checkmark.shield.fill"]];
+                [self.proximityMonitorImageView setTintColor:[UIColor systemGreenColor]];
+            } else {
+                [self.proximityMonitorImageView setImage:[UIImage systemImageNamed:@"exclamationmark.shield"]];
+                [self.proximityMonitorImageView setTintColor:[UIColor systemBlueColor]];
+            }
+        }
+        
+        WCSession *wcs = self->_watchConnectivitySession;
+        if (wcs.isReachable)
+        {
+            [wcs sendMessage:@{@"ProximitySensorState" : @{@"proximityState" : @([[UIDevice currentDevice] proximityState]),
+                                                           @"isProximityMonitoringEnabled" : @([[UIDevice currentDevice] isProximityMonitoringEnabled])}}
+                replyHandler:^(NSDictionary<NSString *,id> * _Nonnull replyMessage) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    // Handle reply
+                });
+            } errorHandler:^(NSError * _Nonnull error) {
+                
+            }];
+        }
+        
+    });
 }
 
 - (void)activateWatchConnectivitySession

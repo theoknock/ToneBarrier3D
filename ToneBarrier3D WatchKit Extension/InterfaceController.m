@@ -33,7 +33,6 @@
     [super didDeactivate];
 }
 
-
 - (void)activateWatchConnectivitySession
 {
     dispatch_queue_t watchConnectivitySessionSerialQueue = dispatch_queue_create("com.blogspot.demonicactivity.serialqueue", DISPATCH_QUEUE_SERIAL);
@@ -90,14 +89,46 @@
     });
 }
 
+- (void)proximityStatus:(NSDictionary *)proximitySensorState
+{
+    BOOL proximityState               = [(NSNumber *)[proximitySensorState objectForKey:@"proximityState"] boolValue];
+    BOOL isProximityMonitoringEnabled = [(NSNumber *)[proximitySensorState objectForKey:@"isProximityMonitoringEnabled"] boolValue];
+    
+    if (proximityState)
+    {
+        [self.proximitySensorStateImageView setImage:[UIImage systemImageNamed:@"xmark.shield.fill"]];
+        [self.proximitySensorStateImageView setTintColor:[UIColor redColor]];
+    } else {
+        [self.proximitySensorStateImageView setImage:[UIImage systemImageNamed:@"checkmark.shield.fill"]];
+        [self.proximitySensorStateImageView setTintColor:[UIColor greenColor]];
+        if (isProximityMonitoringEnabled) {
+            [self.proximitySensorStateImageView setImage:[UIImage systemImageNamed:@"checkmark.shield.fill"]];
+            [self.proximitySensorStateImageView setTintColor:[UIColor greenColor]];
+        } else {
+            [self.proximitySensorStateImageView setImage:[UIImage systemImageNamed:@"exclamationmark.shield"]];
+            [self.proximitySensorStateImageView setTintColor:[UIColor blueColor]];
+        }
+    }
+}
+
 - (void)session:(WCSession *)session didReceiveMessage:(NSDictionary<NSString *,id> *)message replyHandler:(void (^)(NSDictionary<NSString *,id> * _Nonnull))replyHandler
 {
     NSLog(@"%s", __PRETTY_FUNCTION__);
+    // message NSDictionary structure
+    //
+    //      KEY: ProximitySensorState           OBJ: (NSDictionary *)
+    //                                          KEY: (NSString *)proximityState                     OBJ: (BOOL)
+    //                                          KEY: (NSString *)isProximityMonitoringEnabled       OBJ: (BOOL)
+    // Add more here...
+    NSLog(@"%@", [NSString stringWithFormat:@"proximityState == %@", ([(NSNumber *)[message objectForKey:@"UIDeviceProximityStateDidChangeNotification"] boolValue]) ? @"TRUE" : @"FALSE"]);
+    // TO-DO: Create a new dictionary from the ProximitySensorState dictionary and pass it to the proximityStatus method
+    NSDictionary *proximityStateDict = [[NSDictionary alloc] initWithDictionary:(NSDictionary *)[message objectForKey:@"ProximitySensorState"]];
+    if (proximityStateDict) [self proximityStatus:proximityStateDict];
 }
 
 - (void)session:(WCSession *)session didReceiveMessage:(NSDictionary<NSString *,id> *)message
 {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
+    
 }
 
 - (void)sessionReachabilityDidChange:(WCSession *)session
