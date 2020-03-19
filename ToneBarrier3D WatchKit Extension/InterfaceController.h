@@ -15,6 +15,7 @@
 @interface InterfaceController : WKInterfaceController <WCSessionDelegate>
 
 @property (strong, nonatomic) WCSession *watchConnectivitySession;
+@property (weak, nonatomic) IBOutlet WKInterfaceButton *playButton;
 
 @property (weak, nonatomic) IBOutlet WKInterfaceImage *watchConnectivitySessionImageView;
 @property (weak, nonatomic) IBOutlet WKInterfaceImage *sessionWatchStateImageView;

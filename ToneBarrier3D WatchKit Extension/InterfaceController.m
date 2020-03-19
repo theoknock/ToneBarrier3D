@@ -7,7 +7,7 @@
 //
 
 #import "InterfaceController.h"
-
+#import "ToneGenerator.h"
 
 @interface InterfaceController ()
 
@@ -18,7 +18,7 @@
 
 - (void)awakeWithContext:(id)context {
     [super awakeWithContext:context];
-
+    
     // Configure interface objects here.
     [self activateWatchConnectivitySession];
 }
@@ -89,7 +89,7 @@
     });
 }
 
-- (void)proximityStatus:(NSDictionary *)proximitySensorState
+- (void)proximityStatus:(NSDictionary<NSString *, NSNumber *> *)proximitySensorState
 {
     BOOL proximityState               = [(NSNumber *)[proximitySensorState objectForKey:@"proximityState"] boolValue];
     BOOL isProximityMonitoringEnabled = [(NSNumber *)[proximitySensorState objectForKey:@"isProximityMonitoringEnabled"] boolValue];
@@ -101,7 +101,8 @@
     } else {
         [self.proximitySensorStateImageView setImage:[UIImage systemImageNamed:@"checkmark.shield.fill"]];
         [self.proximitySensorStateImageView setTintColor:[UIColor greenColor]];
-        if (isProximityMonitoringEnabled) {
+        if (isProximityMonitoringEnabled)
+        {
             [self.proximitySensorStateImageView setImage:[UIImage systemImageNamed:@"checkmark.shield.fill"]];
             [self.proximitySensorStateImageView setTintColor:[UIColor greenColor]];
         } else {
@@ -119,10 +120,7 @@
     //      KEY: ProximitySensorState           OBJ: (NSDictionary *)
     //                                          KEY: (NSString *)proximityState                     OBJ: (BOOL)
     //                                          KEY: (NSString *)isProximityMonitoringEnabled       OBJ: (BOOL)
-    // Add more here...
-    NSLog(@"%@", [NSString stringWithFormat:@"proximityState == %@", ([(NSNumber *)[message objectForKey:@"UIDeviceProximityStateDidChangeNotification"] boolValue]) ? @"TRUE" : @"FALSE"]);
-    // TO-DO: Create a new dictionary from the ProximitySensorState dictionary and pass it to the proximityStatus method
-    NSDictionary *proximityStateDict = [[NSDictionary alloc] initWithDictionary:(NSDictionary *)[message objectForKey:@"ProximitySensorState"]];
+    NSDictionary<NSString *, NSNumber *> *proximityStateDict = (NSDictionary<NSString *, NSNumber *> *)[[NSDictionary alloc] initWithDictionary:(NSDictionary<NSString *, NSNumber *> *)[message objectForKey:@"ProximitySensorState"]];
     if (proximityStateDict) [self proximityStatus:proximityStateDict];
 }
 
@@ -136,6 +134,27 @@
     BOOL reachable = session.isReachable;
     [self.sessionWatchStateImageView setTintColor:(reachable) ? [UIColor grayColor] : [UIColor redColor]];
 }
+
+- (IBAction)play
+{
+    dispatch_queue_t playSerialQueue = dispatch_queue_create("com.blogspot.demonicactivity.serialqueue", DISPATCH_QUEUE_SERIAL);
+    dispatch_block_t playTonesBlock = dispatch_block_create(0, ^{
+        [[ToneGenerator sharedGenerator] play];
+    });
+    dispatch_async(playSerialQueue, playTonesBlock);
+    dispatch_block_t playButtonBlock = dispatch_block_create(0, ^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if ([[[ToneGenerator sharedGenerator] audioEngine] isRunning])
+            {
+                [self.playButton setBackgroundImageNamed:@"stop"];
+            } else {
+                [self.playButton setBackgroundImageNamed:@"play"];
+            }
+        });
+    });
+    dispatch_block_notify(playTonesBlock, dispatch_get_main_queue(), playButtonBlock);
+}
+
 
 @end
 

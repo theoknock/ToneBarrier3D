@@ -20,6 +20,9 @@
                                     <items>
                                         <button alignment="center" verticalAlignment="center" id="RCQ-Th-LTr">
                                             <group key="contentGroup" width="0.55000000000000004" height="0.55000000000000004" alignment="left" backgroundImage="play" catalog="system" contentMode="scaleAspectFit" id="FyD-rf-Fba"/>
+                                            <connections>
+                                                <action selector="play" destination="AgC-eL-Hgc" id="2wu-FD-cEo"/>
+                                            </connections>
                                         </button>
                                     </items>
                                 </group>
@@ -52,6 +55,7 @@
                         </group>
                     </items>
                     <connections>
+                        <outlet property="playButton" destination="RCQ-Th-LTr" id="5rs-aA-uXY"/>
                         <outlet property="proximitySensorStateImageView" destination="iLm-tG-Bi8" id="zWC-dW-nci"/>
                         <outlet property="sessionWatchStateImageView" destination="mj2-L9-2wp" id="Xny-0v-kBQ"/>
                         <outlet property="watchConnectivitySessionImageView" destination="cm8-sR-eYz" id="Uds-pe-hXD"/>
