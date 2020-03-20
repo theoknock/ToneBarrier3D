@@ -10,6 +10,9 @@
 #import "ToneGenerator.h"
 
 @interface InterfaceController ()
+{
+    dispatch_block_t playButtonBlock_;
+}
 
 @end
 
@@ -18,6 +21,21 @@
 
 - (void)awakeWithContext:(id)context {
     [super awakeWithContext:context];
+    
+    playButtonBlock_ = dispatch_block_create(0, ^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if ([[[ToneGenerator sharedGenerator] audioEngine] isRunning])
+            {
+                [self.playButton setBackgroundImageNamed:@"stop"];
+                // send message to play
+                
+                
+            } else {
+                [self.playButton setBackgroundImageNamed:@"play"];
+                // send a message to stop
+            }
+        });
+    });
     
     // Configure interface objects here.
     [self activateWatchConnectivitySession];
@@ -139,21 +157,59 @@
 {
     dispatch_queue_t playSerialQueue = dispatch_queue_create("com.blogspot.demonicactivity.serialqueue", DISPATCH_QUEUE_SERIAL);
     dispatch_block_t playTonesBlock = dispatch_block_create(0, ^{
-        [[ToneGenerator sharedGenerator] play];
+        WCSession *wcs = self->_watchConnectivitySession;
+        if (wcs.isReachable)
+        {
+            [wcs sendMessage:@{@"RemoteAction" : @{@"play" : @(TRUE)}}
+                replyHandler:^(NSDictionary<NSString *,id> * _Nonnull replyMessage) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    // Handle reply
+                    NSDictionary<NSString *, NSNumber *> *remoteActionDict = (NSDictionary<NSString *, NSNumber *> *)[[NSDictionary alloc] initWithDictionary:(NSDictionary<NSString *, NSDictionary *> *)[replyMessage objectForKey:@"RemoteAction"]];
+                    if (remoteActionDict)
+                    {
+                        BOOL isPlaying = [(NSNumber *)[remoteActionDict objectForKey:@"play"] boolValue];
+                    if (isPlaying)
+                    {
+                        [self.playButton setBackgroundImageNamed:@"stop"];
+                        // send message to play
+                        
+                        
+                    } else {
+                        [self.playButton setBackgroundImageNamed:@"play"];
+                        // send a message to stop
+                    }
+                }
+                               });
+            } errorHandler:^(NSError * _Nonnull error) {
+                
+            }];
+        }
     });
     dispatch_async(playSerialQueue, playTonesBlock);
-    dispatch_block_t playButtonBlock = dispatch_block_create(0, ^{
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if ([[[ToneGenerator sharedGenerator] audioEngine] isRunning])
-            {
-                [self.playButton setBackgroundImageNamed:@"stop"];
-            } else {
-                [self.playButton setBackgroundImageNamed:@"play"];
-            }
-        });
-    });
-    dispatch_block_notify(playTonesBlock, dispatch_get_main_queue(), playButtonBlock);
+    
+    dispatch_block_notify(playTonesBlock, dispatch_get_main_queue(), playButtonBlock_);
 }
+
+//- (IBAction)play
+//{
+//    dispatch_queue_t playSerialQueue = dispatch_queue_create("com.blogspot.demonicactivity.serialqueue", DISPATCH_QUEUE_SERIAL);
+//    dispatch_block_t playTonesBlock = dispatch_block_create(0, ^{
+//        [[ToneGenerator sharedGenerator] play];
+//    });
+//    dispatch_async(playSerialQueue, playTonesBlock);
+//    dispatch_block_t playButtonBlock = dispatch_block_create(0, ^{
+//        dispatch_async(dispatch_get_main_queue(), ^{
+//            if ([[[ToneGenerator sharedGenerator] audioEngine] isRunning])
+//            {
+//                [self.playButton setBackgroundImageNamed:@"stop"];
+//            } else {
+//                [self.playButton setBackgroundImageNamed:@"play"];
+//            }
+//        });
+//    });
+//    dispatch_block_notify(playTonesBlock, dispatch_get_main_queue(), playButtonBlock);
+//}
+
 
 
 @end

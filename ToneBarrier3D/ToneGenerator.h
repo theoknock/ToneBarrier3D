@@ -25,6 +25,9 @@ NS_ASSUME_NONNULL_BEGIN
 + (nonnull ToneGenerator *)sharedGenerator;
 
 @property (nonatomic, readonly) AVAudioEngine * _Nonnull audioEngine;
+@property (nonatomic, readonly) AVAudioPlayerNode * _Nullable playerNode;
+@property (nonatomic, readonly) AVAudioPlayerNode * _Nullable playerNodeAux;
+
 @property (weak) id<ToneGeneratorDelegate> delegate;
 
 - (void)play;

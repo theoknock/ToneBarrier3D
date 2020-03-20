@@ -17,7 +17,7 @@
 
 @property (weak, nonatomic) IBOutlet UIImageView *watchConnectivitySessionImageView;
 @property (weak, nonatomic) IBOutlet UIImageView *sessionWatchStateImageView;  
-@property (weak, nonatomic) IBOutlet UIImageView *headphonesImageView;
+@property (weak, nonatomic) IBOutlet UIImageView *audioRouteImageView;
 @property (weak, nonatomic) IBOutlet UIImageView *thermalStateImageView;
 @property (weak, nonatomic) IBOutlet UIImageView *batteryStateImageView;
 @property (weak, nonatomic) IBOutlet UIImageView *batteryLevelImageView;

@@ -67,8 +67,12 @@
         if ([[[ToneGenerator sharedGenerator] audioEngine] isRunning])
         {
             [self->_playButton setImage:[UIImage systemImageNamed:@"stop"] forState:UIControlStateNormal];
+             [self.audioRouteImageView setTintColor:[UIColor systemGreenColor]];
+            
         } else {
             [self->_playButton setImage:[UIImage systemImageNamed:@"play"] forState:UIControlStateNormal];
+            [self.audioRouteImageView setTintColor:[UIColor systemBlueColor]];
+                       
         }
     });
     dispatch_block_notify(playTonesBlock, dispatch_get_main_queue(), playButtonBlock);
@@ -79,12 +83,23 @@
     AVAudioSession *session = [AVAudioSession sharedInstance];
     for (AVAudioSessionPortDescription *output in [session currentRoute].outputs)
     {
+        NSLog(@"portType %@", [output portType]);
         if ([[output portName] isEqualToString:@"Headphones"])
         {
-            [self.headphonesImageView setTintColor:[UIColor systemGreenColor]];
-        } else {
-            [self.headphonesImageView setTintColor:[UIColor systemRedColor]];
+            [self.audioRouteImageView setImage:[UIImage systemImageNamed:@"headphones"]];
         }
+        else if ([[output portType] containsString:@"Speaker"])
+        {
+            [self.audioRouteImageView setImage:[UIImage systemImageNamed:@"speaker"]];
+        } else if ([[output portType] containsString:@"Bluetooth"])
+        {
+            [self.audioRouteImageView setImage:[UIImage systemImageNamed:@"hifispeaker"]];
+        }
+        
+        //        BluetoothHFP;
+        //        kAudioSessionOutputRoute_BluetoothA2DP;
+        //        kAudioSessionOutputRoute_BuiltInReceiver;
+        //        kAudioSessionOutputRoute_BuiltInSpeaker;
     }
 }
 
@@ -119,7 +134,7 @@
             
         case UIDeviceBatteryStateUnplugged:
         {
-            [self.batteryStateImageView setImage:[UIImage systemImageNamed:@"bolt.slash.fill"]];
+            [self.batteryStateImageView setImage:[UIImage systemImageNamed:@"bolt.slash"]];
             [self.batteryStateImageView setTintColor:[UIColor systemRedColor]];
             break;
         }
@@ -133,7 +148,7 @@
             
         case UIDeviceBatteryStateFull:
         {
-            [self.batteryStateImageView setImage:[UIImage systemImageNamed:@"bolt.fill"]];
+            [self.batteryStateImageView setImage:[UIImage systemImageNamed:@"bolt"]];
             [self.batteryStateImageView setTintColor:[UIColor systemGreenColor]];
             break;
         }
@@ -190,11 +205,11 @@
         {
             // sound alarm
             NSLog(@"proximityState == %@", ([[UIDevice currentDevice] proximityState]) ? @"TRUE" : @"FALSE");
-            [self.proximityMonitorImageView setImage:[UIImage systemImageNamed:@"xmark.shield.fill"]];
+            [self.proximityMonitorImageView setImage:[UIImage systemImageNamed:@"xmark.shield"]];
             [self.proximityMonitorImageView setTintColor:[UIColor systemRedColor]];
         } else {
             if ([[UIDevice currentDevice] isProximityMonitoringEnabled]) {
-                [self.proximityMonitorImageView setImage:[UIImage systemImageNamed:@"checkmark.shield.fill"]];
+                [self.proximityMonitorImageView setImage:[UIImage systemImageNamed:@"checkmark.shield"]];
                 [self.proximityMonitorImageView setTintColor:[UIColor systemGreenColor]];
             } else {
                 [self.proximityMonitorImageView setImage:[UIImage systemImageNamed:@"exclamationmark.shield"]];

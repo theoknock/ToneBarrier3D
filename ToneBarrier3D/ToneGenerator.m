@@ -70,8 +70,6 @@ static void (^renderDataForToneBarrierScoreWithHarmony)(DataRenderedCompletionBl
 @property (nonatomic, readonly) AVAudioMixerNode * _Nullable mainNode;
 @property (nonatomic, readonly) AVAudioMixerNode * _Nullable mixerNode;
 @property (nonatomic, readonly) AVAudioFormat * _Nullable audioFormat;
-@property (nonatomic, readonly) AVAudioPlayerNode * _Nullable playerNode;
-@property (nonatomic, readonly) AVAudioPlayerNode * _Nullable playerNodeAux;
 @property (nonatomic, readonly) AVAudioUnitReverb * _Nullable reverb;
 @property (nonatomic, readonly) AVAudioTime * _Nullable time;
 @property (nonatomic, readonly) AVAudioTime * _Nullable timeAux;
@@ -96,7 +94,6 @@ static ToneGenerator *sharedGenerator = NULL;
     return sharedGenerator;
 }
 
-/// <#Description#>
 - (instancetype)init
 {
     self = [super init];

@@ -76,8 +76,8 @@
                                             <constraint firstAttribute="width" constant="24" id="Ped-ZF-2p4"/>
                                         </constraints>
                                     </imageView>
-                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="headphones" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="3rj-Bo-8BN">
-                                        <rect key="frame" x="96" y="1.3333333333333321" width="24" height="21.666666666666668"/>
+                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="speaker" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="3rj-Bo-8BN">
+                                        <rect key="frame" x="96" y="1.6666666666666643" width="24" height="21.000000000000004"/>
                                         <color key="tintColor" systemColor="systemBlueColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="24" id="Xn7-dw-uc8"/>
@@ -110,9 +110,9 @@
                         <viewLayoutGuide key="safeArea" id="Uee-0j-aNJ"/>
                     </view>
                     <connections>
+                        <outlet property="audioRouteImageView" destination="3rj-Bo-8BN" id="HVJ-0v-JbD"/>
                         <outlet property="batteryLevelImageView" destination="Wei-3l-fSH" id="gDu-rN-DuL"/>
                         <outlet property="batteryStateImageView" destination="D5t-9U-1D6" id="6ZB-4R-sf7"/>
-                        <outlet property="headphonesImageView" destination="3rj-Bo-8BN" id="hmM-jx-tMf"/>
                         <outlet property="playButton" destination="mR4-IJ-DcO" id="R3G-cj-FIn"/>
                         <outlet property="proximityMonitorImageView" destination="ewx-gs-Zxk" id="x1f-x9-5eZ"/>
                         <outlet property="sessionWatchStateImageView" destination="D4Z-q3-dOO" id="l40-as-wEJ"/>
@@ -128,11 +128,11 @@
     <resources>
         <image name="battery.0" catalog="system" width="128" height="65"/>
         <image name="bolt" catalog="system" width="101" height="128"/>
-        <image name="headphones" catalog="system" width="128" height="107"/>
         <image name="play" catalog="system" width="120" height="128"/>
         <image name="radiowaves.left" catalog="system" width="90" height="128"/>
         <image name="radiowaves.right" catalog="system" width="90" height="128"/>
         <image name="shield" catalog="system" width="128" height="121"/>
+        <image name="speaker" catalog="system" width="128" height="121"/>
         <image name="thermometer" catalog="system" width="87" height="128"/>
         <image name="waveform.path" catalog="system" width="128" height="117"/>
     </resources>
