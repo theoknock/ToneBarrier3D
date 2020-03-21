@@ -47,8 +47,8 @@ typedef NS_ENUM(NSUInteger, TonalEnvelope) {
     TonalEnvelopeShortSustain
 };
 
-static AVAudioPCMBuffer * (^glissandro)(double, double, AVAudioFormat *);
-static void (^renderDataForToneBarrierScoreWithGlissandro)(DataRenderedCompletionBlock);
+static AVAudioPCMBuffer * (^glissando)(double, double, AVAudioFormat *);
+static void (^renderDataForToneBarrierScoreWithglissando)(DataRenderedCompletionBlock);
 static AVAudioPCMBuffer * (^harmony)(double, double, AVAudioFormat *);
 static void (^renderDataForToneBarrierScoreWithHarmony)(DataRenderedCompletionBlock);
 
@@ -178,7 +178,7 @@ static ToneGenerator *sharedGenerator = NULL;
             return pow(2.0 * pow(sinf(M_PI * time * trill), 2.0) * 0.5, 4.0);
         };
         
-        glissandro = ^AVAudioPCMBuffer * (double frequency, double harmonic_frequency, AVAudioFormat * audioFormat)
+        glissando = ^AVAudioPCMBuffer * (double frequency, double harmonic_frequency, AVAudioFormat * audioFormat)
         {
             frequency          = Frequency(1.0);
             harmonic_frequency = frequency * (5.0/4.0);
@@ -218,7 +218,7 @@ static ToneGenerator *sharedGenerator = NULL;
             return pcmBuffer;
         };
         
-        renderDataForToneBarrierScoreWithGlissandro = ^void(DataRenderedCompletionBlock dataRenderedCompletionBlock)
+        renderDataForToneBarrierScoreWithglissando = ^void(DataRenderedCompletionBlock dataRenderedCompletionBlock)
         {
             //            double frequency = Frequency(frequency_weight.doubleValue);
             //            double harmonic_frequency = Frequency(frequency_weight.doubleValue);
@@ -256,9 +256,9 @@ static ToneGenerator *sharedGenerator = NULL;
             //            };
             
             // Returns audio buffers via DataRenderedCompletionBlock (recursive until STOP)
-            dataRenderedCompletionBlock(glissandro(min_frequency, min_frequency * (5.0/4.0), _audioFormat), ^(NSString *playerNodeID) {
+            dataRenderedCompletionBlock(glissando(min_frequency, min_frequency * (5.0/4.0), _audioFormat), ^(NSString *playerNodeID) {
                 NSLog(playerNodeID);
-                renderDataForToneBarrierScoreWithGlissandro(dataRenderedCompletionBlock);
+                renderDataForToneBarrierScoreWithglissando(dataRenderedCompletionBlock);
             });
         };
         
@@ -514,9 +514,9 @@ AVAudio3DPoint GenerateRandomXPosition()
             //            });
             //            dispatch_async(buffer_serial_queue, render_buffer_block);
             
-            // TO-DO: sustain the last frequency of the glissandro for the same duration as the glissandro
+            // TO-DO: sustain the last frequency of the glissando for the same duration as the glissando
             if (![_playerNode isPlaying]) [_playerNode play];
-            renderDataForToneBarrierScoreWithGlissandro(^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
+            renderDataForToneBarrierScoreWithglissando(^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
                 [self->_playerNode scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
                     if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
                     {

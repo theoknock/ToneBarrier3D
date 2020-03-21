@@ -47,8 +47,8 @@ typedef NS_ENUM(NSUInteger, TonalEnvelope) {
     TonalEnvelopeShortSustain
 };
 
-static AVAudioPCMBuffer * (^glissandro)(double, double, AVAudioFormat *);
-static void (^renderDataForToneBarrierScoreWithGlissandro)(DataRenderedCompletionBlock);
+static AVAudioPCMBuffer * (^glissando)(double, double, AVAudioFormat *);
+static void (^renderDataForToneBarrierScoreWithglissando)(DataRenderedCompletionBlock);
 static AVAudioPCMBuffer * (^harmony)(double, double, AVAudioFormat *);
 static void (^renderDataForToneBarrierScoreWithHarmony)(DataRenderedCompletionBlock);
 
@@ -176,9 +176,9 @@ static ToneGenerator *sharedGenerator = NULL;
             return pow(2.0 * pow(sinf(M_PI * time * trill), 2.0) * 0.5, 4.0);
         };
         
-        glissandro = ^AVAudioPCMBuffer * (double frequency, double harmonic_frequency, AVAudioFormat * audioFormat)
+        glissando = ^AVAudioPCMBuffer * (double frequency, double harmonic_frequency, AVAudioFormat * audioFormat)
         {
-            double duration_weight = 2.0; //RandomDurationInterval();
+            double duration_weight = 1.25; //RandomDurationInterval();
             frequency = frequency * duration_weight;
             harmonic_frequency = harmonic_frequency * duration_weight;
             double sampleRate = [audioFormat sampleRate];
@@ -215,7 +215,7 @@ static ToneGenerator *sharedGenerator = NULL;
             return pcmBuffer;
         };
         
-        renderDataForToneBarrierScoreWithGlissandro = ^void(DataRenderedCompletionBlock dataRenderedCompletionBlock)
+        renderDataForToneBarrierScoreWithglissando = ^void(DataRenderedCompletionBlock dataRenderedCompletionBlock)
         {
             //            double frequency = Frequency(frequency_weight.doubleValue);
             //            double harmonic_frequency = Frequency(frequency_weight.doubleValue);
@@ -276,11 +276,11 @@ static ToneGenerator *sharedGenerator = NULL;
                 default:
                     break;
             }
-            dataRenderedCompletionBlock(glissandro(frequency, harmonic_frequency, _audioFormat), ^(NSString *playerNodeID) {
+            dataRenderedCompletionBlock(glissando(frequency, harmonic_frequency, _audioFormat), ^(NSString *playerNodeID) {
                 NSLog(playerNodeID);
                 
                 dataRenderedCompletionBlock(harmony(frequency, harmonic_frequency, _audioFormat), ^(NSString *playerNodeID) {
-                    renderDataForToneBarrierScoreWithGlissandro(dataRenderedCompletionBlock);
+                    renderDataForToneBarrierScoreWithglissando(dataRenderedCompletionBlock);
                 });
             });
         };
@@ -289,7 +289,7 @@ static ToneGenerator *sharedGenerator = NULL;
         harmony = ^AVAudioPCMBuffer * (double frequency, double harmonic_frequency, AVAudioFormat * audioFormat)
         {
             // TO-DO: Create two-tone harmony by adding the sinusoids and assigning the sum to each channel
-            double duration_weight = 0.5;//RandomDurationInterval();
+            double duration_weight = RandomDurationInterval();
             frequency = frequency * duration_weight;
             harmonic_frequency = harmonic_frequency * duration_weight;
 
@@ -549,9 +549,9 @@ AVAudio3DPoint GenerateRandomXPosition()
             //            });
             //            dispatch_async(buffer_serial_queue, render_buffer_block);
             
-            // TO-DO: sustain the last frequency of the glissandro for the same duration as the glissandro
+            // TO-DO: sustain the last frequency of the glissando for the same duration as the glissando
             if (![_playerNode isPlaying]) [_playerNode play];
-            renderDataForToneBarrierScoreWithGlissandro(^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
+            renderDataForToneBarrierScoreWithglissando(^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
                 [self->_playerNode scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
                     if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
                     {
@@ -561,16 +561,16 @@ AVAudio3DPoint GenerateRandomXPosition()
                 }];
             });
             
-//            if (![_playerNodeAux isPlaying]) [_playerNodeAux play];
-//            renderDataForToneBarrierScoreWithHarmony(^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
-//                [self->_playerNodeAux scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
-//                    if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
-//                    {
-////                        [self->_playerNodeAux setPosition:GenerateRandomXPosition()];
-//                        dataPlayedBackCompletionBlock([NSString stringWithFormat:@"AVAudioPlayerNodeAuxCompletionDataPlayedBack"]);
-//                    }
-//                }];
-//            });
+            if (![_playerNodeAux isPlaying]) [_playerNodeAux play];
+            renderDataForToneBarrierScoreWithHarmony(^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
+                [self->_playerNodeAux scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
+                    if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
+                    {
+//                        [self->_playerNodeAux setPosition:GenerateRandomXPosition()];
+                        dataPlayedBackCompletionBlock([NSString stringWithFormat:@"AVAudioPlayerNodeAuxCompletionDataPlayedBack"]);
+                    }
+                }];
+            });
             
             //            if (![_playerNodeAux isPlaying]) [_playerNodeAux play];
             //            AVAudioTime *timeAux = [[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(CMClockGetTime(CMClockGetHostTimeClock()))];
