@@ -302,11 +302,11 @@
 - (void)session:(WCSession *)session didReceiveMessage:(NSDictionary<NSString *,id> *)message replyHandler:(nonnull void (^)(NSDictionary<NSString *,id> * _Nonnull))replyHandler
 {
     dispatch_queue_t messageSerialQueue = dispatch_queue_create("com.blogspot.demonicactivity.message.serialqueue", DISPATCH_QUEUE_SERIAL);
-    dispatch_block_t nessageBlock = dispatch_block_create(0, ^{
+    dispatch_block_t messageBlock = dispatch_block_create(0, ^{
         ([message enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
             if ([key isEqualToString:@"RemoteStatus"])
             {
-                
+                replyHandler(@{@"RemoteStatus" : @((BOOL)[[[ToneGenerator sharedGenerator] audioEngine] isRunning])});
             } else if ([key isEqualToString:@"RemoteAction"])
             {
                 NSString *remoteAction = [(NSDictionary<NSString *, NSString *> *)message objectForKey:@"RemoteAction"];
@@ -316,35 +316,35 @@
     });
     dispatch_async(messageSerialQueue, messageBlock);
     
-    dispatch_block_t activateWatchConnectivitySessionBlock = dispatch_block_create(0, ^{
-        
-    });
-    dispatch_block_notify(watchConnectivitySessionBlock, dispatch_get_main_queue(), activateWatchConnectivitySessionBlock);
-    
-    
-                    if (statusDict)
-                    {
-                        isToneBarrierPlaying = [(NSNumber *)[statusDict objectForKey:@"status"] boolValue];
-                        
-                    }
-                });
-            } errorHandler:^(NSError * _Nonnull error) {
-                
-            }];
-        }
-    });
-    dispatch_async(playSerialQueue, playTonesBlock);
-    
-    dispatch_queue_t playConcurrentQueue = dispatch_queue_create("com.blogspot.demonicactivity.concurrentqueue", DISPATCH_QUEUE_CONCURRENT);
-    dispatch_block_t playButtonBlock = dispatch_block_create(0, ^{
-        WCSession *wcs = self->_watchConnectivitySession;
-        if (wcs.isReachable)
-        {
-            [wcs sendMessage:@{@"RemoteAction" : @{@"action" : @(!isToneBarrierPlaying)}}
-                replyHandler:^(NSDictionary<NSString *,id> * _Nonnull replyMessage) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    NSDictionary<NSString *, NSNumber *> *remoteActionDict = (NSDictionary<NSString *, NSNumber *> *)[[NSDictionary alloc] initWithDictionary:(NSDictionary<NSString *, NSDictionary *> *)[replyMessage objectForKey:@"RemoteAction"]];
-                    if (isToneBarrierPlaying)
+//    dispatch_block_t activateWatchConnectivitySessionBlock = dispatch_block_create(0, ^{
+//        
+//    });
+//    dispatch_block_notify(watchConnectivitySessionBlock, dispatch_get_main_queue(), activateWatchConnectivitySessionBlock);
+//    
+//    
+//                    if (statusDict)
+//                    {
+//                        isToneBarrierPlaying = [(NSNumber *)[statusDict objectForKey:@"status"] boolValue];
+//                        
+//                    }
+//                });
+//            } errorHandler:^(NSError * _Nonnull error) {
+//                
+//            }];
+//        }
+//    });
+//    dispatch_async(playSerialQueue, playTonesBlock);
+//    
+//    dispatch_queue_t playConcurrentQueue = dispatch_queue_create("com.blogspot.demonicactivity.concurrentqueue", DISPATCH_QUEUE_CONCURRENT);
+//    dispatch_block_t playButtonBlock = dispatch_block_create(0, ^{
+//        WCSession *wcs = self->_watchConnectivitySession;
+//        if (wcs.isReachable)
+//        {
+//            [wcs sendMessage:@{@"RemoteAction" : @{@"action" : @(!isToneBarrierPlaying)}}
+//                replyHandler:^(NSDictionary<NSString *,id> * _Nonnull replyMessage) {
+//                dispatch_async(dispatch_get_main_queue(), ^{
+//                    NSDictionary<NSString *, NSNumber *> *remoteActionDict = (NSDictionary<NSString *, NSNumber *> *)[[NSDictionary alloc] initWithDictionary:(NSDictionary<NSString *, NSDictionary *> *)[replyMessage objectForKey:@"RemoteAction"]];
+//                    if (isToneBarrierPlaying)
 }
 
 - (void)session:(WCSession *)session didReceiveMessage:(NSDictionary<NSString *,id> *)message

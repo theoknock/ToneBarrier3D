@@ -19,7 +19,7 @@
                                 <group alignment="center" verticalAlignment="center" contentMode="scaleAspectFit" id="gcA-Z8-N3W">
                                     <items>
                                         <button alignment="center" verticalAlignment="center" id="RCQ-Th-LTr">
-                                            <group key="contentGroup" width="0.55000000000000004" height="0.55000000000000004" alignment="left" backgroundImage="play" catalog="system" contentMode="scaleAspectFit" id="FyD-rf-Fba"/>
+                                            <group key="contentGroup" width="0.75" height="0.75" alignment="left" backgroundImage="play" catalog="system" contentMode="scaleAspectFit" id="FyD-rf-Fba"/>
                                             <connections>
                                                 <action selector="play" destination="AgC-eL-Hgc" id="2wu-FD-cEo"/>
                                             </connections>

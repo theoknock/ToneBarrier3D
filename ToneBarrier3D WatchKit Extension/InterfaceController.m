@@ -138,9 +138,6 @@
 - (IBAction)play
 {
     __block BOOL isToneBarrierPlaying = FALSE;
-    // First outer block: messages iOS device for playback status (the isRunning property of AVAudioEngine); based on the reply, create two blocks:
-    //                   First inner block: send command to play/stop via a message iOS device; based on the reply, update the play/stop button
-    //
     dispatch_queue_t playSerialQueue = dispatch_queue_create("com.blogspot.demonicactivity.serialqueue", DISPATCH_QUEUE_SERIAL);
     dispatch_block_t playTonesBlock = dispatch_block_create(0, ^{
         WCSession *wcs = self->_watchConnectivitySession;
@@ -149,12 +146,8 @@
             [wcs sendMessage:@{@"RemoteStatus" : @"GET"}
                 replyHandler:^(NSDictionary<NSString *,id> * _Nonnull replyMessage) {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    NSDictionary<NSString *, NSNumber *> *statusDict = (NSDictionary<NSString *, NSNumber *> *)[[NSDictionary alloc] initWithDictionary:(NSDictionary<NSString *, NSDictionary *> *)[replyMessage objectForKey:@"RemoteStatus"]];
-                    if (statusDict)
-                    {
-                        isToneBarrierPlaying = [(NSNumber *)[statusDict objectForKey:@"status"] boolValue];
-                        
-                    }
+                    isToneBarrierPlaying = [(NSNumber *)[replyMessage objectForKey:@"RemoteStatus"] boolValue];
+                    NSLog(@"isToneBarrierPlaying == %@", (isToneBarrierPlaying) ? @"TRUE" : @"FALSE");
                 });
             } errorHandler:^(NSError * _Nonnull error) {
                 
