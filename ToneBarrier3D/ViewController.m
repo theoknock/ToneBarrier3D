@@ -311,6 +311,7 @@
             {
                 NSString *remoteAction = [(NSDictionary<NSString *, NSString *> *)message objectForKey:@"RemoteAction"];
                 [self play:nil];
+                replyHandler(@{@"RemoteAction" : @{@"action" : @([[[ToneGenerator sharedGenerator] audioEngine] isRunning])}});
             }
         }]);
     });
