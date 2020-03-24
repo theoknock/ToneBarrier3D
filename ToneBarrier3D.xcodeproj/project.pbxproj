@@ -27,6 +27,7 @@
 		B93D77BD23E61CCB0099DF63 /* ToneGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = B93D77BC23E61CCB0099DF63 /* ToneGenerator.m */; };
 		B9510E2923F6FC0A00BFAFC1 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B9510E2823F6FC0A00BFAFC1 /* MediaPlayer.framework */; };
 		B9AA64E623F19AE100C1DC10 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B9AA64E523F19AE100C1DC10 /* AudioToolbox.framework */; };
+		B9D7B8F32428D20100E7C7E6 /* ToneBarrierScores.m in Sources */ = {isa = PBXBuildFile; fileRef = B9D7B8F22428D20100E7C7E6 /* ToneBarrierScores.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -107,6 +108,8 @@
 		B9510E2823F6FC0A00BFAFC1 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 		B9AA64E323F19AE100C1DC10 /* ToneBarrier3D.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ToneBarrier3D.entitlements; sourceTree = "<group>"; };
 		B9AA64E523F19AE100C1DC10 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		B9D7B8F12428D20100E7C7E6 /* ToneBarrierScores.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ToneBarrierScores.h; path = ToneBarrier3D/ToneBarrierScores.h; sourceTree = "<group>"; };
+		B9D7B8F22428D20100E7C7E6 /* ToneBarrierScores.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = ToneBarrierScores.m; path = ToneBarrier3D/ToneBarrierScores.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -132,6 +135,8 @@
 		8A12D27023E107080088463B = {
 			isa = PBXGroup;
 			children = (
+				B9D7B8F12428D20100E7C7E6 /* ToneBarrierScores.h */,
+				B9D7B8F22428D20100E7C7E6 /* ToneBarrierScores.m */,
 				8A12D27B23E107090088463B /* ToneBarrier3D */,
 				8A12D29623E107190088463B /* ToneBarrier3D WatchKit App */,
 				8A12D2A523E1071C0088463B /* ToneBarrier3D WatchKit Extension */,
@@ -343,6 +348,7 @@
 			files = (
 				8A12D28423E107090088463B /* ViewController.m in Sources */,
 				B93D77BD23E61CCB0099DF63 /* ToneGenerator.m in Sources */,
+				B9D7B8F32428D20100E7C7E6 /* ToneBarrierScores.m in Sources */,
 				8A12D27E23E107090088463B /* AppDelegate.m in Sources */,
 				8A12D28F23E107180088463B /* main.m in Sources */,
 				8A12D28123E107090088463B /* SceneDelegate.m in Sources */,

@@ -94,6 +94,14 @@
         } else if ([[output portType] containsString:@"Bluetooth"])
         {
             [self.audioRouteImageView setImage:[UIImage systemImageNamed:@"hifispeaker"]];
+        } else if ([[output portType] containsString:@"Receiver"])
+        {
+            if (ToneGenerator.sharedGenerator.audioEngine.mainMixerNode.volume > 0.0)
+            {
+                NSLog(@"Mark tone barrier was playing.");
+            } else {
+                NSLog(@"Mark tone barrier was stopped.");
+            }
         }
         
         //        BluetoothHFP;
