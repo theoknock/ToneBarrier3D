@@ -9,16 +9,16 @@
 // TO-DO: Create moving sound (velocity) to stimulate instinctive sound localizaton; cues for sound source localization: time- and level-differences (or intensity-difference) between both ears
 //
 
-// TO-DO: convert all functions and class methods to blocks
+// TO-DO: Pattern components to tone barrier scores after basic music theory (https://www.aboutmusictheory.com/music-intervals.html)
 
 #import "ToneGenerator.h"
 
-#define max_frequency      3000.00
+#define max_frequency      2500.00
 #define min_frequency       200.00
 #define max_trill_interval   18.00
 #define min_trill_interval    2.00
 #define sum_duration_interval 2.00
-#define max_duration_interval 1.25
+#define max_duration_interval 0.50
 #define min_duration_interval 0.25
 
 #define RANDOM_NUMF(MIN, MAX) MIN+arc4random_uniform(MAX-MIN+1)
@@ -29,15 +29,20 @@ typedef NS_ENUM(NSUInteger, TonalHarmony) {
     TonalHarmonyRandom
 };
 
-typedef NS_ENUM(NSUInteger, TonalInterval) {
-    TonalIntervalUnison,
-    TonalIntervalOctave,
-    TonalIntervalMajorSixth,
-    TonalIntervalPerfectFifth,
-    TonalIntervalPerfectFourth,
-    TonalIntervalMajorThird,
-    TonalIntervalMinorThird,
-    TonalIntervalRandom
+typedef NS_ENUM(NSUInteger, HarmonicInterval) {
+    HarmonicIntervalUnison,
+    HarmonicIntervalOctave,
+    HarmonicIntervalMajorSixth,
+    HarmonicIntervalPerfectFifth,
+    HarmonicIntervalPerfectFourth,
+    HarmonicIntervalMajorThird,
+    HarmonicIntervalMinorThird,
+    HarmonicIntervalRandom
+};
+
+typedef NS_ENUM(NSUInteger, HarmonicInversion) {
+    HarmonicInversionPerfect,
+    HarmonicInversionImperfect
 };
 
 typedef NS_ENUM(NSUInteger, TonalEnvelope) {
@@ -46,110 +51,66 @@ typedef NS_ENUM(NSUInteger, TonalEnvelope) {
     TonalEnvelopeShortSustain
 };
 
-//typedef double (^Trill)(double, double, double);
-//typedef double(^Amplitude)(double);
-//static void (^renderTone)(double, double, double, AVAudioFormat *, Trill, Amplitude);
+typedef struct frequency
+{
+    double primary;
+    double secondary;
+    double min;
+    double max;
+} Frequency;
 
-typedef void(^RandomizedFrequenciesCompletionBlock)(double, double);
-typedef void(^RandomFrequencies)(RandomizedFrequenciesCompletionBlock);
+typedef double (^TimeEnvelope)(double numerator, double denominator);
+typedef double (^FrequencyEnvelope)(double time, Frequency * frequency);
+typedef double (^AmplitudeEnvelope)(double time, BOOL invert, double mid, double trill, double slope);
 
-typedef void   (^DataPlayedBackCompletionBlock)(NSString *);
-typedef void   (^DataRenderedCompletionBlock)(AVAudioPCMBuffer *, DataPlayedBackCompletionBlock);
-typedef double (^FrequencyBufferData)(double, double, double);
-typedef double (^FrequencyEnvelopeInterval)(double, double, double);
-typedef double (^Amplitude)(double, double);
-typedef void (^Tones)(AVAudioFormat *, DataRenderedCompletionBlock dataRenderedCompletionBlock);
+typedef struct amplitude
+{
+    BOOL              invert;
+    double            mid;
+    double            trill;
+    double            slope;
+    __unsafe_unretained AmplitudeEnvelope amplitudeEnvelope;
+} Amplitude;
 
-//static AVAudioPCMBuffer *(^ToneBuffer)(double, double, double, double(^)(double, double, double(^)(double)), double(^)(double), AVAudioFormat * audioFormat);
-//
-//static AVAudioPCMBuffer * (^glissando)(double, double, double, AVAudioFormat *, Amplitude, FrequencyEnvelope);
-//static void (^renderDataForToneBarrierScoreWithGlissando)(DataRenderedCompletionBlock);
-//static AVAudioPCMBuffer * (^harmony)(double, double, double, AVAudioFormat *);
-//static void (^renderDataForToneBarrierScoreWithHarmony)(DataRenderedCompletionBlock);
+typedef struct tone
+{
+    TimeEnvelope       timeEnvelope;
+    Frequency *        frequency;
+    __unsafe_unretained FrequencyEnvelope  frequencyEnvelope;
+    Amplitude *        amplitude;
+} Tone;
 
-typedef struct block_struct {
-    double frequency;
-    double(^oscillateFrequency)(double, double);
-    double(^trillFrequency)(double, double, double(^)(double frequency));
-    double(^envelopeFrequency)(double);
-} ChannelBufferSpecs;
+typedef struct tones {
+    double duration;
+    Tone * channel_l_tone;
+    Tone * channel_r_tone;
+} Tones;
+
+typedef void (^DataPlayedBackCompletionBlock)(NSString *);
+typedef void (^DataRenderedCompletionBlock)(AVAudioPCMBuffer *, DataPlayedBackCompletionBlock);
+typedef void (^Score)(AVAudioFormat * audioFormat, DataRenderedCompletionBlock dataRenderedCompletionBlock);
+
 
 @interface ToneGenerator ()
-{
-    double(^Normalize)(double, double);
-    double(^Scale)(double, double, double, double, double);
-    double(^RandomFrequency)(double, double, double);
-    double(^HarmonizeFrequency)(double, TonalHarmony, TonalInterval);
-    double(^BufferData)(double, double);
-    ChannelBufferSpecs (^BufferSpecsForChannel)(double, double(^)(double), double(^)(double, double, double(^)(double)));
-    double(^Interval)(double, TonalInterval);
-    double(^TrillInterval)(double);
-    //    double(^Amplitude)(double);
-    
-    
-    double(^RenderTone)(double, ChannelBufferSpecs, ChannelBufferSpecs);
-    double(^Tonality)(double, TonalInterval, TonalHarmony);
-    double(^Trill)(double, double, double(^)(double frequency));
-    double(^TrillInverse)(double, double, double(^)(double));
-    double(^RandomDurationInterval)(void);
-}
 
-@property (class, readonly) Tones glissando;
+@property (nonatomic, readonly) AVAudioMixerNode * _Nullable  mainNode;
+@property (nonatomic, readonly) AVAudioMixerNode * _Nullable  mixerNode;
+@property (nonatomic, readonly) AVAudioFormat * _Nullable     audioFormat;
+@property (nonatomic, readonly) AVAudioUnitReverb * _Nullable reverb;
+
+@property (class, readonly) double(^percentage)(double, double);
 @property (class, readonly) double(^scale)(double, double, double, double, double);
 @property (class, readonly) double(^randomFrequency)(double, double, double);
-@property (class, readonly) FrequencyBufferData frequencyGlissando;
-@property (class, readonly) double(^frequencyEnvelope)(double, double, double, FrequencyEnvelopeInterval);
-@property (class, readonly) FrequencyEnvelopeInterval frequencyEnvelopeInterval;
-@property (class, readonly) Amplitude amplitude;
-@property (class, readonly) double(^percentage)(double, double);
-@property (class, readonly) AVAudioPCMBuffer * (^buffer)(double frequency, double harmonic_frequency, double duration, AVAudioFormat * audioFormat, FrequencyEnvelopeInterval frequencyEnvelopeBufferData, Amplitude amplitude, FrequencyBufferData frequencyBufferData);
-
-@property (nonatomic, readonly) AVAudioMixerNode * _Nullable mainNode;
-@property (nonatomic, readonly) AVAudioMixerNode * _Nullable mixerNode;
-@property (nonatomic, readonly) AVAudioFormat * _Nullable audioFormat;
-@property (nonatomic, readonly) AVAudioUnitReverb * _Nullable reverb;
-@property (nonatomic, readonly) AVAudioTime * _Nullable time;
-@property (nonatomic, readonly) AVAudioTime * _Nullable timeAux;
-
+@property (class, readonly) double(^randomDuration)(double, double, double);
+@property (class, readonly) FrequencyEnvelope  frequencyEnvelope;
+@property (class, readonly) AmplitudeEnvelope  amplitudeEnvelope;
+@property (class, readonly) Score              dyad;
+@property (class, readonly) AVAudioPCMBuffer * (^buffer)(AVAudioFormat * audioFormat, Tones * tones);
+@property (class, readonly) float * (^channelData)(AVAudioFrameCount, Tone *, float *, float *);
 
 @end
 
 @implementation ToneGenerator
-
-//+ (RandomFrequencies)randomizeFrequencies
-//{
-//    return ^void(RandomizedFrequenciesCompletionBlock randomizedFrequencies)
-//    {
-//        NSUInteger r = arc4random_uniform(2);
-//        NSLog(@"r == %lu", (unsigned long)r);
-//        double frequency, harmonic_frequency;
-//
-//        double random = drand48();
-//        random = pow(random, 1.0);
-//        random = Scale(random, 0.0, 1.0, min_frequency, min_frequency);
-//
-//        switch (r) {
-//            case 0:
-//            {
-//                frequency = random;
-//                harmonic_frequency = frequency * (double)(5.0/4.0);
-//                break;
-//            }
-//
-//            case 1:
-//            {
-//                harmonic_frequency = random;
-//                frequency = harmonic_frequency * (double)(5.0/4.0);
-//                break;
-//            }
-//
-//            default:
-//                break;
-//        }
-//
-//        randomizedFrequencies(frequency, harmonic_frequency);
-//    }
-//}
 
 static ToneGenerator *sharedGenerator = NULL;
 + (nonnull ToneGenerator *)sharedGenerator
@@ -166,8 +127,6 @@ static ToneGenerator *sharedGenerator = NULL;
     return sharedGenerator;
 }
 
-
-
 - (instancetype)init
 {
     self = [super init];
@@ -175,13 +134,20 @@ static ToneGenerator *sharedGenerator = NULL;
     if (self)
     {
         srand48(time(0));
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterruption:) name:AVAudioEngineConfigurationChangeNotification object:_audioEngine];
         
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterruption:) name:AVAudioEngineConfigurationChangeNotification object:_audioEngine];
+        [self setupEngine];
     }
     
-    [self setupEngine];
-    
     return self;
+}
+
++ (double (^)(double, double))percentage
+{
+    return ^double(double numerator, double denominator)
+    {
+        return (double)(numerator / denominator);
+    };
 }
 
 + (double(^)(double, double, double, double, double))scale
@@ -203,45 +169,379 @@ static ToneGenerator *sharedGenerator = NULL;
     };
 }
 
-+ (FrequencyBufferData)frequencyGlissando
++ (double(^)(double, double, double))randomDuration
 {
-    return ^double(double time, double frequency, double harmonic_frequency)
+    return ^double(double min, double max, double weight)
     {
-        return sinf(M_PI * 2.0 * time * frequency); //ToneGenerator.scale(time, 0.0, 1.0, min_frequency, max_frequency));
+        double random = drand48();
+        random = pow(random, weight);
+        double duration = ToneGenerator.scale(random, 0.0, 1.0, min, max);
+        
+        return duration;
     };
 }
 
-+ (double(^)(double, double))amplitude
-{
-    return ^double(double time, double slope)
-    {
-        return pow(sinf(time * M_PI), slope);
-    };
-}
-
-+ (double (^)(double, double))percentage
++ (TimeEnvelope)timeEnvelope
 {
     return ^double(double numerator, double denominator)
     {
-        return (double)(numerator / denominator);
+        return numerator / denominator;
     };
 }
 
-+ (FrequencyEnvelopeInterval)frequencyEnvelopeInterval
++ (FrequencyEnvelope)frequencyEnvelope
 {
-    return ^double(double time, double frequency, double harmonic_frequency)
+    return ^double(double time, Frequency * frequency)
     {
-        return ((max_trill_interval - min_trill_interval) * pow(time, 1.0/3.0)) + min_trill_interval;
-    };
-};
-
-+ (double (^)(double, double, double, FrequencyEnvelopeInterval))frequencyEnvelope
-{
-    return ^double(double time, double frequency, double harmonic_frequency, FrequencyEnvelopeInterval frequencyEnvelopeInterval)
-    {
-        return pow(2.0 * pow(sinf(M_PI * time * frequencyEnvelopeInterval(time, frequency, harmonic_frequency)), 2.0) * 0.5, 4.0);
+        return sinf(M_PI * 2.0 * time * frequency->primary);
     };
 }
+
++ (AmplitudeEnvelope)amplitudeEnvelope
+{
+    return ^double(double time, BOOL invert, double trill, double mid, double slope)
+    {
+        time = (invert) ? 1.0 - time : time;
+        return pow(sinf(pow(time, mid) * M_PI * (9.0 * time)), slope);
+    };
+}
+
+//+ (FrequencyModifier)frequencyModifier
+//{
+//    return ^double(double time, double frequencies[4])
+//    {
+//        return 1.0;//(max_trill_interval - min_trill_interval) * pow(time, 1.0/3.0)) + min_trill_interval;
+//    };
+//};
+
+//+ (double (^)(double, double[4], FrequencyEnvelope))frequencyEnvelope
+//{
+//    return ^double(double time, double frequencies[4], FrequencyModifier frequencyModifier)
+//    {
+//        return sinf(M_PI * 2.0 * time * frequencies[0]);
+////        return pow(2.0 * pow(sinf(M_PI * time * frequency), 2.0) * 0.5, 4.0);
+//    };
+//]
+
++ (Frequency *(^)(double, double, double, double))frequencyStruct
+{
+    return ^Frequency *(double primary, double secondary, double min, double max)
+    {
+        Frequency * frequency_struct = malloc(sizeof(Frequency));
+        frequency_struct->primary    = primary;
+        frequency_struct->secondary  = secondary;
+        frequency_struct->min        = min;
+        frequency_struct->max        = max;
+        
+        return frequency_struct;
+    };
+}
+
++ (Amplitude *(^)(BOOL, double, double, AmplitudeEnvelope))amplitudeStruct
+{
+    return ^Amplitude *(BOOL invert, double mid, double slope, AmplitudeEnvelope amplitudeEnvelope)
+    {
+        Amplitude * amplitude_struct        = malloc(sizeof(Amplitude));
+        amplitude_struct->invert            = invert;
+        amplitude_struct->mid               = mid;
+        amplitude_struct->slope             = slope;
+        amplitude_struct->amplitudeEnvelope = amplitudeEnvelope;
+        
+        return amplitude_struct;
+    };
+}
+
++ (Tone *(^)(TimeEnvelope, Frequency *, FrequencyEnvelope, Amplitude *))toneStruct
+{
+    return ^Tone *(TimeEnvelope timeEnvelope, Frequency * frequency, FrequencyEnvelope frequencyEnvelope, Amplitude * amplitude)
+    {
+        Tone * tone_struct = malloc(sizeof(Tone));
+        tone_struct->timeEnvelope       = timeEnvelope;
+        tone_struct->frequency          = frequency;
+        tone_struct->frequencyEnvelope  = frequencyEnvelope;
+        tone_struct->amplitude          = amplitude;
+        
+        return tone_struct;
+    };
+}
+
++ (Tones *(^)(double, Tone *, Tone *))tonesStruct
+{
+    return ^Tones *(double duration, Tone * channel_l_tone, Tone * channel_r_tone)
+    {
+        Tones *tones_struct = malloc(sizeof(Tones));
+        tones_struct->duration = duration;
+        tones_struct->channel_l_tone = channel_l_tone;
+        tones_struct->channel_r_tone = channel_r_tone;
+        
+        return tones_struct;
+    };
+}
+
++ (float * (^)(AVAudioFrameCount, Tone *, float *, float *))channelData
+{
+    return ^float *(AVAudioFrameCount frameLength, Tone * tone, float * channel, float * channelData)
+    {
+        channel = channelData;
+        for (int index = 0; index < frameLength; index++)
+        {
+            double time = tone->timeEnvelope(index, frameLength);
+            double freq = tone->frequencyEnvelope(time, tone->frequency);
+            double amp  = tone->amplitude->amplitudeEnvelope(time, tone->amplitude->invert, tone->amplitude->mid, tone->amplitude->trill, tone->amplitude->slope);
+            
+            double f = freq * amp;
+            if (channel) channel[index] = f;
+        }
+        
+        return channel;
+    };
+}
+
++ (AVAudioPCMBuffer *(^)(AVAudioFormat *, Tones *))buffer
+{
+    return ^AVAudioPCMBuffer *(AVAudioFormat *audioFormat, Tones * tones)
+    {
+        double sampleRate            = [audioFormat sampleRate];
+        AVAudioFrameCount frameCount = (sampleRate * sum_duration_interval) * tones->duration;
+        AVAudioPCMBuffer *pcmBuffer  = [[AVAudioPCMBuffer alloc] initWithPCMFormat:audioFormat frameCapacity:frameCount];
+        pcmBuffer.frameLength        = sampleRate * tones->duration;
+        float * channelL, * channelR;
+        channelL = ToneGenerator.channelData(pcmBuffer.frameLength,
+                                             tones->channel_l_tone,
+                                             channelL,
+                                             pcmBuffer.floatChannelData[0]);
+        channelR = ToneGenerator.channelData(pcmBuffer.frameLength,
+                                             tones->channel_r_tone,
+                                             channelR,
+                                             ([audioFormat channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil);
+        
+        return pcmBuffer;
+    };
+}
+
++ (Score)dyad
+{
+    return ^(AVAudioFormat *audioFormat, DataRenderedCompletionBlock dataRenderedCompletionBlock) {
+        // Glissando plays two tones, the first with a short duration, and the second with a long one; the total duration of both tones is two seconds
+        // When playing multiple tones in a single score call...
+        double minDuration  = 0.25;
+        double maxDuration  = 0.5;
+        double sumDuration  = 2.0;
+        double randDuration = ToneGenerator.randomDuration(minDuration, maxDuration, 3.0);
+        double diffDuration = sumDuration - randDuration;
+        double durationMin  = MIN(randDuration, diffDuration);
+        double durationMax  = MAX(randDuration, diffDuration);
+        double frequency    = ToneGenerator.randomFrequency(min_frequency, max_frequency, 2.0) * durationMin;
+        double harmonic_frequency = (frequency * (5.0/4.0)) * durationMin;
+        
+        // The amplitude calculation is the same for both channels
+        Amplitude * amplitude = ToneGenerator.amplitudeStruct(FALSE,                            // The amplitude peaks in the middle, so an inversion would render the same result
+                                                              1.0,                              // Peak the amplitude in the middle (i.e., even attack, even release)
+                                                              2.0,                              // Smooth the transition from/to 0.0 during/after the attack/release
+                                                              9.0,
+                                                              ToneGenerator.amplitudeEnvelope); // The block that calculates the amplitude using the parameter values supplied in this struct
+        
+        Frequency * frequencyL = ToneGenerator.frequencyStruct(frequency,
+                                                               harmonic_frequency,
+                                                               frequency,
+                                                               harmonic_frequency);
+        Tone * toneL           = ToneGenerator.toneStruct(ToneGenerator.timeEnvelope,
+                                                          frequencyL,
+                                                          ToneGenerator.frequencyEnvelope,
+                                                          amplitude);
+        
+        Frequency * frequencyR = ToneGenerator.frequencyStruct(harmonic_frequency,
+                                                               harmonic_frequency * (5.0/4.0),
+                                                               harmonic_frequency,
+                                                               harmonic_frequency * (5.0/4.0));
+        Tone * toneR           = ToneGenerator.toneStruct(ToneGenerator.timeEnvelope,
+                                                          frequencyR,
+                                                          ToneGenerator.frequencyEnvelope,
+                                                          amplitude);
+        
+        Tones * tones          = ToneGenerator.tonesStruct(durationMin,
+                                                           toneL,
+                                                           toneR);
+        NSLog(@"Minimum duration\t%f", durationMin);
+        dataRenderedCompletionBlock(ToneGenerator.buffer(audioFormat, tones), ^(NSString *playerNodeID) {
+            double frequencyAux = ToneGenerator.randomFrequency(min_frequency, max_frequency, 2.0) * durationMax;
+            double harmonic_frequencyAux = (frequencyAux * (5.0/4.0)) * durationMax;
+            Frequency * frequencyLAux = ToneGenerator.frequencyStruct(frequencyAux,
+                                                                      harmonic_frequencyAux,
+                                                                      frequencyAux,
+                                                                      harmonic_frequencyAux);
+            Tone * toneLAux           = ToneGenerator.toneStruct(ToneGenerator.timeEnvelope,
+                                                                 frequencyLAux,
+                                                                 ToneGenerator.frequencyEnvelope,
+                                                                 amplitude);
+            
+            Frequency * frequencyRAux = ToneGenerator.frequencyStruct(harmonic_frequencyAux,
+                                                                      harmonic_frequencyAux * (5.0/4.0),
+                                                                      harmonic_frequencyAux,
+                                                                      harmonic_frequencyAux * (5.0/4.0));
+            Tone * toneRAux           = ToneGenerator.toneStruct(ToneGenerator.timeEnvelope,
+                                                                 frequencyRAux,
+                                                                 ToneGenerator.frequencyEnvelope,
+                                                                 amplitude);
+            
+            Tones * tonesAux = ToneGenerator.tonesStruct(durationMax,
+                                                         toneLAux,
+                                                         toneRAux);
+            NSLog(@"Maximum duration\t%f", durationMax);
+            dataRenderedCompletionBlock(ToneGenerator.buffer(audioFormat, tonesAux), ^(NSString *playerNodeID) {
+                NSLog(@"Total duration\t%f", durationMin + durationMax);
+                ToneGenerator.dyad(audioFormat, dataRenderedCompletionBlock);
+            });
+        });
+    };
+}
+
+//+ (AVAudioPCMBuffer *(^)(AVAudioFormat *, Tones *))buffer
+//{
+//    return ^AVAudioPCMBuffer *(AVAudioFormat *audioFormat, Tones * tones)
+//    {
+//        frequency = frequency * duration;
+//        harmonic_frequency = harmonic_frequency * duration;
+//        double sampleRate = [audioFormat sampleRate];
+//        AVAudioFrameCount frameCount = (sampleRate * sum_duration_interval) * duration;
+//        AVAudioPCMBuffer *pcmBuffer  = [[AVAudioPCMBuffer alloc] initWithPCMFormat:audioFormat frameCapacity:frameCount];
+//        pcmBuffer.frameLength        = sampleRate * duration; //pcmBuffer.frameCapacity; //(sampleRate * duration_interval)(duration_weight < 1.0) ? frameCount : sampleRate;
+//        float *l_channel             = pcmBuffer.floatChannelData[0];
+//        float *r_channel             = ([audioFormat channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil;
+//
+//        for (int index = 0; index < pcmBuffer.frameLength; index++)
+//        {
+//            double time      = ToneGenerator.percentage(index, pcmBuffer.frameLength);
+//            double freq_env_l  = ToneGenerator.frequencyEnvelope(time, frequency, frequencyEnvelopeInterval);
+//            double freq_env_r  = ToneGenerator.frequencyEnvelope(time, harmonic_frequency, frequencyEnvelopeInterval);
+//            double amp_env   = amplitude(time, 1.0);
+//
+//            double f = freq_env_l * amp_env; /*frequencyEnvelope(time,
+//                                           ToneGenerator.scale(time, 0.0, 1.0, frequency, ToneGenerator.harmonicInterval(frequency, HarmonicIntervalPerfectFifth, HarmonicInversionPerfect)),
+//                                           harmonic_frequency, frequencyEnvelopeInterval) * freq_env * amp_env; //frequencyBufferData(time, frequency, harmonic_frequency) * amplitude(time, 1.0); */
+//            double g = freq_env_r * amp_env; /*frequencyEnvelope(time,
+//                                           ToneGenerator.scale(time, 0.0, 1.0, harmonic_frequency, ToneGenerator.harmonicInterval(harmonic_frequency, HarmonicIntervalPerfectFifth, HarmonicInversionPerfect)),
+//                                           harmonic_frequency) * freq_env * amp_env;*/
+//            if (l_channel) l_channel[index] = f;
+//            if (r_channel) r_channel[index] = g;
+//        }
+//
+//        return pcmBuffer;
+//    };
+//}
+
+
+// Quantity: You determine an interval’s quantity by simply adding the lines and spaces included in the interval on the music staff. Accidentals (sharps and flats), which raise or lower a pitch by a half step, don’t matter when counting interval quantity. Interval quantity may be
+//
+//    Unison (or prime)
+//
+//    Second
+//
+//    Third
+//
+//    Fourth
+//
+//    Fifth
+//
+//    Sixth
+//
+//    Seventh
+//
+//    Octave
+//
+// Quality: Interval quality is based on the number of half steps from one note to another. Unlike in interval quantity, accidentals do matter in interval quality. The terms used to describe quality, and their abbreviations, are as follows:
+//
+//    Major (M): Contains two half steps between notes
+//
+//    Minor (m): Contains a half step less than a major interval, or one half step between notes
+//
+//    Perfect (P): Refers to the harmonic quality of primes, octaves, fourths, and fifths
+//
+//    Diminished (dim): Contains a half step less than a minor or perfect interval
+//
+//    Augmented (aug): Contains a half step more than a major or perfect interval
+
+
+
+// Interval = Inversion
+// Minor seconds = major sevenths
+//Major seconds = minor sevenths
+//Minor thirds = major sixths
+//Major thirds = minor sixths
+//Perfect fourths = perfect fifths
+//@property (class, readonly) double(^tonality)(double frequency, TonalHarmony, HarmonicInterval);
+
+//+ (double (^)(double, HarmonicInterval, HarmonicInversion))harmonicInterval
+//{
+//    return ^double(double frequency, HarmonicInterval harmonicInterval, HarmonicInversion harmonicInversion)
+//    {
+//        double harmonic_interval;
+//        switch (harmonicInterval)
+//        {
+//            case HarmonicIntervalUnison:
+//                harmonic_interval = 1.0;
+//                break;
+//
+//            case HarmonicIntervalOctave:
+//                harmonic_interval = 2.0;
+//                break;
+//
+//            case HarmonicIntervalMajorSixth:
+//                harmonic_interval = 5.0/3.0;
+//                break;
+//
+//            case HarmonicIntervalPerfectFifth:
+//                harmonic_interval = 3.0/2.0;
+//                break;
+//
+//            case HarmonicIntervalPerfectFourth:
+//                harmonic_interval = 4.0/3.0;
+//                break;
+//
+//            case HarmonicIntervalMinorThird:
+//                harmonic_interval = 6.0/5.0;
+//                break;
+//
+//            case HarmonicIntervalMajorThird:
+//                harmonic_interval = 5.0/4.0;
+//                break;
+//
+//            default:
+//                harmonic_interval = 1.0;
+//                break;
+//        }
+//
+//        double new_frequency = (harmonicInversion == HarmonicInversionPerfect) ? frequency * harmonic_interval : frequency / harmonic_interval;
+//
+//        return new_frequency;
+//    };
+//}
+
+//typedef void (^RandomizedFrequenciesCompletionBlock)(double, double);
+//typedef void (^RandomFrequencies)(double, double, double, HarmonicInterval, HarmonicInversion, RandomizedFrequenciesCompletionBlock);
+
+//+ (RandomFrequencies)randomFrequencies
+//{
+//    return ^void(double min, double max, double weight, HarmonicInterval harmonic_interval, HarmonicInversion harmonic_inversion, RandomizedFrequenciesCompletionBlock randomFrequenciesCompletionBlock)
+//    {
+//        NSUInteger r = arc4random_uniform(2);
+//        double frequency, harmonic_frequency;
+//        frequency = ToneGenerator.randomFrequency(min, max, weight);
+//        harmonic_frequency = ToneGenerator.harmonicInterval(frequency, harmonic_interval,  harmonic_inversion);
+//
+//        randomFrequenciesCompletionBlock(frequency, harmonic_frequency);
+//    };
+//
+//}
+//
+//+ (FrequencyBufferData)frequencyGlissando
+//{
+//    return ^double(double time, double frequency, double harmonic_frequency)
+//    {
+//        return sinf(M_PI * 2.0 * time * frequency); //ToneGenerator.scale(time, 0.0, 1.0, min_frequency, max_frequency));
+//    };
+//}
+
 
 //+ (FrequencyEnvelopeInterval)frequencyEnvelopeGlissando
 //{
@@ -251,114 +551,52 @@ static ToneGenerator *sharedGenerator = NULL;
 //    };
 //}
 
-+ (FrequencyEnvelopeInterval)frequencyEnvelopeDyad
-{
-    return ^double(double time, double frequency, double harmonic_frequency)
-    {
-        return ((max_trill_interval - min_trill_interval) * pow(time, 1.0/3.0)) + min_trill_interval;
-    };
-}
+//+ (FrequencyEnvelopeInterval)frequencyEnvelopeDyad
+//{
+//    return ^double(double time, double frequency, double harmonic_frequency)
+//    {
+//        return ((max_trill_interval - min_trill_interval) * pow(time, 1.0/3.0)) + min_trill_interval;
+//    };
+//}
 
-+ (AVAudioPCMBuffer *(^)(double, double, double, AVAudioFormat *, FrequencyEnvelopeInterval, Amplitude, FrequencyBufferData))buffer
-{
-    return ^AVAudioPCMBuffer *(double frequency, double harmonic_frequency, double duration, AVAudioFormat *audioFormat, FrequencyEnvelopeInterval frequencyEnvelopeInterval, Amplitude amplitude, FrequencyBufferData frequencyBufferData)
-    {
-        frequency = frequency * duration;
-        harmonic_frequency = harmonic_frequency * duration;
-        double sampleRate = [audioFormat sampleRate];
-        AVAudioFrameCount frameCount = (sampleRate * sum_duration_interval) * duration;
-        AVAudioPCMBuffer *pcmBuffer  = [[AVAudioPCMBuffer alloc] initWithPCMFormat:audioFormat frameCapacity:frameCount];
-        pcmBuffer.frameLength        = pcmBuffer.frameCapacity; //(sampleRate * duration_interval)(duration_weight < 1.0) ? frameCount : sampleRate;
-        float *l_channel             = pcmBuffer.floatChannelData[0];
-        float *r_channel             = ([audioFormat channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil;
-        
-        for (int index = 0; index < frameCount; index++)
-        {
-            double time      = ToneGenerator.percentage(index, frameCount);
-            double freq_env  = ToneGenerator.frequencyEnvelope(time, frequency, harmonic_frequency, frequencyEnvelopeInterval);
-            double amp_env   = amplitude(time, 1.0);
-            
-            double f = frequencyBufferData(time,
-                                           ToneGenerator.scale(time, 0.0, 1.0, frequency, harmonic_frequency),
-                                           ToneGenerator.scale(time, 0.0, 1.0, harmonic_frequency, harmonic_frequency * (double)(5.0/4.0))) * freq_env * amp_env; //frequencyBufferData(time, frequency, harmonic_frequency) * amplitude(time, 1.0);
-            if (l_channel) l_channel[index] = f;
-            if (r_channel) r_channel[index] = f;
-        }
-        
-        return pcmBuffer;
-    };
-}
-
-+ (Tones)glissando
-{
-    return ^(AVAudioFormat *audioFormat, DataRenderedCompletionBlock dataRenderedCompletionBlock) {
-        NSUInteger r = arc4random_uniform(2);
-        double frequency, harmonic_frequency;
-        switch (r) {
-            case 0:
-            {
-                frequency = ToneGenerator.randomFrequency(min_frequency, max_frequency, 1.0);
-                harmonic_frequency = frequency * (double)(5.0/4.0);
-                break;
-            }
-                
-            case 1:
-            {
-                harmonic_frequency = ToneGenerator.randomFrequency(min_frequency, max_frequency, 1.0);
-                frequency = harmonic_frequency * (double)(5.0/4.0);
-                break;
-            }
-                
-            default:
-                break;
-        }
-        
-        double duration = RANDOM_NUMF(0.0, 2.0);
-        
-        dispatch_queue_t dataRendererSerialQueue = dispatch_queue_create("com.blogspot.demonicactivity.dataRendererSerialQueue", DISPATCH_QUEUE_SERIAL);
-        dispatch_block_t glissandoBlock = dispatch_block_create(0, ^{
-            dataRenderedCompletionBlock(ToneGenerator.buffer(frequency, harmonic_frequency, duration, audioFormat, ToneGenerator.frequencyEnvelopeInterval, ToneGenerator.amplitude, ToneGenerator.frequencyGlissando), ^(NSString *playerNodeID) {
-                NSLog(@"%@", playerNodeID);
-                
-                
-            });
-            
-        });
-        dispatch_async(dataRendererSerialQueue, glissandoBlock);
-        dispatch_block_t glissandoBlockAux = dispatch_block_create(0, ^{
-            dataRenderedCompletionBlock(ToneGenerator.buffer(harmonic_frequency, harmonic_frequency * (double)(5.0/4.0), sum_duration_interval - duration, audioFormat, ToneGenerator.frequencyEnvelopeInterval, ToneGenerator.amplitude, ToneGenerator.frequencyGlissando), ^(NSString *playerNodeID) {
-                NSLog(@"%@", playerNodeID);
-                ToneGenerator.glissando(audioFormat, dataRenderedCompletionBlock);
-            });
-        });
-        dispatch_block_notify(glissandoBlock, dispatch_get_main_queue(), glissandoBlockAux);
-    };
-}
-
-//+ (ToneBarrierScore)dyad
+//+ (Score)glissando
 //{
 //    return ^(AVAudioFormat *audioFormat, DataRenderedCompletionBlock dataRenderedCompletionBlock) {
-//        __block double frequency, harmonic_frequency;
-//        frequency = ToneGenerator.randomFrequency(min_frequency, max_frequency / 2.0, 1.0/3.0);
-//        harmonic_frequency = frequency * (double)(1.1 + drand48());
 //
-//        double duration = RANDOM_NUMF(0.0, 2.0);
 //
-//        dispatch_queue_t dataRendererSerialQueue = dispatch_queue_create("com.blogspot.demonicactivity.dataRendererSerialQueue", DISPATCH_QUEUE_SERIAL);
-//        dispatch_block_t glissandoBlock = dispatch_block_create(0, ^{
-//            dataRenderedCompletionBlock(harmony(frequency, harmonic_frequency, duration,audioFormat), ^(NSString *playerNodeID) {
 //
+//
+//        NSUInteger q = arc4random_uniform(2);
+//        ToneGenerator.randomFrequencies(min_frequency, max_frequency, 2.0, HarmonicIntervalPerfectFifth, q, ^(double frequency, double harmonic_frequency) {
+//            double duration = ToneGenerator.randomDuration(min_duration_interval, max_duration_interval, 3.0);
+//            NSLog(@"duration (1) == %f (harmonic inversion == %lu)", MIN(duration, sum_duration_interval - duration), q);
+//
+//            dataRenderedCompletionBlock(ToneGenerator.buffer(frequency, harmonic_frequency, MIN(duration, sum_duration_interval - duration), audioFormat, ToneGenerator.frequencyEnvelopeInterval, ToneGenerator.amplitude, ToneGenerator.frequencyEnvelope), ^(NSString *playerNodeID) {
+//                NSUInteger r = arc4random_uniform(2);
+//                NSLog(@"duration (2) == %f (harmonic inversion == %lu", MAX(duration, sum_duration_interval - duration), r);
+//                dataRenderedCompletionBlock(ToneGenerator.buffer(harmonic_frequency, ToneGenerator.harmonicInterval(frequency, HarmonicIntervalPerfectFifth, (HarmonicInversion)(r)), MAX(duration, sum_duration_interval - duration), audioFormat, ToneGenerator.frequencyEnvelopeInterval, ToneGenerator.amplitude, ToneGenerator.frequencyEnvelope), ^(NSString *playerNodeID) {
+//                    ToneGenerator.glissando(audioFormat, dataRenderedCompletionBlock);
+//                });
 //            });
+//
 //        });
-//        dispatch_async(dataRendererSerialQueue, glissandoBlock);
-//        dispatch_block_t harmonyBlock = dispatch_block_create(0, ^{
-//            frequency = ToneGenerator.randomFrequency(min_frequency, max_frequency / 8.0, 1.0/3.0);
-//            harmonic_frequency = frequency * (double)(5.0/4.0);
-//            dataRenderedCompletionBlock(harmony(frequency, harmonic_frequency, sum_duration_interval - duration, audioFormat), ^(NSString *playerNodeID) {
-//                renderDataForToneBarrierScoreWithHarmony(dataRenderedCompletionBlock);
-//            });
-//        });
-//        dispatch_block_notify(glissandoBlock, dispatch_get_main_queue(), harmonyBlock);
+//
+//        //        ToneGenerator.randomFrequencies(min_frequency, max_frequency, 2.0, HarmonicIntervalMajorThird, ^(double frequency, double harmonic_frequency) {
+//        //            double duration = RANDOM_NUMF(0.0, 2.0);
+//        //            dispatch_queue_t dataRendererSerialQueue = dispatch_queue_create("com.blogspot.demonicactivity.dataRendererSerialQueue", DISPATCH_QUEUE_SERIAL);
+//        //            dispatch_block_t glissandoBlock = dispatch_block_create(0, ^{
+//        //                dataRenderedCompletionBlock(ToneGenerator.buffer(frequency, harmonic_frequency, duration, audioFormat, ToneGenerator.frequencyEnvelopeInterval, ToneGenerator.amplitude, ToneGenerator.frequencyEnvelope), ^(NSString *playerNodeID) {
+//        //
+//        //                });
+//        //            });
+//        //            dispatch_async(dataRendererSerialQueue, glissandoBlock);
+//        //            dispatch_block_t glissandoBlockAux = dispatch_block_create(0, ^{
+//        //                dataRenderedCompletionBlock(ToneGenerator.buffer(harmonic_frequency, ToneGenerator.harmonicInterval(harmonic_frequency, HarmonicIntervalPerfectFifth, HarmonicInversionPerfect), sum_duration_interval - duration, audioFormat, ToneGenerator.frequencyEnvelopeInterval, ToneGenerator.amplitude, ToneGenerator.frequencyEnvelope), ^(NSString *playerNodeID) {
+//        //                    ToneGenerator.glissando(audioFormat, dataRenderedCompletionBlock);
+//        //                });
+//        //            });
+//        //            dispatch_block_notify(glissandoBlock, dispatch_get_main_queue(), glissandoBlockAux);
+//        //        });
 //    };
 //}
 
@@ -370,10 +608,14 @@ static ToneGenerator *sharedGenerator = NULL;
     if (interruptionType == AVAudioSessionInterruptionTypeBegan)
     {
         NSLog(@"AVAudioSessionInterruptionTypeBegan");
+        // if playing, stop audio engine and then set the volume to 1,0
+        [self.delegate play:nil];
+        [ToneGenerator.sharedGenerator.audioEngine.mainMixerNode setOutputVolume:1.0];
     } else if (interruptionType == AVAudioSessionInterruptionTypeEnded)
     {
-        if (_audioEngine.mainMixerNode.volume > 0.0)
+        if (_audioEngine.mainMixerNode.outputVolume > 0.0)
         {
+            NSLog(@"Resuming playback...");
             [self.delegate play:nil];
         }
         NSLog(@"AVAudioSessionInterruptionTypeEnded");
@@ -387,49 +629,6 @@ static ToneGenerator *sharedGenerator = NULL;
         NSLog(@"AVAudioSessionInterruptionOptionShouldResume FALSE");
     }
 }
-
-
-//- (void)handleInterruption:(NSNotification *)notification
-//{
-//
-//    NSLog(@"Session interrupted > --- %s ---\n", theInterruptionType == AVAudioSessionInterruptionTypeBegan ? "Begin Interruption" : "End Interruption");
-//
-//    if (theInterruptionType == AVAudioSessionInterruptionTypeBegan) {
-//        _isSessionInterrupted = YES;
-//
-//        //stop the playback of the nodes
-//        for (int i = 0; i < _collisionPlayerArray.count; i++)
-//            [[_collisionPlayerArray objectAtIndex:i] stop];
-//
-//        if ([self.delegate respondsToSelector:@selector(engineWasInterrupted)]) {
-//            [self.delegate engineWasInterrupted];
-//        }
-//
-//    }
-//    if (theInterruptionType == AVAudioSessionInterruptionTypeEnded) {
-//        // make sure to activate the session
-//        NSError *error;
-//        bool success = [[AVAudioSession sharedInstance] setActive:YES error:&error];
-//        if (!success)
-//            NSLog(@"AVAudioSession set active failed with error: %@", [error localizedDescription]);
-//        else {
-//            _isSessionInterrupted = NO;
-//            if (_isConfigChangePending) {
-//                //there is a pending config changed notification
-//                NSLog(@"Responding to earlier engine config changed notification. Re-wiring connections and starting once again");
-//                [self makeEngineConnections];
-//                [self startEngine];
-//
-//                _isConfigChangePending = NO;
-//            }
-//            else {
-//                // start the engine once again
-//                [self startEngine];
-//            }
-//        }
-//    }
-//}
-
 
 - (void)setupEngine
 {
@@ -482,12 +681,6 @@ static ToneGenerator *sharedGenerator = NULL;
             if (error)
             {
                 NSLog(@"%@", [error description]);
-            } else {
-                _time          = [[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(CMClockGetTime(CMClockGetHostTimeClock()))];
-                _timeAux       = [[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(CMClockGetTime(CMClockGetHostTimeClock()))];
-                CMTime cmtime  = CMTimeAdd(CMTimeMakeWithSeconds([AVAudioTime secondsForHostTime:[self->_timeAux hostTime]], NSEC_PER_SEC), CMTimeMakeWithSeconds(1.0, NSEC_PER_SEC));
-                _timeAux = [[AVAudioTime alloc] initWithHostTime:CMClockConvertHostTimeToSystemUnits(cmtime)];
-                
             }
         }
     } else {
@@ -545,7 +738,7 @@ AVAudio3DPoint GenerateRandomXPosition()
             
             // TO-DO: sustain the last frequency of the glissando for the same duration as the glissando
             if (![_playerNode isPlaying]) [_playerNode play];
-            ToneGenerator.glissando(self.audioFormat, ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
+            ToneGenerator.dyad(self.audioFormat, ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
                 [self->_playerNode scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
                     if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
                     {
@@ -554,6 +747,17 @@ AVAudio3DPoint GenerateRandomXPosition()
                     }
                 }];
             });
+            
+            //            if (![_playerNodeAux isPlaying]) [_playerNodeAux play];
+            //            ToneGenerator.glissando(self.audioFormat, ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
+            //                [self->_playerNodeAux scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
+            //                    if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
+            //                    {
+            //                        [self->_playerNodeAux setPosition:GenerateRandomXPosition()];
+            //                        dataPlayedBackCompletionBlock([NSString stringWithFormat:@"AVAudioPlayerNodeCompletionDataPlayedBack"]);
+            //                    }
+            //                }];
+            //            });
             
             //            if (![_playerNodeAux isPlaying]) [_playerNodeAux play];
             //            renderDataForToneBarrierScoreWithHarmony(^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
