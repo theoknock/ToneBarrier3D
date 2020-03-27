@@ -415,9 +415,9 @@ static ToneGenerator *sharedGenerator = NULL;
                                                      toneLAux,
                                                      toneRAux);
         
-        NSLog(@"Minimum duration\t%f", durationMin);
+//        NSLog(@"Minimum duration\t%f", durationMin);
         dataRenderedCompletionBlock(ToneGenerator.buffer(audioFormat, tones), ^(NSString *playerNodeID) {
-            NSLog(@"Maximum duration\t%f", durationMax);
+//            NSLog(@"Maximum duration\t%f", durationMax);
             free(amplitude);
             free(frequencyL);
             free(frequencyR);
@@ -425,7 +425,7 @@ static ToneGenerator *sharedGenerator = NULL;
             free(toneR);
             free(tones);
             dataRenderedCompletionBlock(ToneGenerator.buffer(audioFormat, tonesAux), ^(NSString *playerNodeID) {
-                NSLog(@"Total duration\t%f", durationMin + durationMax);
+//                NSLog(@"Total duration\t%f", durationMin + durationMax);
                 free(amplitudeAux);
                 free(frequencyLAux);
                 free(frequencyRAux);
@@ -511,9 +511,9 @@ static ToneGenerator *sharedGenerator = NULL;
         Tones * tonesAux = ToneGenerator.tonesStruct(durationMax,
                                                      toneLAux,
                                                      toneRAux);
-        NSLog(@"Minimum duration\t%f", durationMin);
+//        NSLog(@"Minimum duration\t%f", durationMin);
         dataRenderedCompletionBlock(ToneGenerator.buffer(audioFormat, tones), ^(NSString *playerNodeID) {
-            NSLog(@"Maximum duration\t%f", durationMax);
+//            NSLog(@"Maximum duration\t%f", durationMax);
             free(amplitude);
             free(frequencyL);
             free(frequencyR);
@@ -521,7 +521,7 @@ static ToneGenerator *sharedGenerator = NULL;
             free(toneR);
             free(tones);
             dataRenderedCompletionBlock(ToneGenerator.buffer(audioFormat, tonesAux), ^(NSString *playerNodeID) {
-                NSLog(@"Total duration\t%f", durationMin + durationMax);
+//                NSLog(@"Total duration\t%f", durationMin + durationMax);
                 free(amplitudeAux);
                 free(frequencyLAux);
                 free(frequencyRAux);
@@ -887,16 +887,16 @@ AVAudio3DPoint GenerateRandomXPosition()
                 }];
             });
             
-//            if (![_playerNodeAux isPlaying]) [_playerNodeAux play];
-//            ToneGenerator.glissando(self.audioFormat, ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
-//                [self->_playerNodeAux scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
-//                    if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
-//                    {
-//                        [self->_playerNodeAux setPosition:GenerateRandomXPosition()];
-//                        dataPlayedBackCompletionBlock([NSString stringWithFormat:@"AVAudioPlayerNodeCompletionDataPlayedBack"]);
-//                    }
-//                }];
-//            });
+            if (![_playerNodeAux isPlaying]) [_playerNodeAux play];
+            ToneGenerator.dyad(self.audioFormat, ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
+                [self->_playerNodeAux scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
+                    if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
+                    {
+                        [self->_playerNodeAux setPosition:GenerateRandomXPosition()];
+                        dataPlayedBackCompletionBlock([NSString stringWithFormat:@"AVAudioPlayerNodeCompletionDataPlayedBack"]);
+                    }
+                }];
+            });
             
             //            if (![_playerNodeAux isPlaying]) [_playerNodeAux play];
             //            renderDataForToneBarrierScoreWithHarmony(^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
