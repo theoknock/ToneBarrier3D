@@ -237,13 +237,15 @@ static ToneGenerator *sharedGenerator = NULL;
     };
 }
 
-+ (Amplitude *(^)(BOOL, double, double, AmplitudeEnvelope))amplitudeStruct
++ (Amplitude *(^)(BOOL, double, double, double, AmplitudeEnvelope))amplitudeStruct
 {
-    return ^Amplitude *(BOOL invert, double mid, double slope, AmplitudeEnvelope amplitudeEnvelope)
+    return ^Amplitude *(BOOL invert, double mid, double trill, double slope, AmplitudeEnvelope amplitudeEnvelope)
     {
         Amplitude * amplitude_struct        = malloc(sizeof(Amplitude));
         amplitude_struct->invert            = invert;
         amplitude_struct->mid               = mid;
+        amplitude_struct->trill             = trill;
+        
         amplitude_struct->slope             = slope;
         amplitude_struct->amplitudeEnvelope = amplitudeEnvelope;
         
