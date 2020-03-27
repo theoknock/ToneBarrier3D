@@ -102,10 +102,12 @@ typedef void (^Score)(AVAudioFormat * audioFormat, DataRenderedCompletionBlock d
 @property (class, readonly) double(^scale)(double, double, double, double, double);
 @property (class, readonly) double(^randomFrequency)(double, double, double);
 @property (class, readonly) double(^randomDuration)(double, double, double);
-@property (class, readonly) FrequencyEnvelope  frequencyEnvelope;
-@property (class, readonly) AmplitudeEnvelope  amplitudeEnvelope;
-@property (class, readonly) AmplitudeEnvelope  amplitudeEnvelopeAux;
+@property (nonatomic, strong) FrequencyEnvelope  frequencyEnvelope;
+@property (nonatomic, strong) FrequencyEnvelope  frequencyEnvelopeAux;
+@property (nonatomic, strong) AmplitudeEnvelope  amplitudeEnvelope;
+@property (nonatomic, strong) AmplitudeEnvelope  amplitudeEnvelopeAux;
 @property (class, readonly) Score              dyad;
+@property (class, readonly) Score              glissando;
 @property (class, readonly) AVAudioPCMBuffer * (^buffer)(AVAudioFormat * audioFormat, Tones * tones);
 @property (class, readonly) float * (^channelData)(AVAudioFrameCount, Tone *, float *, float *);
 
@@ -191,7 +193,7 @@ static ToneGenerator *sharedGenerator = NULL;
     };
 }
 
-+ (FrequencyEnvelope)frequencyEnvelope
+- (FrequencyEnvelope)frequencyEnvelope
 {
     return ^double(double time, double primaryFrequency, double secondaryFrequency, double minFrequency, double maxFrequency)
     {
@@ -199,7 +201,16 @@ static ToneGenerator *sharedGenerator = NULL;
     };
 }
 
-+ (AmplitudeEnvelope)amplitudeEnvelope
+- (FrequencyEnvelope)frequencyEnvelopeAux
+{
+    return ^double(double time, double primaryFrequency, double secondaryFrequency, double minFrequency, double maxFrequency)
+    {
+        double new_frequency = primaryFrequency + ((secondaryFrequency - primaryFrequency) * time);
+        return sinf(M_PI * 2.0 * time * new_frequency);
+    };
+}
+
+- (AmplitudeEnvelope)amplitudeEnvelope
 {
     return ^double(double time, BOOL invert, double trill, double mid, double slope)
     {
@@ -208,7 +219,7 @@ static ToneGenerator *sharedGenerator = NULL;
     };
 }
 
-+ (AmplitudeEnvelope)amplitudeEnvelopeAux
+- (AmplitudeEnvelope)amplitudeEnvelopeAux
 {
     return ^double(double time, BOOL invert, double trill, double mid, double slope)
     {
@@ -233,16 +244,16 @@ static ToneGenerator *sharedGenerator = NULL;
 //    };
 //]
 
-+ (Frequency *(^)(double, double, double, double))frequencyStruct
++ (Frequency *(^)(double, double, double, double, FrequencyEnvelope))frequencyStruct
 {
-    return ^Frequency *(double primary, double secondary, double min, double max)
+    return ^Frequency *(double primary, double secondary, double min, double max, FrequencyEnvelope frequencyEnvelope)
     {
         Frequency * frequency_struct        = malloc(sizeof(Frequency));
         frequency_struct->primary           = primary;
         frequency_struct->secondary         = secondary;
         frequency_struct->min               = min;
         frequency_struct->max               = max;
-        frequency_struct->frequencyEnvelope = ToneGenerator.frequencyEnvelope;
+        frequency_struct->frequencyEnvelope = frequencyEnvelope;
         
         return frequency_struct;
     };
@@ -263,9 +274,9 @@ static ToneGenerator *sharedGenerator = NULL;
     };
 }
 
-+ (Tone *(^)(TimeEnvelope, Frequency *, FrequencyEnvelope, Amplitude *))toneStruct
++ (Tone *(^)(TimeEnvelope, Frequency *, Amplitude *))toneStruct
 {
-    return ^Tone *(TimeEnvelope timeEnvelope, Frequency * frequency, FrequencyEnvelope frequencyEnvelope, Amplitude * amplitude)
+    return ^Tone *(TimeEnvelope timeEnvelope, Frequency * frequency, Amplitude * amplitude)
     {
         Tone * tone_struct = malloc(sizeof(Tone));
         tone_struct->timeEnvelope       = timeEnvelope;
@@ -352,68 +363,177 @@ static ToneGenerator *sharedGenerator = NULL;
                                                               2.0,                              // Peak the amplitude in the middle (i.e., even attack, even release)
                                                               2.0,                              // Smooth the transition from/to 0.0 during/after the attack/release
                                                               1.0,                              // The trill value must always be an odd number
-                                                              ToneGenerator.amplitudeEnvelope); // The block that calculates the amplitude using the parameter values supplied in this struct
+                                                              ToneGenerator.sharedGenerator.amplitudeEnvelope); // The block that calculates the amplitude using the parameter values supplied in this struct
         
         Frequency * frequencyL = ToneGenerator.frequencyStruct(frequency * durationMin,
                                                                harmonic_frequency * durationMin,
                                                                0.0,
-                                                               0.0);
+                                                               0.0,
+                                                               ToneGenerator.sharedGenerator.frequencyEnvelope);
         Tone * toneL           = ToneGenerator.toneStruct(ToneGenerator.timeEnvelope,
                                                           frequencyL,
-                                                          ToneGenerator.frequencyEnvelope,
                                                           amplitude);
         
         Frequency * frequencyR = ToneGenerator.frequencyStruct(harmonic_frequency * durationMin,
                                                                frequencyAux * durationMin,
                                                                0.0,
-                                                               0.0);
+                                                               0.0,
+                                                               ToneGenerator.sharedGenerator.frequencyEnvelope);
         Tone * toneR           = ToneGenerator.toneStruct(ToneGenerator.timeEnvelope,
                                                           frequencyR,
-                                                          ToneGenerator.frequencyEnvelope,
                                                           amplitude);
         
         Tones * tones          = ToneGenerator.tonesStruct(durationMin,
                                                            toneL,
                                                            toneR);
-        NSLog(@"Minimum duration\t%f", durationMin);
         
         Amplitude * amplitudeAux = ToneGenerator.amplitudeStruct(FALSE,
                                                                  8.0,
                                                                  8.0,
                                                                  8.0,
-                                                                 ToneGenerator.amplitudeEnvelopeAux);
+                                                                 ToneGenerator.sharedGenerator.amplitudeEnvelopeAux);
         
         Frequency * frequencyLAux = ToneGenerator.frequencyStruct(harmonic_frequency * durationMax,
                                                                   frequencyAux * durationMax,
                                                                   0.0,
-                                                                  0.0);
+                                                                  0.0,
+                                                                  ToneGenerator.sharedGenerator.frequencyEnvelope);
         Tone * toneLAux           = ToneGenerator.toneStruct(ToneGenerator.timeEnvelope,
                                                              frequencyLAux,
-                                                             ToneGenerator.frequencyEnvelope,
                                                              amplitudeAux);
         
         Frequency * frequencyRAux = ToneGenerator.frequencyStruct(frequencyAux * durationMax,
                                                                   harmonic_frequencyAux * durationMax,
                                                                   0.0,
-                                                                  0.0);
+                                                                  0.0,
+                                                                  ToneGenerator.sharedGenerator.frequencyEnvelope);
         Tone * toneRAux           = ToneGenerator.toneStruct(ToneGenerator.timeEnvelope,
                                                              frequencyRAux,
-                                                             ToneGenerator.frequencyEnvelope,
                                                              amplitudeAux);
         
         Tones * tonesAux = ToneGenerator.tonesStruct(durationMax,
                                                      toneLAux,
                                                      toneRAux);
-        NSLog(@"Maximum duration\t%f", durationMax);
         
+        NSLog(@"Minimum duration\t%f", durationMin);
         dataRenderedCompletionBlock(ToneGenerator.buffer(audioFormat, tones), ^(NSString *playerNodeID) {
+            NSLog(@"Maximum duration\t%f", durationMax);
+            free(amplitude);
+            free(frequencyL);
+            free(frequencyR);
+            free(toneL);
+            free(toneR);
+            free(tones);
             dataRenderedCompletionBlock(ToneGenerator.buffer(audioFormat, tonesAux), ^(NSString *playerNodeID) {
                 NSLog(@"Total duration\t%f", durationMin + durationMax);
+                free(amplitudeAux);
+                free(frequencyLAux);
+                free(frequencyRAux);
+                free(toneLAux);
+                free(toneRAux);
+                free(tonesAux);
                 ToneGenerator.dyad(audioFormat, dataRenderedCompletionBlock);
             });
         });
     };
 }
+
++ (Score)glissando
+{
+    return ^(AVAudioFormat *audioFormat, DataRenderedCompletionBlock dataRenderedCompletionBlock) {
+        // Glissando plays two tones, the first with a short duration, and the second with a long one; the total duration of both tones is two seconds
+        // When playing multiple tones in a single score call...
+        double minDuration  = 0.25;
+        double maxDuration  = 0.75;
+        double sumDuration  = 2.0;
+        double randDuration = ToneGenerator.randomDuration(minDuration, maxDuration, 3.0);
+        double diffDuration = sumDuration - randDuration;
+        double durationMin  = sumDuration; //MIN(randDuration, diffDuration);
+        double durationMax  = sumDuration; //MAX(randDuration, diffDuration);
+        double frequency    = ToneGenerator.randomFrequency(min_frequency, max_frequency, 2.0);
+        double harmonic_frequency = (frequency * (5.0/4.0));
+        double frequencyAux = (harmonic_frequency * (5.0/4.0));
+        double harmonic_frequencyAux = (frequencyAux * (5.0/4.0));
+        
+        // The amplitude calculation is the same for both channels
+        Amplitude * amplitude = ToneGenerator.amplitudeStruct(FALSE,                            // The amplitude peaks in the middle, so an inversion would render the same result
+                                                              2.0,                              // Peak the amplitude in the middle (i.e., even attack, even release)
+                                                              2.0,                              // Smooth the transition from/to 0.0 during/after the attack/release
+                                                              1.0,                              // The trill value must always be an odd number
+                                                              ToneGenerator.sharedGenerator.amplitudeEnvelope); // The block that calculates the amplitude using the parameter values supplied in this struct
+        
+        Frequency * frequencyL = ToneGenerator.frequencyStruct(frequency * durationMin,
+                                                               harmonic_frequency * durationMin,
+                                                               frequency * durationMin,
+                                                               harmonic_frequency * durationMin,
+                                                               ToneGenerator.sharedGenerator.frequencyEnvelopeAux);
+        Tone * toneL           = ToneGenerator.toneStruct(ToneGenerator.timeEnvelope,
+                                                          frequencyL,
+                                                          amplitude);
+        
+        Frequency * frequencyR = ToneGenerator.frequencyStruct(harmonic_frequency * durationMin,
+                                                               frequencyAux * durationMin,
+                                                               harmonic_frequency * durationMin,
+                                                               frequencyAux * durationMin,
+                                                               ToneGenerator.sharedGenerator.frequencyEnvelopeAux);
+        Tone * toneR           = ToneGenerator.toneStruct(ToneGenerator.timeEnvelope,
+                                                          frequencyR,
+                                                          amplitude);
+        
+        Tones * tones          = ToneGenerator.tonesStruct(durationMin,
+                                                           toneL,
+                                                           toneR);
+        
+        Amplitude * amplitudeAux = ToneGenerator.amplitudeStruct(FALSE,
+                                                                 8.0,
+                                                                 8.0,
+                                                                 8.0,
+                                                                 ToneGenerator.sharedGenerator.amplitudeEnvelopeAux);
+        
+        Frequency * frequencyLAux = ToneGenerator.frequencyStruct(harmonic_frequency * durationMax,
+                                                                  frequencyAux * durationMax,
+                                                                  harmonic_frequency * durationMax,
+                                                                  frequencyAux * durationMax,
+                                                                  ToneGenerator.sharedGenerator.frequencyEnvelopeAux);
+        Tone * toneLAux           = ToneGenerator.toneStruct(ToneGenerator.timeEnvelope,
+                                                             frequencyLAux,
+                                                             amplitudeAux);
+        
+        Frequency * frequencyRAux = ToneGenerator.frequencyStruct(frequencyAux * durationMax,
+                                                                  harmonic_frequencyAux * durationMax,
+                                                                  frequencyAux * durationMax,
+                                                                  harmonic_frequencyAux * durationMax,
+                                                                  ToneGenerator.sharedGenerator.frequencyEnvelopeAux);
+        Tone * toneRAux           = ToneGenerator.toneStruct(ToneGenerator.timeEnvelope,
+                                                             frequencyRAux,
+                                                             amplitudeAux);
+        
+        Tones * tonesAux = ToneGenerator.tonesStruct(durationMax,
+                                                     toneLAux,
+                                                     toneRAux);
+        NSLog(@"Minimum duration\t%f", durationMin);
+        dataRenderedCompletionBlock(ToneGenerator.buffer(audioFormat, tones), ^(NSString *playerNodeID) {
+            NSLog(@"Maximum duration\t%f", durationMax);
+            free(amplitude);
+            free(frequencyL);
+            free(frequencyR);
+            free(toneL);
+            free(toneR);
+            free(tones);
+            dataRenderedCompletionBlock(ToneGenerator.buffer(audioFormat, tonesAux), ^(NSString *playerNodeID) {
+                NSLog(@"Total duration\t%f", durationMin + durationMax);
+                free(amplitudeAux);
+                free(frequencyLAux);
+                free(frequencyRAux);
+                free(toneLAux);
+                free(toneRAux);
+                free(tonesAux);
+                ToneGenerator.glissando(audioFormat, dataRenderedCompletionBlock);
+            });
+        });
+    };
+}
+
 
 //+ (AVAudioPCMBuffer *(^)(AVAudioFormat *, Tones *))buffer
 //{
@@ -757,7 +877,7 @@ AVAudio3DPoint GenerateRandomXPosition()
             
             // TO-DO: sustain the last frequency of the glissando for the same duration as the glissando
             if (![_playerNode isPlaying]) [_playerNode play];
-            ToneGenerator.dyad(self.audioFormat, ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
+            ToneGenerator.glissando(self.audioFormat, ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
                 [self->_playerNode scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
                     if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
                     {
@@ -767,16 +887,16 @@ AVAudio3DPoint GenerateRandomXPosition()
                 }];
             });
             
-//                        if (![_playerNodeAux isPlaying]) [_playerNodeAux play];
-//                        ToneGenerator.dyad(self.audioFormat, ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
-//                            [self->_playerNodeAux scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
-//                                if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
-//                                {
-//                                    [self->_playerNodeAux setPosition:GenerateRandomXPosition()];
-//                                    dataPlayedBackCompletionBlock([NSString stringWithFormat:@"AVAudioPlayerNodeCompletionDataPlayedBack"]);
-//                                }
-//                            }];
-//                        });
+//            if (![_playerNodeAux isPlaying]) [_playerNodeAux play];
+//            ToneGenerator.glissando(self.audioFormat, ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
+//                [self->_playerNodeAux scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
+//                    if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
+//                    {
+//                        [self->_playerNodeAux setPosition:GenerateRandomXPosition()];
+//                        dataPlayedBackCompletionBlock([NSString stringWithFormat:@"AVAudioPlayerNodeCompletionDataPlayedBack"]);
+//                    }
+//                }];
+//            });
             
             //            if (![_playerNodeAux isPlaying]) [_playerNodeAux play];
             //            renderDataForToneBarrierScoreWithHarmony(^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
