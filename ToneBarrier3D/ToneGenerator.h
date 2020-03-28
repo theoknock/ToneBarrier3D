@@ -10,13 +10,26 @@
 #import <AVFoundation/AVFoundation.h>
 #import <UIKit/UIKit.h>
 
+typedef NS_ENUM(NSUInteger, ToneBarrierScore) {
+    ToneBarrierScoreHeadphones,
+    ToneBarrierScoreSpeaker,
+    ToneBarrierScoreAlarm,
+    ToneBarrierScoreNone
+};
+
 
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol ToneGeneratorDelegate <NSObject>
 
 @required
+#if TARGET_OS_IOS
 - (IBAction)play:(UIButton *)sender;
+@property (weak, nonatomic) IBOutlet UIButton *playButton;
+#else
+- (IBAction)play;
+#endif
+
 
 @end
 
@@ -30,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (weak) id<ToneGeneratorDelegate> delegate;
 
-- (void)play;
+- (void)play:(ToneBarrierScore)toneBarrierScore;
 
 @end
 

@@ -137,10 +137,6 @@
 
 - (IBAction)play
 {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.playButton setBackgroundImage:[UIImage imageNamed:@"stop"]];
-    });
-    
     __block BOOL isToneBarrierPlaying = FALSE;
     dispatch_queue_t playSerialQueue = dispatch_queue_create("com.blogspot.demonicactivity.serialqueue", DISPATCH_QUEUE_SERIAL);
     dispatch_block_t playTonesBlock = dispatch_block_create(0, ^{
@@ -152,40 +148,68 @@
                 dispatch_async(dispatch_get_main_queue(), ^{
                     isToneBarrierPlaying = [(NSNumber *)[replyMessage objectForKey:@"RemoteStatus"] boolValue];
                     NSLog(@"isToneBarrierPlaying == %@", (isToneBarrierPlaying) ? @"TRUE" : @"FALSE");
+                    if (isToneBarrierPlaying)
+                    {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [self.playButton setBackgroundImageNamed:@"stop"];
+                        });
+                    } else {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                        [self.playButton setBackgroundImageNamed:@"play"];
+                        });
+                    }
                 });
             } errorHandler:^(NSError * _Nonnull error) {
                 
+            }];
+            
+            [wcs sendMessage:@{@"RemoteAction" : @{@"action" : @(!isToneBarrierPlaying)}}
+                replyHandler:^(NSDictionary<NSString *,id> * _Nonnull replyMessage) {
+
+                    NSDictionary<NSString *, NSNumber *> *remoteActionDict = (NSDictionary<NSString *, NSNumber *> *)[[NSDictionary alloc] initWithDictionary:(NSDictionary<NSString *, NSDictionary *> *)[replyMessage objectForKey:@"RemoteAction"]];
+                    if (isToneBarrierPlaying)
+                    {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [self.playButton setBackgroundImage:[UIImage systemImageNamed:@"stop"]];
+                        });
+                    } else {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                        [self.playButton setBackgroundImage:[UIImage systemImageNamed:@"play"]];
+                        });
+                    }
+            } errorHandler:^(NSError * _Nonnull error) {
+
             }];
         }
     });
     dispatch_async(playSerialQueue, playTonesBlock);
     
-    dispatch_queue_t playConcurrentQueue = dispatch_queue_create("com.blogspot.demonicactivity.concurrentqueue", DISPATCH_QUEUE_CONCURRENT);
-    dispatch_block_t playButtonBlock = dispatch_block_create(0, ^{
-        WCSession *wcs = self->_watchConnectivitySession;
-        if (wcs.isReachable)
-        {
-            [wcs sendMessage:@{@"RemoteAction" : @{@"action" : @(!isToneBarrierPlaying)}}
-                replyHandler:^(NSDictionary<NSString *,id> * _Nonnull replyMessage) {
-                
-                    NSDictionary<NSString *, NSNumber *> *remoteActionDict = (NSDictionary<NSString *, NSNumber *> *)[[NSDictionary alloc] initWithDictionary:(NSDictionary<NSString *, NSDictionary *> *)[replyMessage objectForKey:@"RemoteAction"]];
-                    if (isToneBarrierPlaying)
-                    {
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            [self.playButton setBackgroundImage:[UIImage imageNamed:@"stop"]];
-                        });
-                    } else {
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                        [self.playButton setBackgroundImageNamed:[UIImage imageNamed:@"play"]];
-                        });
-                    }
-            } errorHandler:^(NSError * _Nonnull error) {
-                
-            }];
-        }
-    });
-    
-    dispatch_block_notify(playTonesBlock, playConcurrentQueue, playButtonBlock);
+//    dispatch_queue_t playConcurrentQueue = dispatch_queue_create("com.blogspot.demonicactivity.concurrentqueue", DISPATCH_QUEUE_CONCURRENT);
+//    dispatch_block_t playButtonBlock = dispatch_block_create(0, ^{
+//        WCSession *wcs = self->_watchConnectivitySession;
+//        if (wcs.isReachable)
+//        {
+//            [wcs sendMessage:@{@"RemoteAction" : @{@"action" : @(!isToneBarrierPlaying)}}
+//                replyHandler:^(NSDictionary<NSString *,id> * _Nonnull replyMessage) {
+//                
+//                    NSDictionary<NSString *, NSNumber *> *remoteActionDict = (NSDictionary<NSString *, NSNumber *> *)[[NSDictionary alloc] initWithDictionary:(NSDictionary<NSString *, NSDictionary *> *)[replyMessage objectForKey:@"RemoteAction"]];
+//                    if (isToneBarrierPlaying)
+//                    {
+//                        dispatch_async(dispatch_get_main_queue(), ^{
+//                            [self.playButton setBackgroundImage:[UIImage imageNamed:@"stop"]];
+//                        });
+//                    } else {
+//                        dispatch_async(dispatch_get_main_queue(), ^{
+//                        [self.playButton setBackgroundImageNamed:[UIImage imageNamed:@"play"]];
+//                        });
+//                    }
+//            } errorHandler:^(NSError * _Nonnull error) {
+//                
+//            }];
+//        }
+//    });
+//    
+//    dispatch_block_notify(playTonesBlock, playConcurrentQueue, playButtonBlock);
 }
 
 //- (IBAction)play

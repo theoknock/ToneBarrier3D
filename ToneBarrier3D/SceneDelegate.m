@@ -38,7 +38,7 @@
     MPRemoteCommandCenter *remoteCommandCenter = [MPRemoteCommandCenter sharedCommandCenter];
     [[remoteCommandCenter togglePlayPauseCommand] addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [[[ToneGenerator sharedGenerator] delegate] play:nil];;
+            [ToneGenerator.sharedGenerator.delegate play:[ToneGenerator.sharedGenerator.delegate playButton]];
         });
         return MPRemoteCommandHandlerStatusSuccess;
     }];

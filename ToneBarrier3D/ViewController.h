@@ -11,7 +11,9 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <AVFoundation/AVFoundation.h>
 
-@interface ViewController : UIViewController <WCSessionDelegate>
+#import "ToneGenerator.h"
+
+@interface ViewController : UIViewController <WCSessionDelegate, ToneGeneratorDelegate>
 
 @property (strong, nonatomic) WCSession *watchConnectivitySession;
 

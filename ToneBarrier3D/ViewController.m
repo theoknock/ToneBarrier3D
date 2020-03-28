@@ -59,20 +59,20 @@
 {
     dispatch_queue_t playSerialQueue = dispatch_queue_create("com.blogspot.demonicactivity.serialqueue", DISPATCH_QUEUE_SERIAL);
     dispatch_block_t playTonesBlock = dispatch_block_create(0, ^{
-        [[ToneGenerator sharedGenerator] play];
+        [[ToneGenerator sharedGenerator] play:ToneBarrierScoreHeadphones];
     });
     dispatch_async(playSerialQueue, playTonesBlock);
     dispatch_block_t playButtonBlock = dispatch_block_create(0, ^{
         
         if ([[[ToneGenerator sharedGenerator] audioEngine] isRunning])
         {
-            [self->_playButton setImage:[UIImage systemImageNamed:@"stop"] forState:UIControlStateNormal];
-             [self.audioRouteImageView setTintColor:[UIColor systemGreenColor]];
+            [sender setImage:[UIImage systemImageNamed:@"stop"] forState:UIControlStateNormal];
+            [self.audioRouteImageView setTintColor:[UIColor systemGreenColor]];
             
         } else {
-            [self->_playButton setImage:[UIImage systemImageNamed:@"play"] forState:UIControlStateNormal];
+            [sender setImage:[UIImage systemImageNamed:@"play"] forState:UIControlStateNormal];
             [self.audioRouteImageView setTintColor:[UIColor systemBlueColor]];
-                       
+            
         }
     });
     dispatch_block_notify(playTonesBlock, dispatch_get_main_queue(), playButtonBlock);
@@ -98,9 +98,9 @@
         {
             if (ToneGenerator.sharedGenerator.audioEngine.mainMixerNode.volume > 0.0)
             {
-                NSLog(@"Mark tone barrier was playing.");
+                NSLog(@"Tone barrier was playing.");
             } else {
-                NSLog(@"Mark tone barrier was stopped.");
+                NSLog(@"Tone barrier was stopped.");
             }
         }
         
@@ -208,24 +208,30 @@
 // TO-DO: Read user info dictionary from NSNotification to detect changes to the proximity sensor
 - (void)proximitySensorStateStatus
 {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if ([[UIDevice currentDevice] proximityState])
-        {
-            // sound alarm
-            NSLog(@"proximityState == %@", ([[UIDevice currentDevice] proximityState]) ? @"TRUE" : @"FALSE");
-            [self.proximityMonitorImageView setImage:[UIImage systemImageNamed:@"xmark.shield"]];
-            [self.proximityMonitorImageView setTintColor:[UIColor systemRedColor]];
+//    dispatch_queue_t alarmSerialQueue = dispatch_queue_create("com.blogspot.demonicactivity.serialqueue", DISPATCH_QUEUE_SERIAL);
+//    dispatch_block_t stopAudioEngineBlock = dispatch_block_create(0, ^{
+//        if (ToneGenerator.sharedGenerator.audioEngine.isRunning)
+//            [ToneGenerator.sharedGenerator play:ToneBarrierScoreNone];
+//        [ToneGenerator.sharedGenerator play:ToneBarrierScoreAlarm];
+//    });
+    dispatch_block_t proximityMonitorImageViewAlarmBlock = dispatch_block_create(0, ^{
+        [self.proximityMonitorImageView setImage:[UIImage systemImageNamed:@"xmark.shield"]];
+        [self.proximityMonitorImageView setTintColor:[UIColor systemRedColor]];
+    });
+    dispatch_block_t proximityMonitorImageViewStatusBlock = dispatch_block_create(0, ^{
+        if ([[UIDevice currentDevice] isProximityMonitoringEnabled]) {
+            [self.proximityMonitorImageView setImage:[UIImage systemImageNamed:@"checkmark.shield"]];
+            [self.proximityMonitorImageView setTintColor:[UIColor systemGreenColor]];
         } else {
-            if ([[UIDevice currentDevice] isProximityMonitoringEnabled]) {
-                [self.proximityMonitorImageView setImage:[UIImage systemImageNamed:@"checkmark.shield"]];
-                [self.proximityMonitorImageView setTintColor:[UIColor systemGreenColor]];
-            } else {
-                [self.proximityMonitorImageView setImage:[UIImage systemImageNamed:@"exclamationmark.shield"]];
-                [self.proximityMonitorImageView setTintColor:[UIColor systemBlueColor]];
-            }
+            [self.proximityMonitorImageView setImage:[UIImage systemImageNamed:@"exclamationmark.shield"]];
+            [self.proximityMonitorImageView setTintColor:[UIColor systemBlueColor]];
         }
-        
-        WCSession *wcs = self->_watchConnectivitySession;
+    });
+    
+    //dispatch_async(alarmSerialQueue, stopAudioEngineBlock);
+    //dispatch_block_notify(stopAudioEngineBlock, dispatch_get_main_queue(), playAlarmBlock);
+    
+    WCSession *wcs = self->_watchConnectivitySession;
         if (wcs.isReachable)
         {
             [wcs sendMessage:@{@"ProximitySensorState" : @{@"proximityState" : @([[UIDevice currentDevice] proximityState]),
@@ -238,8 +244,16 @@
                 
             }];
         }
-        
-    });
+    
+    if ([[UIDevice currentDevice] proximityState]) {
+        dispatch_async(dispatch_get_main_queue(), proximityMonitorImageViewAlarmBlock);
+    } else {
+        dispatch_async(dispatch_get_main_queue(), proximityMonitorImageViewStatusBlock);
+    }
+    
+    
+    
+    
 }
 
 - (void)activateWatchConnectivitySession
@@ -318,7 +332,7 @@
             } else if ([key isEqualToString:@"RemoteAction"])
             {
                 NSString *remoteAction = [(NSDictionary<NSString *, NSString *> *)message objectForKey:@"RemoteAction"];
-                [self play:nil];
+                [self play:self.playButton];
                 replyHandler(@{@"RemoteAction" : @{@"action" : @([[[ToneGenerator sharedGenerator] audioEngine] isRunning])}});
             }
         }]);
