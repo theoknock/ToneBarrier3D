@@ -1,0 +1,70 @@
+// [[[[[TIME]]]]]
+
+typedef struct time_parameters_struct
+{
+    int time_parameters_array_length;
+    double * time_parameters_array;
+    __unsafe_unretained id flag;
+} TimeParameters;
+
+typedef double (^TimeCalculator)(double time, TimeParameters * timeParameters);
+
+typedef struct time_envelope_struct
+{
+    TimeParameters * timeParameters;
+    __unsafe_unretained TimeCalculator timeCalculator;
+} TimeEnvelope;
+
+static TimeParameters * (^timeParameters)(int time_parameters_array_length,
+                                          double * time_parameters_array);
+static TimeCalculator timeCalculator;
+static TimeEnvelope * (^timeEnvelope)(TimeParameters *timeParameters,
+                                      __unsafe_unretained TimeCalculator timeCalculator);
+
+// [[[[[FREQUENCY]]]]]
+
+typedef struct frequencies_parameters_struct
+{
+    int frequencies_parameters_array_length;
+    double * frequencies_parameters_array;
+    __unsafe_unretained id flag;
+} FrequencyParameters;
+
+typedef double (^FrequencyCalculator)(double time,
+                                      FrequencyParameters * frequencyParameters);
+
+typedef struct frequency_envelope_struct
+{
+    FrequencyParameters * frequencyParameters;
+    __unsafe_unretained FrequencyCalculator frequencyCalculator;
+} FrequencyEnvelope;
+
+static FrequencyParameters * (^frequencyParameters)(int time_parameters_array_length,
+                                                    double * time_parameters_array);
+static FrequencyCalculator frequencyCalculator;
+static FrequencyEnvelope * (^frequencyEnvelope)(FrequencyParameters * frequencyParameters,
+                                                __unsafe_unretained FrequencyCalculator frequencyCalculator);
+
+// [[[[[AMPLITUDE]]]]]
+
+typedef struct amplitude_params_array_struct
+{
+    int amplitude_parameters_array_length;
+    double * amplitude_parameters_array;
+    __unsafe_unretained id flag;
+} AmplitudeParameters;
+
+typedef double (^AmplitudeCalculator)(double time,
+                                      AmplitudeParameters * amplitudeParameters);
+
+typedef struct amplitude_envelope_struct
+{
+    AmplitudeParameters * amplitudeParameters;
+    __unsafe_unretained AmplitudeCalculator amplitudeCalculator;
+} AmplitudeEnvelope;
+
+static AmplitudeParameters * (^amplitudeParameters)(int time_parameters_array_length,
+                                                    double * time_parameters_array);
+static AmplitudeCalculator amplitudeCalculator;
+static AmplitudeEnvelope * (^amplitudeEnvelope)(AmplitudeParameters * amplitudeParameters,
+                                                __unsafe_unretained AmplitudeCalculator amplitudeCalculator);
