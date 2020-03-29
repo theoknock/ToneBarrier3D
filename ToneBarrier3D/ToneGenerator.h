@@ -17,6 +17,35 @@ typedef NS_ENUM(NSUInteger, ToneBarrierScore) {
     ToneBarrierScoreNone
 };
 
+#define RANDOM_NUMF(MIN, MAX) MIN+arc4random_uniform(MAX-MIN+1)
+
+typedef NS_ENUM(NSUInteger, TonalHarmony) {
+    TonalHarmonyConsonance,
+    TonalHarmonyDissonance,
+    TonalHarmonyRandom
+};
+
+typedef NS_ENUM(NSUInteger, HarmonicInterval) {
+    HarmonicIntervalUnison,
+    HarmonicIntervalOctave,
+    HarmonicIntervalMajorSixth,
+    HarmonicIntervalPerfectFifth,
+    HarmonicIntervalPerfectFourth,
+    HarmonicIntervalMajorThird,
+    HarmonicIntervalMinorThird,
+    HarmonicIntervalRandom
+};
+
+typedef NS_ENUM(NSUInteger, HarmonicInversion) {
+    HarmonicInversionPerfect,
+    HarmonicInversionImperfect
+};
+
+typedef NS_ENUM(NSUInteger, TonalEnvelope) {
+    TonalEnvelopeAverageSustain,
+    TonalEnvelopeLongSustain,
+    TonalEnvelopeShortSustain
+};
 
 NS_ASSUME_NONNULL_BEGIN
 
