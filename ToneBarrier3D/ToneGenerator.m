@@ -77,12 +77,12 @@ static BufferPackage * (^bufferPackage)(AVAudioFormat * audio_format,
                                         ChannelBundle * channel_r_bundle);
 
 
-static float * (^ChannelDataCalculator)(AVAudioFrameCount audio_samples,
+static float * (^channelDataCalculator)(AVAudioFrameCount samples_count,
                                         ChannelBundle * channel_bundle,
                                         float * floatChannelDataPtrsArray,
                                         float * floatChannelDataPtrs);
 
-static AVAudioPCMBuffer * (^BufferDataCalculator)(BufferPackage * buffer_package);
+static AVAudioPCMBuffer * (^bufferDataCalculator)(BufferPackage * buffer_package);
 
 // [[[[[SCORE]]]]]
 
@@ -363,17 +363,70 @@ static ToneGenerator *sharedGenerator = NULL;
     };
 }
 
+- (float * (^)(AVAudioFrameCount, ChannelBundle *, float *, float *))channelDataCalculator
+{
+    return ^float *(AVAudioFrameCount samples_count,
+                    ChannelBundle * channel_bundle,
+                    float * floatChannelDataPtrsArray,
+                    float * floatChannelDataPtrs)
+    {
+        floatChannelDataPtrsArray = floatChannelDataPtrs;
+        for (int index = 0; index < samples_count; index++)
+        {
+            double time = channel_bundle->time_envelope->calculator(normalize(index, samples_count), channel_bundle->time_envelope->parameters);
+            double freq = channel_bundle->frequency_envelope->calculator(time, channel_bundle->frequency_envelope->parameters);
+            double amp  = channel_bundle->amplitude_envelope->calculator(time, channel_bundle->amplitude_envelope->parameters);
+
+            double f = freq * amp;
+            if (floatChannelDataPtrsArray) floatChannelDataPtrsArray[index] = f;
+        }
+
+        return floatChannelDataPtrsArray;
+    };
+}
+
+- (AVAudioPCMBuffer *(^)(BufferPackage *))buffer
+{
+    return ^AVAudioPCMBuffer *(BufferPackage * buffer_package)
+    {
+        double sampleRate            = [buffer_package->audio_format sampleRate];
+        AVAudioFrameCount frameCount = (sampleRate * sum_duration_interval) * buffer_package->duration;
+        AVAudioPCMBuffer *pcmBuffer  = [[AVAudioPCMBuffer alloc] initWithPCMFormat:buffer_package->audio_format frameCapacity:frameCount];
+        pcmBuffer.frameLength        = sampleRate * buffer_package->duration;
+        float * channelL, * channelR;
+        channelL = channelDataCalculator(pcmBuffer.frameLength,
+                                         buffer_package->channel_l_bundle,
+                                         channelL,
+                                         pcmBuffer.floatChannelData[0]);
+        channelR = channelDataCalculator(pcmBuffer.frameLength,
+                                         buffer_package->channel_r_bundle,
+                                         channelR,
+                                         ([buffer_package->audio_format channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil);
+
+        return pcmBuffer;
+    };
+}
+
+- (Score)standard
+{
+    return ^(AVAudioFormat *audioFormat, DataRenderedCompletionBlock dataRenderedCompletionBlock) {
+        
+//        dataRenderedCompletionBlock()
+        
+    };
+}
+
 //- (void)createEnvelope
 //{
 //    srand48(time(NULL));
-//    
+//
 //    double numbers[2] = {1.0, 4.0};
 //    TimeEnvelope * time_envelope = ToneGenerator.sharedGenerator.timeEnvelope(ToneGenerator.sharedGenerator.timeParameters(1,
 //                                                                                                                           numbers,
 //                                                                                                                           nil),
 //                                                                              ToneGenerator.sharedGenerator.timeCalculator);
-//    
-//    
+//
+//
 //}
 
 
