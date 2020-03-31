@@ -222,11 +222,15 @@ static ToneGenerator *sharedInstance = NULL;
 {
     return ^double(double time, typeof(Parameters) * parameters)
     {
+        BOOL shorten_wavelength = (BOOL)[(NSNumber *)parameters->flag boolValue];
         double duration = parameters->parameters_array[0];
         double sinusoids_sum = 0;
         for (int i = 1; i < parameters->parameters_array_length; i++)
         {
-            sinusoids_sum += sinf(M_PI * time * (parameters->parameters_array[i] * duration));
+            double frequency = (parameters->parameters_array[i] * duration);
+            frequency        = (shorten_wavelength) ? ((340) / (340 - (pow(time, 3.0) * 20.0))) * frequency :
+                                                      ((340) / (340 + (pow(time, 1.0/3.0) * 20.0))) * frequency;
+            sinusoids_sum += sinf(M_PI * time * frequency);
         }
 
         sinusoids_sum = (double)(sinusoids_sum / (double)(parameters->parameters_array_length - 1));
@@ -390,20 +394,21 @@ static ToneGenerator *sharedInstance = NULL;
 {
     return ^(AVAudioFormat *audioFormat, DataRenderedCompletionBlock dataRenderedCompletionBlock)
     {
-        double frequencies[] = {sum_duration_interval, max_frequency};
-        double amplitude_params[] = {1.0, 8.0, 1.0};
+        double duration = sum_duration_interval;
+        double frequencies[] = {duration, max_frequency};
+        double amplitude_params[] = {1.0, 1.0, 1.0};
 
         ToneGenerator *tg = [ToneGenerator sharedInstance];
 
         BufferPackage * buffer_package = tg.bufferPackage(audioFormat,
-                                                          sum_duration_interval,
+                                                          duration,
                                                           tg.channelBundle(tg.envelope(tg.parameters(0,
                                                                                                      nil,
                                                                                                      nil),
                                                                                        tg.timeCalculator),
                                                                            tg.envelope(tg.parameters(2,
                                                                                                      frequencies,
-                                                                                                     nil),
+                                                                                                     @(TRUE)),
                                                                                        tg.frequencyCalculator),
                                                                            tg.envelope(tg.parameters(3,
                                                                                                      amplitude_params,
@@ -413,8 +418,8 @@ static ToneGenerator *sharedInstance = NULL;
                                                                                                      nil,
                                                                                                      nil),
                                                                                        tg.timeCalculator),
-                                                                           tg.envelope(tg.parameters(2,
-                                                                                                     frequencies,
+                                                                           tg.envelope(tg.parameters(0,
+                                                                                                     nil,
                                                                                                      nil),
                                                                                        tg.frequencyCalculator),
                                                                            tg.envelope(tg.parameters(3,
@@ -427,7 +432,6 @@ static ToneGenerator *sharedInstance = NULL;
             NSLog(NSStringFromSelector(@selector(standardScore)));
 
             tg.freeBufferPackage(buffer_package);
-
             tg.standardScore(audioFormat, dataRenderedCompletionBlock);
         });
                                     
@@ -908,16 +912,6 @@ static ToneGenerator *sharedInstance = NULL;
 
 //
 
-//
-//AVAudio3DPoint GenerateRandomXPosition()
-//{
-//    double randomX = arc4random_uniform(40) - 20.0;
-//    AVAudio3DPoint point = AVAudioMake3DPoint(randomX, 0.0, 0.0);
-//
-//    return point;
-//}
-//
-
 - (BOOL)startEngine
 {
     __autoreleasing NSError *error = nil;
@@ -985,7 +979,6 @@ static ToneGenerator *sharedInstance = NULL;
     ToneGenerator.sharedInstance.standardScore(self.audioFormat, ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
         NSLog(@"%lu\tReturned", call_count++);
 //        [node prepareWithFrameCount:buffer.frameCapacity];
-//        [node setPosition:GenerateRandomXPosition()];
         [node scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
             if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
             {
