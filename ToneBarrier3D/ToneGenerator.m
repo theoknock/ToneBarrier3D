@@ -222,13 +222,14 @@ static ToneGenerator *sharedInstance = NULL;
 {
     return ^double(double time, typeof(Parameters) * parameters)
     {
+        double duration = parameters->parameters_array[0];
         double sinusoids_sum = 0;
-        for (int i = 0; i < parameters->parameters_array_length; i++)
+        for (int i = 1; i < parameters->parameters_array_length; i++)
         {
-            sinusoids_sum += sinf(M_PI * time * parameters->parameters_array[i]);
+            sinusoids_sum += sinf(M_PI * time * (parameters->parameters_array[i] * duration));
         }
 
-        sinusoids_sum = (double)(sinusoids_sum / (double)parameters->parameters_array_length);
+        sinusoids_sum = (double)(sinusoids_sum / (double)(parameters->parameters_array_length - 1));
 
         return sinusoids_sum;
     };
@@ -389,11 +390,9 @@ static ToneGenerator *sharedInstance = NULL;
 {
     return ^(AVAudioFormat *audioFormat, DataRenderedCompletionBlock dataRenderedCompletionBlock)
     {
-        double frequencies[] = {max_frequency * sum_duration_interval};
+        double frequencies[] = {sum_duration_interval, max_frequency};
         double amplitude_params[] = {1.0, 8.0, 1.0};
 
-        Parameters * params = ToneGenerator.sharedInstance.parameters(3, frequencies, nil);
-        
         ToneGenerator *tg = [ToneGenerator sharedInstance];
 
         BufferPackage * buffer_package = tg.bufferPackage(audioFormat,
@@ -402,7 +401,7 @@ static ToneGenerator *sharedInstance = NULL;
                                                                                                      nil,
                                                                                                      nil),
                                                                                        tg.timeCalculator),
-                                                                           tg.envelope(tg.parameters(1,
+                                                                           tg.envelope(tg.parameters(2,
                                                                                                      frequencies,
                                                                                                      nil),
                                                                                        tg.frequencyCalculator),
@@ -414,7 +413,7 @@ static ToneGenerator *sharedInstance = NULL;
                                                                                                      nil,
                                                                                                      nil),
                                                                                        tg.timeCalculator),
-                                                                           tg.envelope(tg.parameters(1,
+                                                                           tg.envelope(tg.parameters(2,
                                                                                                      frequencies,
                                                                                                      nil),
                                                                                        tg.frequencyCalculator),
@@ -425,7 +424,7 @@ static ToneGenerator *sharedInstance = NULL;
 
         dataRenderedCompletionBlock(tg.bufferDataCalculator(buffer_package), ^(__unsafe_unretained id flag) {
 //            NSString *str = (NSString *)flag;
-//            NSLog(NSStringFromSelector(@selector(standard)));
+            NSLog(NSStringFromSelector(@selector(standardScore)));
 
             tg.freeBufferPackage(buffer_package);
 
@@ -972,13 +971,13 @@ static ToneGenerator *sharedInstance = NULL;
                 [_audioEngine connect:_playerNode to:_mixerNode format:_audioFormat];
 
 //                [self playScore:ToneGenerator.sharedInstance.glissando onNode:_playerNode];
-                [self playStandardScoreOnNode:_playerNode];
+            [self playScore:ToneGenerator.sharedInstance.standardScore onNode:_playerNode];
 //            }
         }
     }
 }
 
-- (void)playStandardScoreOnNode:(AVAudioPlayerNode *)node
+- (void)playScore:(typeof(Score))score onNode:(AVAudioPlayerNode *)node
 {
     __block NSInteger call_count = 0;
     __block NSInteger call_back  = 0;
