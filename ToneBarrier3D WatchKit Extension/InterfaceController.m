@@ -216,12 +216,12 @@
 //{
 //    dispatch_queue_t playSerialQueue = dispatch_queue_create("com.blogspot.demonicactivity.serialqueue", DISPATCH_QUEUE_SERIAL);
 //    dispatch_block_t playTonesBlock = dispatch_block_create(0, ^{
-//        [[ToneGenerator sharedGenerator] play];
+//        [[ToneGenerator sharedInstance] play];
 //    });
 //    dispatch_async(playSerialQueue, playTonesBlock);
 //    dispatch_block_t playButtonBlock = dispatch_block_create(0, ^{
 //        dispatch_async(dispatch_get_main_queue(), ^{
-//            if ([[[ToneGenerator sharedGenerator] audioEngine] isRunning])
+//            if ([[[ToneGenerator sharedInstance] audioEngine] isRunning])
 //            {
 //                [self.playButton setBackgroundImageNamed:@"stop"];
 //            } else {

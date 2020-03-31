@@ -64,7 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ToneGenerator : NSObject
 
-+ (nonnull ToneGenerator *)sharedGenerator;
++ (nonnull ToneGenerator *)sharedInstance;
 
 @property (nonatomic, readonly) AVAudioEngine * _Nonnull audioEngine;
 @property (nonatomic, readonly) AVAudioPlayerNode * _Nullable playerNode;

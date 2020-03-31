@@ -20,7 +20,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    [ToneGenerator.sharedGenerator setDelegate:(id<ToneGeneratorDelegate> _Nullable)self];
+    [ToneGenerator.sharedInstance setDelegate:(id<ToneGeneratorDelegate> _Nullable)self];
     
     [self audioRouteStatus];
     [self batteryLevelStatus];
@@ -59,12 +59,12 @@
 {
     dispatch_queue_t playSerialQueue = dispatch_queue_create("com.blogspot.demonicactivity.serialqueue", DISPATCH_QUEUE_SERIAL);
     dispatch_block_t playTonesBlock = dispatch_block_create(0, ^{
-        [[ToneGenerator sharedGenerator] play:ToneBarrierScoreHeadphones];
+        [[ToneGenerator sharedInstance] play:ToneBarrierScoreHeadphones];
     });
     dispatch_async(playSerialQueue, playTonesBlock);
     dispatch_block_t playButtonBlock = dispatch_block_create(0, ^{
         
-        if ([[[ToneGenerator sharedGenerator] audioEngine] isRunning])
+        if ([[[ToneGenerator sharedInstance] audioEngine] isRunning])
         {
             [sender setImage:[UIImage systemImageNamed:@"stop"] forState:UIControlStateNormal];
             [self.audioRouteImageView setTintColor:[UIColor systemGreenColor]];
@@ -96,7 +96,7 @@
             [self.audioRouteImageView setImage:[UIImage systemImageNamed:@"hifispeaker"]];
         } else if ([[output portType] containsString:@"Receiver"])
         {
-            if (ToneGenerator.sharedGenerator.audioEngine.mainMixerNode.volume > 0.0)
+            if (ToneGenerator.sharedInstance.audioEngine.mainMixerNode.volume > 0.0)
             {
                 NSLog(@"Tone barrier was playing.");
             } else {
@@ -210,9 +210,9 @@
 {
 //    dispatch_queue_t alarmSerialQueue = dispatch_queue_create("com.blogspot.demonicactivity.serialqueue", DISPATCH_QUEUE_SERIAL);
 //    dispatch_block_t stopAudioEngineBlock = dispatch_block_create(0, ^{
-//        if (ToneGenerator.sharedGenerator.audioEngine.isRunning)
-//            [ToneGenerator.sharedGenerator play:ToneBarrierScoreNone];
-//        [ToneGenerator.sharedGenerator play:ToneBarrierScoreAlarm];
+//        if (ToneGenerator.sharedInstance.audioEngine.isRunning)
+//            [ToneGenerator.sharedInstance play:ToneBarrierScoreNone];
+//        [ToneGenerator.sharedInstance play:ToneBarrierScoreAlarm];
 //    });
     dispatch_block_t proximityMonitorImageViewAlarmBlock = dispatch_block_create(0, ^{
         [self.proximityMonitorImageView setImage:[UIImage systemImageNamed:@"xmark.shield"]];
@@ -328,12 +328,12 @@
         ([message enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
             if ([key isEqualToString:@"RemoteStatus"])
             {
-                replyHandler(@{@"RemoteStatus" : @((BOOL)[[[ToneGenerator sharedGenerator] audioEngine] isRunning])});
+                replyHandler(@{@"RemoteStatus" : @((BOOL)[[[ToneGenerator sharedInstance] audioEngine] isRunning])});
             } else if ([key isEqualToString:@"RemoteAction"])
             {
                 NSString *remoteAction = [(NSDictionary<NSString *, NSString *> *)message objectForKey:@"RemoteAction"];
                 [self play:self.playButton];
-                replyHandler(@{@"RemoteAction" : @{@"action" : @([[[ToneGenerator sharedGenerator] audioEngine] isRunning])}});
+                replyHandler(@{@"RemoteAction" : @{@"action" : @([[[ToneGenerator sharedInstance] audioEngine] isRunning])}});
             }
         }]);
     });

@@ -25,10 +25,10 @@
     MPRemoteCommandCenter *remoteCommandCenter = [MPRemoteCommandCenter sharedCommandCenter];
     [[remoteCommandCenter togglePlayPauseCommand] addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
         dispatch_async(dispatch_get_main_queue(), ^{
-//            if (![WatchToneGenerator.sharedGenerator.playerOneNode isPlaying]) {
-//                [WatchToneGenerator.sharedGenerator start];
-//            } else if ([WatchToneGenerator.sharedGenerator.playerOneNode isPlaying]) {
-//                [WatchToneGenerator.sharedGenerator stop];
+//            if (![WatchToneGenerator.sharedInstance.playerOneNode isPlaying]) {
+//                [WatchToneGenerator.sharedInstance start];
+//            } else if ([WatchToneGenerator.sharedInstance.playerOneNode isPlaying]) {
+//                [WatchToneGenerator.sharedInstance stop];
 //            }
         });
         return MPRemoteCommandHandlerStatusSuccess;
