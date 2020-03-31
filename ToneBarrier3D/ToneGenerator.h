@@ -10,11 +10,11 @@
 #import <AVFoundation/AVFoundation.h>
 #import <UIKit/UIKit.h>
 
-typedef NS_ENUM(NSUInteger, ToneBarrierScore) {
-    ToneBarrierScoreHeadphones,
-    ToneBarrierScoreSpeaker,
-    ToneBarrierScoreAlarm,
-    ToneBarrierScoreNone
+typedef NS_ENUM(NSUInteger, Score) {
+    ScoreHeadphones,
+    ScoreSpeaker,
+    ScoreAlarm,
+    ScoreNone
 };
 
 #define RANDOM_NUMF(MIN, MAX) MIN+arc4random_uniform(MAX-MIN+1)
@@ -72,7 +72,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (weak) id<ToneGeneratorDelegate> delegate;
 
-- (void)play:(ToneBarrierScore)toneBarrierScore;
+- (void)play:(Score)score;
 
 @end
 

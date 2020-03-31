@@ -59,7 +59,7 @@
 {
     dispatch_queue_t playSerialQueue = dispatch_queue_create("com.blogspot.demonicactivity.serialqueue", DISPATCH_QUEUE_SERIAL);
     dispatch_block_t playTonesBlock = dispatch_block_create(0, ^{
-        [[ToneGenerator sharedInstance] play:ToneBarrierScoreHeadphones];
+        [[ToneGenerator sharedInstance] play:nil];
     });
     dispatch_async(playSerialQueue, playTonesBlock);
     dispatch_block_t playButtonBlock = dispatch_block_create(0, ^{
