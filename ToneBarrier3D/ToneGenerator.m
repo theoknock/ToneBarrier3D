@@ -11,6 +11,10 @@
 
 // TO-DO: Pattern components to tone barrier textures after basic music theory (https://www.aboutmusictheory.com/music-intervals.html)
 
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #import "ToneGenerator.h"
 
 #define max_frequency      2500.00
@@ -254,17 +258,13 @@ static ToneGenerator *sharedInstance = NULL;
         double duration = parameters->parameters_array[0];                       // duration
         double A        = parameters->parameters_array[2];                       // amplitude (sinf(time * M_PI))
         double p        = (int)(parameters->parameters_array[3]) * (M_PI / 2.0); // phase
-        double v        = parameters->parameters_array[4];                // velocity (linear speed or speed of propogation)
+        double v        = parameters->parameters_array[4];                       // velocity (linear speed or speed of propogation)
         double f        = parameters->parameters_array[1] * duration;            // ordinary frequency (adjusted)
-        
-        double fs       = ((340) / (340 - 20.0)) * f;                            // shortened wavelength (higher frequency)
-        double fl       = ((340) / (340 + 20.0)) * f;                            // lengthened wavelength (lower frequency)
-        //        f               = sinf(time * M_PI) + (fs - fl);                         // the amount added to the fl when time < 0.5, subtracted when time >= 0.5
-        
+
         double w        = 2.0 * M_PI * f;                                        // angular frequency
         double l        = f / v;                                                 // wavelength
         double k        = (2.0 * M_PI) / l;                                      // angular wave number
-        double x        = parameters->parameters_array[5] * 0.0;                // spatial position
+        double x        = parameters->parameters_array[5] * 0.0;                 // spatial position
         double D        = parameters->parameters_array[6];                       // center amplitude
         
         double g        = A * sinf((k * x) + (w * time) + p) + D;
@@ -303,7 +303,7 @@ static ToneGenerator *sharedInstance = NULL;
             double frequency       = (parameters->parameters_array[i] * duration);
             double frequency_short = ((340) / (340 - 20.0)) * frequency;
             double frequency_long  = ((340) / (340 + 20.0)) * frequency;
-            double new_frequency   = (sinf(M_PI * time) * (frequency_short - frequency_long)) + frequency_long;
+            double new_frequency   = frequency_long + ((frequency_short - frequency_long) * sinf(time * M_PI));
             sinusoids_sum += sinf(M_PI * time * new_frequency);
         }
         
@@ -321,15 +321,22 @@ static ToneGenerator *sharedInstance = NULL;
         double trill = parameters->parameters_array[1];
         double slope = parameters->parameters_array[2];
         BOOL invert  = (BOOL)[(NSNumber *)parameters->flag boolValue];
-        
+
         time = (mid > 1.0) ? pow(time, mid) : time;
         time = (invert) ? 1.0 - time : time;
         time = (trill != 1.0) ? time * (trill * time) : time;
         double w = (M_PI * time);
         w = pow(sinf(w), slope);
-        
-        return w;
+
+        return sinf(w); //signbit(sinf(time * M_PI * 2));
     };
+}
+
+float sincf(float x)
+{
+    double sincf_x = sin(x * M_PI) / (x * M_PI);
+    
+    return sincf_x;
 }
 
 - (typeof(Envelope) * (^)(typeof(Parameters) *, __unsafe_unretained typeof(Calculator)))envelope
@@ -465,16 +472,17 @@ static ToneGenerator *sharedInstance = NULL;
     };
 }
 
+// Random Frequencies (returns two Frequency structs
+// texture: unison, polyphony, homophony
+
 -(void(^)(AVAudioFormat *, DataRenderedCompletionBlock))standardTexture
 {
     return ^(AVAudioFormat *audioFormat, DataRenderedCompletionBlock dataRenderedCompletionBlock)
     {
-        //        double frequencies[] = {sum_duration_interval, max_frequency, 1.0, 0.0, 1.0, 1.0, 0.0}; // frequencyCalculator
-        double frequencies[] = {sum_duration_interval, max_frequency, max_frequency * (4.0/5.0), (max_frequency * (4.0/5.0)) / (4.0/5.0)}; // frequencyCalculatorPolytone
-        double amplitude_params[] = {1.0, 1.0, 1.0};
-        
         ToneGenerator *tg = [ToneGenerator sharedInstance];
-        
+
+        double frequencies_params[] = {sum_duration_interval, max_frequency, max_frequency * (4.0/5.0), (max_frequency * (4.0/5.0)) / (4.0/5.0)}; // frequencyCalculatorPolytone
+        double amplitude_params[] = {1.0, 1.0, 3.0};
         BufferPackage * buffer_package = tg.bufferPackage(audioFormat,
                                                           sum_duration_interval,
                                                           tg.channelBundle(tg.envelope(tg.parameters(0,
@@ -482,8 +490,8 @@ static ToneGenerator *sharedInstance = NULL;
                                                                                                      nil),
                                                                                        tg.timeCalculator),
                                                                            tg.envelope(tg.parameters(4,
-                                                                                                     frequencies,
-                                                                                                     @(TRUE)),
+                                                                                                     frequencies_params,
+                                                                                                     nil),
                                                                                        tg.frequencyCalculatorPolytone),
                                                                            tg.envelope(tg.parameters(3,
                                                                                                      amplitude_params,
@@ -494,12 +502,12 @@ static ToneGenerator *sharedInstance = NULL;
                                                                                                      nil),
                                                                                        tg.timeCalculator),
                                                                            tg.envelope(tg.parameters(4,
-                                                                                                     frequencies,
+                                                                                                     frequencies_params,
                                                                                                      nil),
                                                                                        tg.frequencyCalculatorPolytone),
                                                                            tg.envelope(tg.parameters(3,
                                                                                                      amplitude_params,
-                                                                                                     @(FALSE)),
+                                                                                                     @(TRUE)),
                                                                                        tg.amplitudeCalculator)));
         
         dataRenderedCompletionBlock(tg.bufferDataCalculator(buffer_package), ^(__unsafe_unretained id flag) {
@@ -593,6 +601,17 @@ static ToneGenerator *sharedInstance = NULL;
 
 - (void)play:(Score)score
 {
+
+//    double max = 10.0;
+//    double low = 1000.0;
+//    double hgh = 2000.0;
+//    for (int index = 0; index < 10; index++)
+//    {
+//        double time = ToneGenerator.sharedInstance.normalize(0.0, 1.0, index, 0.0, max - 1.0);
+//        NSLog(@"time == %f", low + ((hgh-low) * sinf(time * M_PI)));
+//    }
+    
+  
     if ([_audioEngine isRunning])
     {
         [_audioEngine pause];
