@@ -29,10 +29,10 @@
 
 // Interface
 
-typedef NS_ENUM(NSUInteger, CalculatorType) {
-    CalculatorTypeTime,
-    CalculatorTypeFrequency,
-    CalculatorTypeAmplitude
+typedef NS_ENUM(NSUInteger, CalculatorsType) {
+    CalculatorsTypeTime,
+    CalculatorsTypeFrequency,
+    CalculatorsTypeAmplitude
 };
 
 typedef struct parameters_struct
@@ -45,6 +45,7 @@ typedef struct parameters_struct
 typedef double (^Calculator)(double time,
                              typeof(Parameters) * parameters,
                              double (^ _Nullable calculator)(double time, typeof(Parameters) * parameters));
+
 typedef struct calculator_envelope_struct
 {
     typeof(Parameters) * parameters;
@@ -53,9 +54,9 @@ typedef struct calculator_envelope_struct
 
 typedef struct calculators_struct
 {
-    CalculatorType calculatorType;
+    CalculatorsType calculators_type;
     int calculators_array_length;
-    typeof(CalculatorEnvelope) * calculatorEnvelopes[];
+    typeof(CalculatorEnvelope) * calculators_array[];
 } Calculators;
 
 typedef struct channel_bundle_struct
@@ -87,8 +88,8 @@ typedef void (^Texture)(AVAudioFormat * audio_format, DataRenderedCompletionBloc
 
 @property (nonatomic, readonly) typeof(Parameters) * (^parameters)(int parameters_array_length, double * parameters_array, __unsafe_unretained id flag);
 @property (nonatomic, readonly) typeof(CalculatorEnvelope) * (^calculatorEnvelope)(typeof(Parameters) * parameters, __unsafe_unretained typeof(Calculator) calculator);
-@property (nonatomic, readonly) Calculators * (^calculators)(CalculatorType calculatorType, int calculators_array_length, typeof(CalculatorEnvelope) * calculatorEnvelopes[]);
-@property (nonatomic, readonly) ChannelBundle * (^channel_bundle)(Calculators * time_calculators, Calculators * frequency_calculators, Calculators * amplitude_calculators);
+@property (nonatomic, readonly) typeof(Calculators) * (^calculators)(CalculatorsType calculators_type, int calculators_array_length, typeof(CalculatorEnvelope) * calculators_array[]);
+@property (nonatomic, readonly) ChannelBundle * (^channel_bundle)(typeof(Calculators) * time_calculators, typeof(Calculators) * frequency_calculators, typeof(Calculators) * amplitude_calculators);
 @property (nonatomic, readonly) BufferPackage * (^buffer_package)(AVAudioFormat * audio_format, double duration, ChannelBundle * channel_l_bundle, ChannelBundle * channel_r_bundle);
 @property (nonatomic, readonly) float * (^audio_samples)(AVAudioFrameCount samples_count, ChannelBundle * channel_bundle, float * samples_array, float * sample_ptrs);
 @property (nonatomic, readonly) AVAudioPCMBuffer * (^audio_buffer)(BufferPackage * buffer_package);
@@ -102,7 +103,7 @@ typedef void (^Texture)(AVAudioFormat * audio_format, DataRenderedCompletionBloc
 
 @property (nonatomic, readonly) void (^free_parameters)(typeof(Parameters) * parameters_struct);
 @property (nonatomic, readonly) void(^free_calculator_envelope)(typeof(CalculatorEnvelope) * calculator_envelope_struct);
-@property (nonatomic, readonly) void(^free_calculators)(Calculators * calculators_structs[]);
+@property (nonatomic, readonly) void(^free_calculators)(typeof(Calculators) * calculators_structs[]);
 @property (nonatomic, readonly) void(^free_channel_bundle)(ChannelBundle * channel_bundle);
 @property (nonatomic, readonly) void(^free_buffer_package)(BufferPackage * buffer_package);
 
@@ -366,11 +367,19 @@ float sincf(float x)
     };
 }
 
-- (typeof(Calculators) * (^)(CalculatorType, int, CalculatorEnvelope *[]))calculators
+- (typeof(Calculators) * (^)(CalculatorsType, int, typeof(CalculatorEnvelope) * [] ))calculators
 {
-    return ^typeof(Calculators) *(CalculatorType calculatorType, int calculators_array_length, CalculatorEnvelope * calculators[])
+    return ^typeof(Calculators) *(CalculatorsType calculators_type, int calculators_array_length, CalculatorEnvelope * calculators_array[])
     {
-        
+        typeof(Calculators) * calculators_struct  = malloc(sizeof(Calculators) + (sizeof(CalculatorEnvelope) * calculators_array_length));
+        calculators_struct->calculators_type = calculators_type;
+        calculators_struct->calculators_array[calculators_array_length] = malloc((sizeof(CalculatorEnvelope) * calculators_array_length));
+        for (int i = 0; i < calculators_array_length; i++)
+        {
+            calculators_struct->calculators_array[i] = calculators_array[i];
+        }
+
+        return calculators_struct;
     };
 }
 
@@ -434,7 +443,7 @@ float sincf(float x)
         {
             for (int j = 0; j < calculators_structs[i]->calculators_array_length; j++)
             {
-                ToneGenerator.sharedInstance.freeCalculatorEnvelope(calculators_structs[i]->calculatorEnvelopes[j]);
+                ToneGenerator.sharedInstance.freeCalculatorEnvelope(calculators_structs[i]->calculators_array[j]);
             }
         }
     };
