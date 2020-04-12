@@ -15,6 +15,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#import <GameplayKit/GameplayKit.h>
+
 #import "ToneGenerator.h"
 
 #define max_frequency      2500.00
@@ -27,10 +29,10 @@
 
 // Interface
 
-typedef NS_ENUM(NSUInteger, ParametersType) {
-    ParametersTypeTime,
-    ParametersTypeFrequency,
-    ParametersTypeAmplitude
+typedef NS_ENUM(NSUInteger, CalculatorType) {
+    CalculatorTypeTime,
+    CalculatorTypeFrequency,
+    CalculatorTypeAmplitude
 };
 
 typedef struct parameters_struct
@@ -41,19 +43,26 @@ typedef struct parameters_struct
 } Parameters;
 
 typedef double (^Calculator)(double time,
-                             typeof(Parameters) * parameters);
-
-typedef struct envelope_struct
+                             typeof(Parameters) * parameters,
+                             double (^ _Nullable calculator)(double time, typeof(Parameters) * parameters));
+typedef struct calculator_envelope_struct
 {
     typeof(Parameters) * parameters;
     __unsafe_unretained typeof(Calculator) calculator;
-} Envelope;
+} CalculatorEnvelope;
+
+typedef struct calculators_struct
+{
+    CalculatorType calculatorType;
+    int calculators_array_length;
+    typeof(CalculatorEnvelope) * calculatorEnvelopes[];
+} Calculators;
 
 typedef struct channel_bundle_struct
 {
-    typeof(Envelope) * time_envelope;
-    typeof(Envelope) * frequency_envelope;
-    typeof(Envelope) * amplitude_envelope;
+    Calculators * time_calculators;
+    Calculators * frequency_calculators;
+    Calculators * amplitude_calculators;
 } ChannelBundle;
 
 typedef struct buffer_package_struct {
@@ -77,8 +86,9 @@ typedef void (^Texture)(AVAudioFormat * audio_format, DataRenderedCompletionBloc
 @property (nonatomic, readonly) BOOL   (^validate)(typeof(Calculator));
 
 @property (nonatomic, readonly) typeof(Parameters) * (^parameters)(int parameters_array_length, double * parameters_array, __unsafe_unretained id flag);
-@property (nonatomic, readonly) typeof(Envelope) * (^envelope)(typeof(Parameters) * parameters, __unsafe_unretained typeof(Calculator) calculator);
-@property (nonatomic, readonly) ChannelBundle * (^channel_bundle)(typeof(Envelope) * time_envelope, typeof(Envelope) * frequency_envelope, typeof(Envelope) * amplitude_envelope);
+@property (nonatomic, readonly) typeof(CalculatorEnvelope) * (^calculatorEnvelope)(typeof(Parameters) * parameters, __unsafe_unretained typeof(Calculator) calculator);
+@property (nonatomic, readonly) Calculators * (^calculators)(CalculatorType calculatorType, int calculators_array_length, typeof(CalculatorEnvelope) * calculatorEnvelopes[]);
+@property (nonatomic, readonly) ChannelBundle * (^channel_bundle)(Calculators * time_calculators, Calculators * frequency_calculators, Calculators * amplitude_calculators);
 @property (nonatomic, readonly) BufferPackage * (^buffer_package)(AVAudioFormat * audio_format, double duration, ChannelBundle * channel_l_bundle, ChannelBundle * channel_r_bundle);
 @property (nonatomic, readonly) float * (^audio_samples)(AVAudioFrameCount samples_count, ChannelBundle * channel_bundle, float * samples_array, float * sample_ptrs);
 @property (nonatomic, readonly) AVAudioPCMBuffer * (^audio_buffer)(BufferPackage * buffer_package);
@@ -91,9 +101,13 @@ typedef void (^Texture)(AVAudioFormat * audio_format, DataRenderedCompletionBloc
 @property (nonatomic, readonly) typeof(Texture) standardTexture;
 
 @property (nonatomic, readonly) void (^free_parameters)(typeof(Parameters) * parameters_struct);
-@property (nonatomic, readonly) void(^free_envelope)(typeof(Envelope) * envelope_struct);
+@property (nonatomic, readonly) void(^free_calculator_envelope)(typeof(CalculatorEnvelope) * calculator_envelope_struct);
+@property (nonatomic, readonly) void(^free_calculators)(Calculators * calculators_structs[]);
 @property (nonatomic, readonly) void(^free_channel_bundle)(ChannelBundle * channel_bundle);
 @property (nonatomic, readonly) void(^free_buffer_package)(BufferPackage * buffer_package);
+
+@property (nonatomic, readonly) GKMersenneTwisterRandomSource * _Nullable randomizer;
+@property (nonatomic, readonly) GKGaussianDistribution * _Nullable distributor;
 
 @property (nonatomic, readonly) AVAudioMixerNode * _Nullable  mainNode;
 @property (nonatomic, readonly) AVAudioMixerNode * _Nullable  mixerNode;
@@ -244,7 +258,7 @@ static ToneGenerator *sharedInstance = NULL;
 
 - (Calculator)timeCalculator
 {
-    return ^double(double time, typeof(Parameters) * parameters)
+    return ^double(double time, typeof(Parameters) * parameters, double (^calculator)(double time, typeof(Parameters) * parameters))
     {
         return time;
     };
@@ -253,7 +267,7 @@ static ToneGenerator *sharedInstance = NULL;
 // 2.0, max_frequency, 1.0, 0.0, 1.0, 1.0, 0.0
 - (Calculator)frequencyCalculator
 {
-    return ^double(double time, typeof(Parameters) * parameters)
+    return ^double(double time, typeof(Parameters) * parameters, double (^calculator)(double time, typeof(Parameters) * parameters))
     {
         double duration = parameters->parameters_array[0];                       // duration
         double A        = parameters->parameters_array[2];                       // amplitude (sinf(time * M_PI))
@@ -267,7 +281,7 @@ static ToneGenerator *sharedInstance = NULL;
         double x        = parameters->parameters_array[5] * 0.0;                 // spatial position
         double D        = parameters->parameters_array[6];                       // center amplitude
         
-        double g        = A * sinf((k * x) + (w * time) + p) + D;
+//        double g        = A * sinf((k * x) + (w * time) + p) + D;
         
         return A * sinf(w * time);
     };
@@ -275,7 +289,7 @@ static ToneGenerator *sharedInstance = NULL;
 
 - (Calculator)frequencyCalculatorPolytone
 {
-    return ^double(double time, typeof(Parameters) * parameters)
+    return ^double(double time, typeof(Parameters) * parameters, double (^calculator)(double time, typeof(Parameters) * parameters))
     {
         double duration = parameters->parameters_array[0];
         double sinusoids_sum = 0;
@@ -293,7 +307,7 @@ static ToneGenerator *sharedInstance = NULL;
 
 - (Calculator)frequencyCalculatorDoppler
 {
-    return ^double(double time, typeof(Parameters) * parameters)
+    return ^double(double time, typeof(Parameters) * parameters, double (^calculator)(double time, typeof(Parameters) * parameters))
     {
         BOOL shorten_wavelength = (BOOL)[(NSNumber *)parameters->flag boolValue];
         double duration = parameters->parameters_array[0];
@@ -315,7 +329,7 @@ static ToneGenerator *sharedInstance = NULL;
 
 - (Calculator)amplitudeCalculator
 {
-    return ^double(double time, typeof(Parameters) * parameters)
+    return ^double(double time, typeof(Parameters) * parameters, double (^calculator)(double time, typeof(Parameters) * parameters))
     {
         double mid   = parameters->parameters_array[0];
         double trill = parameters->parameters_array[1];
@@ -339,12 +353,12 @@ float sincf(float x)
     return sincf_x;
 }
 
-- (typeof(Envelope) * (^)(typeof(Parameters) *, __unsafe_unretained typeof(Calculator)))envelope
+- (typeof(CalculatorEnvelope) * (^)(typeof(Parameters) *, __unsafe_unretained typeof(Calculator)))calculator
 {
-    return ^typeof(Envelope) * (typeof(Parameters) * parameters,
+    return ^typeof(CalculatorEnvelope) * (typeof(Parameters) * parameters,
                                 __unsafe_unretained typeof(Calculator) calculator)
     {
-        typeof(Envelope) * envelope_struct  = malloc(sizeof(Envelope));
+        typeof(CalculatorEnvelope) * envelope_struct  = malloc(sizeof(CalculatorEnvelope));
         envelope_struct->parameters = parameters;
         envelope_struct->calculator = calculator;
         
@@ -352,21 +366,30 @@ float sincf(float x)
     };
 }
 
-- (ChannelBundle * (^)(typeof(Envelope) *, typeof(Envelope) *, typeof(Envelope) *))channelBundle
+- (typeof(Calculators) * (^)(CalculatorType, int, CalculatorEnvelope *[]))calculators
 {
-    return ^ChannelBundle *(typeof(Envelope) * time_envelope,
-                            typeof(Envelope) * frequency_envelope,
-                            typeof(Envelope) * amplitude_envelope)
+    return ^typeof(Calculators) *(CalculatorType calculatorType, int calculators_array_length, CalculatorEnvelope * calculators[])
     {
-        ChannelBundle *channel_bundle_struct = malloc(sizeof(ChannelBundle) + sizeof(time_envelope) + sizeof(frequency_envelope) + sizeof(amplitude_envelope));
-        channel_bundle_struct->time_envelope = time_envelope;
-        channel_bundle_struct->frequency_envelope = frequency_envelope;
-        channel_bundle_struct->amplitude_envelope = amplitude_envelope;
+        
+    };
+}
+
+- (ChannelBundle * (^)(Calculators *, Calculators *, Calculators *))channelBundle
+{
+    return ^ChannelBundle *(Calculators * time_calculators,
+                            Calculators * frequency_calculators,
+                            Calculators * amplitude_calculators)
+    {
+        ChannelBundle *channel_bundle_struct = malloc(sizeof(ChannelBundle) + sizeof(time_calculators) + sizeof(frequency_calculators) + sizeof(amplitude_calculators));
+        channel_bundle_struct->time_calculators = time_calculators;
+        channel_bundle_struct->frequency_calculators = frequency_calculators;
+        channel_bundle_struct->amplitude_calculators = amplitude_calculators;
         
         return channel_bundle_struct;
     };
 }
 
+// TO-DO: Move duration multiplication operation to a separate block and perform operation here (NOT anywhere else) 2   q   
 - (BufferPackage * (^)(AVAudioFormat *, double duration, ChannelBundle *, ChannelBundle *))bufferPackage
 {
     return ^BufferPackage *(AVAudioFormat * audio_format,
@@ -394,13 +417,26 @@ float sincf(float x)
     };
 }
 
-- (void(^)(typeof(Envelope) *))freeEnvelope
+- (void(^)(typeof(CalculatorEnvelope) *))freeCalculatorEnvelope
 {
-    return ^void(typeof(Envelope) * envelope)
+    return ^void(typeof(CalculatorEnvelope) * calculatorEnvelope)
     {
-        ToneGenerator.sharedInstance.freeParameters(envelope->parameters);
-        envelope->calculator= nil;
-        free((void *)envelope);
+        ToneGenerator.sharedInstance.freeParameters(calculatorEnvelope->parameters);
+        calculatorEnvelope->calculator= nil;
+        free((void *)calculatorEnvelope);
+    };
+}
+
+- (void(^)(Calculators * []))free_calculators
+{
+    return ^void(Calculators * calculators_structs[]){
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < calculators_structs[i]->calculators_array_length; j++)
+            {
+                ToneGenerator.sharedInstance.freeCalculatorEnvelope(calculators_structs[i]->calculatorEnvelopes[j]);
+            }
+        }
     };
 }
 
@@ -408,12 +444,10 @@ float sincf(float x)
 {
     return ^void(ChannelBundle * channel_bundle_struct)
     {
-        ToneGenerator.sharedInstance.freeEnvelope(channel_bundle_struct->time_envelope);
-        ToneGenerator.sharedInstance.freeEnvelope(channel_bundle_struct->frequency_envelope);
-        ToneGenerator.sharedInstance.freeEnvelope(channel_bundle_struct->amplitude_envelope);
+        Calculators * calculators_structs[3] = {channel_bundle_struct->time_calculators, channel_bundle_struct->frequency_calculators, channel_bundle_struct->amplitude_calculators};
+        ToneGenerator.sharedInstance.free_calculators(calculators_structs);
         
         free((void *)channel_bundle_struct);
-        
     };
 }
 
@@ -472,17 +506,21 @@ float sincf(float x)
     };
 }
 
-// Random Frequencies (returns two Frequency structs
-// texture: unison, polyphony, homophony
+//// Random Frequencies (returns two Frequency structs
+//- (double *(^)(int length))randomFrequencies
+//{
+//
+//}
 
--(void(^)(AVAudioFormat *, DataRenderedCompletionBlock))standardTexture
+- (void(^)(AVAudioFormat *, DataRenderedCompletionBlock))standardTexture
 {
     return ^(AVAudioFormat *audioFormat, DataRenderedCompletionBlock dataRenderedCompletionBlock)
     {
         ToneGenerator *tg = [ToneGenerator sharedInstance];
 
-        double frequencies_params[] = {sum_duration_interval, max_frequency, max_frequency * (4.0/5.0), (max_frequency * (4.0/5.0)) / (4.0/5.0)}; // frequencyCalculatorPolytone
-        double amplitude_params[] = {1.0, 1.0, 3.0};
+        double frequency_root       = [_distributor nextInt];
+        double frequencies_params[] = {sum_duration_interval, frequency_root, frequency_root * (4.0/5.0), (frequency_root * (4.0/5.0)) / (4.0/5.0)}; // frequencyCalculatorPolytone
+        double amplitude_params[]   = {2.0, 8.0, 2.0};
         BufferPackage * buffer_package = tg.bufferPackage(audioFormat,
                                                           sum_duration_interval,
                                                           tg.channelBundle(tg.envelope(tg.parameters(0,
@@ -507,7 +545,7 @@ float sincf(float x)
                                                                                        tg.frequencyCalculatorPolytone),
                                                                            tg.envelope(tg.parameters(3,
                                                                                                      amplitude_params,
-                                                                                                     @(TRUE)),
+                                                                                                     @(FALSE)),
                                                                                        tg.amplitudeCalculator)));
         
         dataRenderedCompletionBlock(tg.bufferDataCalculator(buffer_package), ^(__unsafe_unretained id flag) {
@@ -616,11 +654,18 @@ float sincf(float x)
     {
         [_audioEngine pause];
         [_audioEngine.mainMixerNode setOutputVolume:0.0];
+        
         [_audioEngine detachNode:_playerNode];
+        _playerNode  = nil;
+        
+        _randomizer  = nil;
+        _distributor = nil;
     } else {
         if ([self startEngine])
         {
-            [_audioEngine.mainMixerNode setOutputVolume:1.0];
+            _randomizer  = [[GKMersenneTwisterRandomSource alloc] initWithSeed:time(NULL)];
+            _distributor = [[GKGaussianDistribution alloc] initWithRandomSource:_randomizer mean:(max_frequency / 1.25) deviation:min_frequency];
+            
             _playerNode = [[AVAudioPlayerNode alloc] init];
             [_playerNode setRenderingAlgorithm:AVAudio3DMixingRenderingAlgorithmAuto];
             [_playerNode setSourceMode:AVAudio3DMixingSourceModeAmbienceBed];
@@ -629,6 +674,8 @@ float sincf(float x)
             [_audioEngine attachNode:_playerNode];
             [_audioEngine connect:_playerNode to:_mixerNode format:_audioFormat];
             
+            [_audioEngine.mainMixerNode setOutputVolume:1.0];
+            
             [self playTexture:ToneGenerator.sharedInstance.standardTexture onNode:_playerNode];
         }
     }
@@ -636,16 +683,12 @@ float sincf(float x)
 
 - (void)playTexture:(typeof(Texture))texture onNode:(AVAudioPlayerNode *)node
 {
-    __block NSInteger call_count = 0;
-    __block NSInteger call_back  = 0;
     if (![node isPlaying]) [node play];
     ToneGenerator.sharedInstance.standardTexture(self.audioFormat, ^(AVAudioPCMBuffer *buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock) {
-        NSLog(@"%lu\tReturned", call_count++);
-        //        [node prepareWithFrameCount:buffer.frameCapacity];
+        [node prepareWithFrameCount:buffer.frameCapacity];
         [node scheduleBuffer:buffer completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack completionHandler:^(AVAudioPlayerNodeCompletionCallbackType callbackType) {
             if (callbackType == AVAudioPlayerNodeCompletionDataPlayedBack)
             {
-                NSLog(@"%lu\tCalled", call_back++);
                 dataPlayedBackCompletionBlock(nil);
             }
         }];
