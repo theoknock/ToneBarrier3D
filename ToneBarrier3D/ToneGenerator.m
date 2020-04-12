@@ -43,8 +43,7 @@ typedef struct parameters_struct
 } Parameters;
 
 typedef double (^Calculator)(double time,
-                             typeof(Parameters) * parameters,
-                             double (^ _Nullable calculator)(double time, typeof(Parameters) * parameters));
+                             typeof(Parameters) * parameters);
 
 typedef struct calculator_envelope_struct
 {
@@ -87,7 +86,7 @@ typedef void (^Texture)(AVAudioFormat * audio_format, DataRenderedCompletionBloc
 @property (nonatomic, readonly) BOOL   (^validate)(typeof(Calculator));
 
 @property (nonatomic, readonly) typeof(Parameters) * (^parameters)(int parameters_array_length, double * parameters_array, __unsafe_unretained id flag);
-@property (nonatomic, readonly) typeof(CalculatorEnvelope) * (^calculatorEnvelope)(typeof(Parameters) * parameters, __unsafe_unretained typeof(Calculator) calculator);
+@property (nonatomic, readonly) typeof(CalculatorEnvelope) * (^calculator_envelope)(typeof(Parameters) * parameters, __unsafe_unretained typeof(Calculator) calculator);
 @property (nonatomic, readonly) typeof(Calculators) * (^calculators)(CalculatorsType calculators_type, int calculators_array_length, typeof(CalculatorEnvelope) * calculators_array[]);
 @property (nonatomic, readonly) ChannelBundle * (^channel_bundle)(typeof(Calculators) * time_calculators, typeof(Calculators) * frequency_calculators, typeof(Calculators) * amplitude_calculators);
 @property (nonatomic, readonly) BufferPackage * (^buffer_package)(AVAudioFormat * audio_format, double duration, ChannelBundle * channel_l_bundle, ChannelBundle * channel_r_bundle);
@@ -103,7 +102,7 @@ typedef void (^Texture)(AVAudioFormat * audio_format, DataRenderedCompletionBloc
 
 @property (nonatomic, readonly) void (^free_parameters)(typeof(Parameters) * parameters_struct);
 @property (nonatomic, readonly) void(^free_calculator_envelope)(typeof(CalculatorEnvelope) * calculator_envelope_struct);
-@property (nonatomic, readonly) void(^free_calculators)(typeof(Calculators) * calculators_structs[]);
+@property (nonatomic, readonly) void(^free_calculators)(typeof(Calculators) * calculator_arrays[]);
 @property (nonatomic, readonly) void(^free_channel_bundle)(ChannelBundle * channel_bundle);
 @property (nonatomic, readonly) void(^free_buffer_package)(BufferPackage * buffer_package);
 
@@ -259,7 +258,7 @@ static ToneGenerator *sharedInstance = NULL;
 
 - (Calculator)timeCalculator
 {
-    return ^double(double time, typeof(Parameters) * parameters, double (^calculator)(double time, typeof(Parameters) * parameters))
+    return ^double(double time, typeof(Parameters) * parameters)
     {
         return time;
     };
@@ -268,7 +267,7 @@ static ToneGenerator *sharedInstance = NULL;
 // 2.0, max_frequency, 1.0, 0.0, 1.0, 1.0, 0.0
 - (Calculator)frequencyCalculator
 {
-    return ^double(double time, typeof(Parameters) * parameters, double (^calculator)(double time, typeof(Parameters) * parameters))
+    return ^double(double time, typeof(Parameters) * parameters)
     {
         double duration = parameters->parameters_array[0];                       // duration
         double A        = parameters->parameters_array[2];                       // amplitude (sinf(time * M_PI))
@@ -290,7 +289,7 @@ static ToneGenerator *sharedInstance = NULL;
 
 - (Calculator)frequencyCalculatorPolytone
 {
-    return ^double(double time, typeof(Parameters) * parameters, double (^calculator)(double time, typeof(Parameters) * parameters))
+    return ^double(double time, typeof(Parameters) * parameters)
     {
         double duration = parameters->parameters_array[0];
         double sinusoids_sum = 0;
@@ -308,7 +307,7 @@ static ToneGenerator *sharedInstance = NULL;
 
 - (Calculator)frequencyCalculatorDoppler
 {
-    return ^double(double time, typeof(Parameters) * parameters, double (^calculator)(double time, typeof(Parameters) * parameters))
+    return ^double(double time, typeof(Parameters) * parameters)
     {
         BOOL shorten_wavelength = (BOOL)[(NSNumber *)parameters->flag boolValue];
         double duration = parameters->parameters_array[0];
@@ -330,7 +329,7 @@ static ToneGenerator *sharedInstance = NULL;
 
 - (Calculator)amplitudeCalculator
 {
-    return ^double(double time, typeof(Parameters) * parameters, double (^calculator)(double time, typeof(Parameters) * parameters))
+    return ^double(double time, typeof(Parameters) * parameters)
     {
         double mid   = parameters->parameters_array[0];
         double trill = parameters->parameters_array[1];
@@ -354,7 +353,7 @@ float sincf(float x)
     return sincf_x;
 }
 
-- (typeof(CalculatorEnvelope) * (^)(typeof(Parameters) *, __unsafe_unretained typeof(Calculator)))calculator
+- (typeof(CalculatorEnvelope) * (^)(typeof(Parameters) *, __unsafe_unretained typeof(Calculator)))calculator_envelope
 {
     return ^typeof(CalculatorEnvelope) * (typeof(Parameters) * parameters,
                                 __unsafe_unretained typeof(Calculator) calculator)
@@ -367,9 +366,9 @@ float sincf(float x)
     };
 }
 
-- (typeof(Calculators) * (^)(CalculatorsType, int, typeof(CalculatorEnvelope) * [] ))calculators
+- (typeof(Calculators) * (^)(CalculatorsType, int, typeof(CalculatorEnvelope) * []))calculators
 {
-    return ^typeof(Calculators) *(CalculatorsType calculators_type, int calculators_array_length, CalculatorEnvelope * calculators_array[])
+    return ^typeof(Calculators) *(CalculatorsType calculators_type, int calculators_array_length, typeof(CalculatorEnvelope) * calculators_array[])
     {
         typeof(Calculators) * calculators_struct  = malloc(sizeof(Calculators) + (sizeof(CalculatorEnvelope) * calculators_array_length));
         calculators_struct->calculators_type = calculators_type;
@@ -416,7 +415,7 @@ float sincf(float x)
     };
 }
 
-- (void(^)(typeof(Parameters) *))freeParameters
+- (void(^)(typeof(Parameters) *))free_parameters
 {
     return ^void(typeof(Parameters) * parameters)
     {
@@ -426,46 +425,47 @@ float sincf(float x)
     };
 }
 
-- (void(^)(typeof(CalculatorEnvelope) *))freeCalculatorEnvelope
+- (void(^)(typeof(CalculatorEnvelope) *))free_calculator_envelope
 {
     return ^void(typeof(CalculatorEnvelope) * calculatorEnvelope)
     {
-        ToneGenerator.sharedInstance.freeParameters(calculatorEnvelope->parameters);
+        // TO-DO: Loop number of CalculatorEnvelopes in Calculators array and then free each CalculatorEnvelope
+        ToneGenerator.sharedInstance.free_parameters(calculatorEnvelope->parameters);
         calculatorEnvelope->calculator= nil;
         free((void *)calculatorEnvelope);
     };
 }
 
-- (void(^)(Calculators * []))free_calculators
+- (void(^)(typeof(Calculators) * []))free_calculators
 {
-    return ^void(Calculators * calculators_structs[]){
+    return ^void(typeof(Calculators) * calculators_structs[]){
         for (int i = 0; i < 3; i++)
         {
             for (int j = 0; j < calculators_structs[i]->calculators_array_length; j++)
             {
-                ToneGenerator.sharedInstance.freeCalculatorEnvelope(calculators_structs[i]->calculators_array[j]);
+                ToneGenerator.sharedInstance.free_calculator_envelope(calculators_structs[i]->calculators_array[j]);
             }
         }
     };
 }
 
-- (void(^)(ChannelBundle *))freeChannelBundle
+- (void(^)(ChannelBundle *))free_channel_bundle
 {
     return ^void(ChannelBundle * channel_bundle_struct)
     {
-        Calculators * calculators_structs[3] = {channel_bundle_struct->time_calculators, channel_bundle_struct->frequency_calculators, channel_bundle_struct->amplitude_calculators};
+        typeof(Calculators) * calculators_structs[3] = {channel_bundle_struct->time_calculators, channel_bundle_struct->frequency_calculators, channel_bundle_struct->amplitude_calculators};
         ToneGenerator.sharedInstance.free_calculators(calculators_structs);
         
         free((void *)channel_bundle_struct);
     };
 }
 
-- (void(^)(BufferPackage *))freeBufferPackage
+- (void(^)(BufferPackage *))free_buffer_package
 {
     return ^void(BufferPackage * buffer_package_struct)
     {
-        ToneGenerator.sharedInstance.freeChannelBundle(buffer_package_struct->channel_l_bundle);
-        ToneGenerator.sharedInstance.freeChannelBundle(buffer_package_struct->channel_r_bundle);
+        ToneGenerator.sharedInstance.free_channel_bundle(buffer_package_struct->channel_l_bundle);
+        ToneGenerator.sharedInstance.free_channel_bundle(buffer_package_struct->channel_r_bundle);
         
         free((void *)buffer_package_struct);
     };
@@ -481,11 +481,28 @@ float sincf(float x)
         floatChannelDataPtrsArray = floatChannelDataPtrs;
         for (int index = 0; index < samples_count; index++)
         {
-            double time = channel_bundle->time_envelope->calculator(ToneGenerator.sharedInstance.normalize(0.0, 1.0, index, 0.0, samples_count - 1.0), channel_bundle->time_envelope->parameters);
-            double freq = channel_bundle->frequency_envelope->calculator(time, channel_bundle->frequency_envelope->parameters);
-            double amp  = channel_bundle->amplitude_envelope->calculator(time, channel_bundle->amplitude_envelope->parameters);
+            double time = ToneGenerator.sharedInstance.normalize(0.0, 1.0, index, 0.0, samples_count - 1.0);
+            for (int time_calculator_index = 0; time_calculator_index < channel_bundle->time_calculators->calculators_array_length; time_calculator_index++)
+            {
+                typeof(CalculatorEnvelope) * time_calculator_envelope = channel_bundle->time_calculators->calculators_array[time_calculator_index];
+                time = time_calculator_envelope->calculator(time, time_calculator_envelope->parameters);
+            }
             
-            double f = freq * amp;
+            double frequency = max_frequency;
+            for (int frequency_calculator_index = 0; frequency_calculator_index < channel_bundle->frequency_calculators->calculators_array_length; frequency_calculator_index++)
+            {
+                typeof(CalculatorEnvelope) * frequency_calculator_envelope = channel_bundle->frequency_calculators->calculators_array[frequency_calculator_index];
+                frequency = frequency_calculator_envelope->calculator(time, frequency_calculator_envelope->parameters);
+            }
+            
+            double amplitude = 1.0;
+            for (int amplitude_calculator_index = 0; amplitude_calculator_index < channel_bundle->amplitude_calculators->calculators_array_length; amplitude_calculator_index++)
+            {
+                typeof(CalculatorEnvelope) * amplitude_calculator_envelope = channel_bundle->amplitude_calculators->calculators_array[amplitude_calculator_index];
+                amplitude = amplitude_calculator_envelope->calculator(time, amplitude_calculator_envelope->parameters);
+            }
+            
+            double f = frequency * amplitude;
             if (floatChannelDataPtrsArray) floatChannelDataPtrsArray[index] = f;
         }
         
@@ -530,29 +547,69 @@ float sincf(float x)
         double frequency_root       = [_distributor nextInt];
         double frequencies_params[] = {sum_duration_interval, frequency_root, frequency_root * (4.0/5.0), (frequency_root * (4.0/5.0)) / (4.0/5.0)}; // frequencyCalculatorPolytone
         double amplitude_params[]   = {2.0, 8.0, 2.0};
+        
+        
+        typedef struct parameters_struct
+        {
+            int parameters_array_length;
+            double * parameters_array;
+            __unsafe_unretained id flag;
+        } Parameters;
+
+        typedef double (^Calculator)(double time,
+                                     typeof(Parameters) * parameters);
+
+        typedef struct calculator_envelope_struct
+        {
+            typeof(Parameters) * parameters;
+            __unsafe_unretained typeof(Calculator) calculator;
+        } CalculatorEnvelope;
+
+        typedef struct calculators_struct
+        {
+            CalculatorsType calculators_type;
+            int calculators_array_length;
+            typeof(CalculatorEnvelope) * calculators_array;
+        } Calculators;
+
+        typedef struct channel_bundle_struct
+        {
+            Calculators * time_calculators;
+            Calculators * frequency_calculators;
+            Calculators * amplitude_calculators;
+        } ChannelBundle;
+
+        typedef struct buffer_package_struct {
+            AVAudioFormat * audio_format;
+            double duration;
+            ChannelBundle * channel_l_bundle;
+            ChannelBundle * channel_r_bundle;
+        } BufferPackage;
+
+        typeof(Calculator) * time_calculators[1] = tg.calculators(CalculatorsTypeTime, tg.calculator_envelope(tg.parameters(0, nil, nil), tg.timeCalculator)); //tg.calculators(CalculatorsTypeTime, tg.calculator( {tg.calculatorEnvelope(tg.parameters(0, nil, nil), tg.timeCalculator)});
+        
         BufferPackage * buffer_package = tg.bufferPackage(audioFormat,
                                                           sum_duration_interval,
-                                                          tg.channelBundle(tg.envelope(tg.parameters(0,
-                                                                                                     nil,
-                                                                                                     nil),
-                                                                                       tg.timeCalculator),
-                                                                           tg.envelope(tg.parameters(4,
+                                                          tg.channelBundle(tg.calculators(CalculatorsTypeTime, 1, )
+                                                                           
+                                                                           t,
+                                                                           tg.calculatorEnvelope(tg.parameters(4,
                                                                                                      frequencies_params,
                                                                                                      nil),
                                                                                        tg.frequencyCalculatorPolytone),
-                                                                           tg.envelope(tg.parameters(3,
+                                                                           tg.calculatorEnvelope(tg.parameters(3,
                                                                                                      amplitude_params,
                                                                                                      @(FALSE)),
                                                                                        tg.amplitudeCalculator)),
-                                                          tg.channelBundle(tg.envelope(tg.parameters(0,
+                                                          tg.channelBundle(tg.calculatorEnvelope(tg.parameters(0,
                                                                                                      nil,
                                                                                                      nil),
                                                                                        tg.timeCalculator),
-                                                                           tg.envelope(tg.parameters(4,
+                                                                           tg.calculatorEnvelope(tg.parameters(4,
                                                                                                      frequencies_params,
                                                                                                      nil),
                                                                                        tg.frequencyCalculatorPolytone),
-                                                                           tg.envelope(tg.parameters(3,
+                                                                           tg.calculatorEnvelope(tg.parameters(3,
                                                                                                      amplitude_params,
                                                                                                      @(FALSE)),
                                                                                        tg.amplitudeCalculator)));
