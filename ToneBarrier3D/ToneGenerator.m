@@ -86,8 +86,8 @@ struct score_struct
 };
 
 typedef void (^DataPlayedBackCompletionBlock)(__unsafe_unretained id flag);
-typedef void (^DataRenderedCompletionBlock)(AVAudioPCMBuffer * buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock);
-typedef void (^Texture)(AVAudioFormat * audio_format, DataRenderedCompletionBlock dataRenderedCompletionBlock);
+typedef void (^DataRenderedCompletionBlock)(GKGaussianDistribution * _Nullable distributor, AVAudioPCMBuffer * buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock);
+typedef void (^Texture)(GKGaussianDistribution * _Nullable distributor, AVAudioFormat * audio_format, DataRenderedCompletionBlock dataRenderedCompletionBlock);
 
 @interface ToneGenerator ()
 
@@ -481,15 +481,6 @@ float sincf(float x)
     };
 }
 
-struct buffer_package_struct
-{
-    AVAudioFormat * audio_format;
-    double duration;
-    int channel_bundles_array_length;
-    struct channel_bundle_struct * channel_bundles_array;
-};
-
-
 - (void (^)(struct buffer_package_struct *))free_buffer_package
 {
     return ^void(struct buffer_package_struct * buffer_package_struct)
@@ -506,10 +497,10 @@ struct buffer_package_struct
     };
 }
 
-- (float * (^)(AVAudioFrameCount, ChannelBundle *, float *, float *))channelDataCalculator
+- (float * (^)(AVAudioFrameCount, struct channel_bundle_struct *, float *, float *))channelDataCalculator
 {
     return ^float *(AVAudioFrameCount samples_count,
-                    ChannelBundle * channel_bundle,
+                    struct channel_bundle_struct * channel_bundle_struct,
                     float * floatChannelDataPtrsArray,
                     float * floatChannelDataPtrs)
     {
@@ -517,23 +508,23 @@ struct buffer_package_struct
         for (int index = 0; index < samples_count; index++)
         {
             double time = ToneGenerator.sharedInstance.normalize(0.0, 1.0, index, 0.0, samples_count - 1.0);
-            for (int time_calculator_index = 0; time_calculator_index < channel_bundle->time_calculators->calculators_array_length; time_calculator_index++)
+            for (int time_calculator_index = 0; time_calculator_index < channel_bundle_struct->time_calculators->calculators_array_length; time_calculator_index++)
             {
-                typeof(CalculatorEnvelope) * time_calculator_envelope = channel_bundle->time_calculators->calculators_array[time_calculator_index];
+                struct calculator_struct * time_calculator_envelope = &channel_bundle_struct->time_calculators->calculators_array[time_calculator_index];
                 time = time_calculator_envelope->calculator(time, time_calculator_envelope->parameters);
             }
             
             double frequency = max_frequency;
-            for (int frequency_calculator_index = 0; frequency_calculator_index < channel_bundle->frequency_calculators->calculators_array_length; frequency_calculator_index++)
+            for (int frequency_calculator_index = 0; frequency_calculator_index < channel_bundle_struct->frequency_calculators->calculators_array_length; frequency_calculator_index++)
             {
-                typeof(CalculatorEnvelope) * frequency_calculator_envelope = channel_bundle->frequency_calculators->calculators_array[frequency_calculator_index];
+                struct calculator_struct * frequency_calculator_envelope = &channel_bundle_struct->frequency_calculators->calculators_array[frequency_calculator_index];
                 frequency = frequency_calculator_envelope->calculator(time, frequency_calculator_envelope->parameters);
             }
             
             double amplitude = 1.0;
-            for (int amplitude_calculator_index = 0; amplitude_calculator_index < channel_bundle->amplitude_calculators->calculators_array_length; amplitude_calculator_index++)
+            for (int amplitude_calculator_index = 0; amplitude_calculator_index < channel_bundle_struct->amplitude_calculators->calculators_array_length; amplitude_calculator_index++)
             {
-                typeof(CalculatorEnvelope) * amplitude_calculator_envelope = channel_bundle->amplitude_calculators->calculators_array[amplitude_calculator_index];
+                struct calculator_struct * amplitude_calculator_envelope = &channel_bundle_struct->amplitude_calculators->calculators_array[amplitude_calculator_index];
                 amplitude = amplitude_calculator_envelope->calculator(time, amplitude_calculator_envelope->parameters);
             }
             
@@ -545,23 +536,26 @@ struct buffer_package_struct
     };
 }
 
-- (AVAudioPCMBuffer *(^)(BufferPackage *))bufferDataCalculator
+- (AVAudioPCMBuffer *(^)(struct buffer_package_struct *))bufferDataCalculator
 {
-    return ^AVAudioPCMBuffer *(BufferPackage * buffer_package)
+    return ^AVAudioPCMBuffer *(struct buffer_package_struct * buffer_package_struct)
     {
-        double sampleRate            = [buffer_package->audio_format sampleRate];
-        AVAudioFrameCount frameCount = (sampleRate * sum_duration_interval) * buffer_package->duration;
-        AVAudioPCMBuffer *pcmBuffer  = [[AVAudioPCMBuffer alloc] initWithPCMFormat:buffer_package->audio_format frameCapacity:frameCount];
-        pcmBuffer.frameLength        = sampleRate * buffer_package->duration;
+        double sampleRate            = [buffer_package_struct->audio_format sampleRate];
+        AVAudioFrameCount frameCount = (sampleRate * sum_duration_interval) * buffer_package_struct->duration;
+        AVAudioPCMBuffer *pcmBuffer  = [[AVAudioPCMBuffer alloc] initWithPCMFormat:buffer_package_struct->audio_format frameCapacity:frameCount];
+        pcmBuffer.frameLength        = sampleRate * buffer_package_struct->duration;
         float * channelL, * channelR;
+        
+        // TO-DO: Create a for loop to iterate the channel bundle array; but...
+        //        for now, get the first two (the left and right channels) in the array only
         channelL = ToneGenerator.sharedInstance.channelDataCalculator(pcmBuffer.frameLength,
-                                                                      buffer_package->channel_l_bundle,
+                                                                      &buffer_package_struct->channel_bundles_array[0],
                                                                       channelL,
                                                                       pcmBuffer.floatChannelData[0]);
         channelR = ToneGenerator.sharedInstance.channelDataCalculator(pcmBuffer.frameLength,
-                                                                      buffer_package->channel_r_bundle,
+                                                                      &buffer_package_struct->channel_bundles_array[1],
                                                                       channelR,
-                                                                      ([buffer_package->audio_format channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil);
+                                                                      ([buffer_package_struct->audio_format channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil);
         
         return pcmBuffer;
     };
@@ -573,105 +567,107 @@ struct buffer_package_struct
 //
 //}
 
-- (void(^)(AVAudioFormat *, DataRenderedCompletionBlock))standardTexture
+- (void(^)(GKGaussianDistribution * _Nullable, AVAudioFormat *, DataRenderedCompletionBlock))standardTexture
 {
-    return ^(AVAudioFormat *audioFormat, DataRenderedCompletionBlock dataRenderedCompletionBlock)
+    return ^(GKGaussianDistribution * _Nullable distributor, AVAudioFormat *audioFormat, DataRenderedCompletionBlock dataRenderedCompletionBlock)
     {
         ToneGenerator *tg = [ToneGenerator sharedInstance];
-
+        
         double frequency_root       = [_distributor nextInt];
         double frequencies_params[] = {sum_duration_interval, frequency_root, frequency_root * (4.0/5.0), (frequency_root * (4.0/5.0)) / (4.0/5.0)}; // frequencyCalculatorPolytone
         double amplitude_params[]   = {2.0, 8.0, 2.0};
         
+        struct parameters_struct * time_parameters_struct = tg.parameters(0, nil, nil);
         
-        typedef struct parameters_struct
-        {
-            int parameters_array_length;
-            double * parameters_array;
-            __unsafe_unretained id flag;
-        } Parameters;
-
-        typedef double (^Calculator)(double time,
-                                     typeof(Parameters) * parameters);
-
-        typedef struct calculator_envelope_struct
-        {
-            typeof(Parameters) * parameters;
-            __unsafe_unretained typeof(Calculator) calculator;
-        } CalculatorEnvelope;
-
-        typedef struct calculators_struct
-        {
-            CalculatorsType calculators_type;
-            int calculators_array_length;
-            typeof(CalculatorEnvelope) * calculators_array;
-        } Calculators;
-
-        typedef struct channel_bundle_struct
-        {
-            Calculators * time_calculators;
-            Calculators * frequency_calculators;
-            Calculators * amplitude_calculators;
-        } ChannelBundle;
-
-        typedef struct buffer_package_struct {
-            AVAudioFormat * audio_format;
-            double duration;
-            ChannelBundle * channel_l_bundle;
-            ChannelBundle * channel_r_bundle;
-        } BufferPackage;
-           
-           CalculatorEnvelope *
-           
-        Calculators *time_calculators;
+        struct calculator_struct * time_calculator = tg.calculator(time_parameters_struct, tg.timeCalculator);
         
-        typeof(ChannelBundle) * channelBundleL, * channelBundleR;
+        struct calculator_struct time_calculators_array[] = malloc(sizeof(time_calculator));
+        \
+        {time_calculator};
+        struct calculator_struct * time_calculators_array_ptr = &time_calculators_array;
         
-        BufferPackage * bufferPackage = tg.buffer_package(audioFormat,
-                                                          sum_duration_interval,
-                                                          channelBundleL,
-                                                          channelBundleR);
-
-        typeof(Calculator) * time_calculators[1] = tg.calculators(CalculatorsTypeTime, tg.calculator_envelope(tg.parameters(0, nil, nil), tg.timeCalculator)); //tg.calculators(CalculatorsTypeTime, tg.calculator( {tg.calculatorEnvelope(tg.parameters(0, nil, nil), tg.timeCalculator)});
+        struct calculators_struct * time_calculators = tg.calculators(CalculatorsTypeTime,
+                                                                      1,
+                                                                      time_calculators_array);
         
-        BufferPackage * buffer_package = tg.bufferPackage(audioFormat,
-                                                          sum_duration_interval,
-                                                          tg.channelBundle(tg.calculators(CalculatorsTypeTime, 1, )
-                                                                           
-                                                                           t,
-                                                                           tg.calculatorEnvelope(tg.parameters(4,
-                                                                                                     frequencies_params,
-                                                                                                     nil),
-                                                                                       tg.frequencyCalculatorPolytone),
-                                                                           tg.calculatorEnvelope(tg.parameters(3,
-                                                                                                     amplitude_params,
-                                                                                                     @(FALSE)),
-                                                                                       tg.amplitudeCalculator)),
-                                                          tg.channelBundle(tg.calculatorEnvelope(tg.parameters(0,
-                                                                                                     nil,
-                                                                                                     nil),
-                                                                                       tg.timeCalculator),
-                                                                           tg.calculatorEnvelope(tg.parameters(4,
-                                                                                                     frequencies_params,
-                                                                                                     nil),
-                                                                                       tg.frequencyCalculatorPolytone),
-                                                                           tg.calculatorEnvelope(tg.parameters(3,
-                                                                                                     amplitude_params,
-                                                                                                     @(FALSE)),
-                                                                                       tg.amplitudeCalculator)));
         
-        dataRenderedCompletionBlock(tg.bufferDataCalculator(buffer_package), ^(__unsafe_unretained id flag) {
+        struct parameters_struct * frequency_parameters_struct = tg.parameters(4, frequencies_params, nil);
+        
+        struct calculator_struct * frequency_calculator = tg.calculator(frequency_parameters_struct, tg.frequencyCalculatorPolytone);
+        
+        struct calculator_struct * frequency_calculators_array[1] = {frequency_calculator};
+        
+        struct calculators_struct * frequency_calculators = tg.calculators(CalculatorsTypeFrequency,
+                                                                           1,
+                                                                           frequency_calculators_array);
+        
+        
+        struct parameters_struct * amplitude_parameters_struct = tg.parameters(3, amplitude_params, nil);
+        
+        struct calculator_struct * amplitude_calculator = tg.calculator(amplitude_parameters_struct, tg.amplitudeCalculator);
+        
+        struct calculator_struct * amplitude_calculators_array = {amplitude_calculator};
+        
+        struct calculators_struct * amplitude_calculators = tg.calculators(CalculatorsTypeAmplitude,
+                                                                           1,
+                                                                           amplitude_calculators_array);
+        
+        
+        struct channel_bundle_struct *channel_bundle_struct_left = tg.channel_bundle(ChannelBundleAssignmentLeft,
+                                                                                     time_calculators,
+                                                                                     frequency_calculators,
+                                                                                     amplitude_calculators);
+        
+        struct channel_bundle_struct *channel_bundle_struct_right = tg.channel_bundle(ChannelBundleAssignmentRight,
+                                                                                      time_calculators,
+                                                                                      frequency_calculators,
+                                                                                      amplitude_calculators);
+        
+        struct channel_bundle_struct * channel_bundles_array[2] = {channel_bundle_struct_left, channel_bundle_struct_right};
+        
+        struct buffer_package_struct * buffer_package_struct = tg.buffer_package(audioFormat,
+                                                                                 sum_duration_interval,
+                                                                                 2,
+                                                                                 
+                                                                                 
+                                                                                 BufferPackage * buffer_package = tg.bufferPackage(audioFormat,
+                                                                                                                                   sum_duration_interval,
+                                                                                                                                   tg.channelBundle(tg.calculators(CalculatorsTypeTime, 1, )
+                                                                                                                                                    
+                                                                                                                                                    t,
+                                                                                                                                                    tg.calculatorEnvelope(tg.parameters(4,
+                                                                                                                                                                                        frequencies_params,
+                                                                                                                                                                                        nil),
+                                                                                                                                                                          tg.frequencyCalculatorPolytone),
+                                                                                                                                                    tg.calculatorEnvelope(tg.parameters(3,
+                                                                                                                                                                                        amplitude_params,
+                                                                                                                                                                                        @(FALSE)),
+                                                                                                                                                                          tg.amplitudeCalculator)),
+                                                                                                                                   tg.channelBundle(tg.calculatorEnvelope(tg.parameters(0,
+                                                                                                                                                                                        nil,
+                                                                                                                                                                                        nil),
+                                                                                                                                                                          tg.timeCalculator),
+                                                                                                                                                    tg.calculatorEnvelope(tg.parameters(4,
+                                                                                                                                                                                        frequencies_params,
+                                                                                                                                                                                        nil),
+                                                                                                                                                                          tg.frequencyCalculatorPolytone),
+                                                                                                                                                    tg.calculatorEnvelope(tg.parameters(3,
+                                                                                                                                                                                        amplitude_params,
+                                                                                                                                                                                        @(FALSE)),
+                                                                                                                                                                          tg.amplitudeCalculator)));
+                                                                                 
+                                                                                 dataRenderedCompletionBlock(tg.bufferDataCalculator(buffer_package), ^(__unsafe_unretained id flag) {
             //            NSString *str = (NSString *)flag;
             //            NSLog(NSStringFromSelector(@selector(standardTexture)));
             
             tg.freeBufferPackage(buffer_package);
             tg.standardTexture(audioFormat, dataRenderedCompletionBlock);
         });
-        
-        return;
-    };
-}
-
+                                                                                 
+                                                                                 return;
+                                                                                 };
+                                                                                 }
+                                                                                 
 //- (AmplitudeEnvelope)amplitudeEnvelope
 //{
 //    return ^double(double time, int mid, double trill, double slope, id var)
