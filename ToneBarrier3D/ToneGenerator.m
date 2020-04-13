@@ -85,8 +85,6 @@ struct score_struct
     struct buffer_package_struct * buffer_packages_array;
 };
 
-// [[[[[SCORE]]]]]
-
 typedef void (^DataPlayedBackCompletionBlock)(__unsafe_unretained id flag);
 typedef void (^DataRenderedCompletionBlock)(AVAudioPCMBuffer * buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock);
 typedef void (^Texture)(AVAudioFormat * audio_format, DataRenderedCompletionBlock dataRenderedCompletionBlock);
@@ -412,14 +410,6 @@ float sincf(float x)
     };
 }
 
-struct buffer_package_struct
-{
-    AVAudioFormat * audio_format;
-    double duration;
-    int channel_bundles_array_length;
-    struct channel_bundle_struct * channel_bundles_array;
-};
-
 // TO-DO: Move duration multiplication operation to a separate block and perform operation here (NOT anywhere else)
 - (struct buffer_package_struct * (^)(AVAudioFormat *, double duration, int channel_bundles_array_length, struct channel_bundle_struct *))bufferPackage
 {
@@ -442,57 +432,75 @@ struct buffer_package_struct
     };
 }
 
-- (void(^)(typeof(Parameters) *))free_parameters
+- (void (^)(struct parameters_struct *))free_parameters
 {
-    return ^void(typeof(Parameters) * parameters)
+    return ^void(struct parameters_struct * parameters_struct)
     {
-        free((void *)parameters->parameters_array);
-        parameters->flag = nil;
-        free((void *)parameters);
+        free((void *)parameters_struct->parameters_array);
+        parameters_struct->flag = nil;
+        free((void *)parameters_struct);
     };
 }
 
-- (void(^)(typeof(CalculatorEnvelope) *))free_calculator_envelope
+- (void (^)(struct calculator_struct *))free_calculator
 {
-    return ^void(typeof(CalculatorEnvelope) * calculatorEnvelope)
+    return ^void(struct calculator_struct * calculator_struct)
     {
         // TO-DO: Loop number of CalculatorEnvelopes in Calculators array and then free each CalculatorEnvelope
-        ToneGenerator.sharedInstance.free_parameters(calculatorEnvelope->parameters);
-        calculatorEnvelope->calculator= nil;
-        free((void *)calculatorEnvelope);
+        ToneGenerator.sharedInstance.free_parameters(calculator_struct->parameters);
+        calculator_struct->calculator= nil;
+        free((void *)calculator_struct);
     };
 }
 
-- (void(^)(typeof(Calculators) * []))free_calculators
+- (void (^)(struct calculators_struct *))free_calculators
 {
-    return ^void(typeof(Calculators) * calculators_structs[]){
+    return ^void(struct calculators_struct * calculators_array)
+    {
         for (int i = 0; i < 3; i++)
         {
-            for (int j = 0; j < calculators_structs[i]->calculators_array_length; j++)
+            struct calculators_struct * calculator_struct = &calculators_array[i];
+            
+            for (int j = 0; j < calculator_struct->calculators_array_length; j++)
             {
-                ToneGenerator.sharedInstance.free_calculator_envelope(calculators_structs[i]->calculators_array[j]);
+                ToneGenerator.sharedInstance.free_calculator(&calculator_struct->calculators_array[j]);
             }
         }
     };
 }
 
-- (void(^)(ChannelBundle *))free_channel_bundle
+- (void (^)(struct channel_bundle_struct *))free_channel_bundle
 {
-    return ^void(ChannelBundle * channel_bundle_struct)
+    return ^void(struct channel_bundle_struct * channel_bundle_struct)
     {
-        typeof(Calculators) * calculators_structs[3] = {channel_bundle_struct->time_calculators, channel_bundle_struct->frequency_calculators, channel_bundle_struct->amplitude_calculators};
-        ToneGenerator.sharedInstance.free_calculators(calculators_structs);
+        ToneGenerator.sharedInstance.free_calculators(channel_bundle_struct->time_calculators);
+        ToneGenerator.sharedInstance.free_calculators(channel_bundle_struct->frequency_calculators);
+        ToneGenerator.sharedInstance.free_calculators(channel_bundle_struct->amplitude_calculators);
         
         free((void *)channel_bundle_struct);
     };
 }
 
-- (void(^)(BufferPackage *))free_buffer_package
+struct buffer_package_struct
 {
-    return ^void(BufferPackage * buffer_package_struct)
+    AVAudioFormat * audio_format;
+    double duration;
+    int channel_bundles_array_length;
+    struct channel_bundle_struct * channel_bundles_array;
+};
+
+
+- (void (^)(struct buffer_package_struct *))free_buffer_package
+{
+    return ^void(struct buffer_package_struct * buffer_package_struct)
     {
-        ToneGenerator.sharedInstance.free_channel_bundle(buffer_package_struct->channel_l_bundle);
-        ToneGenerator.sharedInstance.free_channel_bundle(buffer_package_struct->channel_r_bundle);
+        buffer_package_struct->audio_format = nil;
+        
+        for (int i = 0; i < 3; i++)
+        {
+            struct channel_bundle_struct * channel_bundle_struct = &buffer_package_struct->channel_bundles_array[i];
+            ToneGenerator.sharedInstance.free_channel_bundle(channel_bundle_struct);
+        }
         
         free((void *)buffer_package_struct);
     };
