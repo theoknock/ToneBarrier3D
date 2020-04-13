@@ -35,42 +35,49 @@ typedef NS_ENUM(NSUInteger, CalculatorsType) {
     CalculatorsTypeAmplitude
 };
 
-typedef struct parameters_struct
+struct parameters_struct
 {
     int parameters_array_length;
     double * parameters_array;
     __unsafe_unretained id flag;
-} Parameters;
+};
 
 typedef double (^Calculator)(double time,
-                             typeof(Parameters) * parameters);
+                             struct parameters_struct * parameters);
 
-typedef struct calculator_envelope_struct
+struct calculator_struct
 {
-    typeof(Parameters) * parameters;
+    struct parameters_struct parameters;
     __unsafe_unretained typeof(Calculator) calculator;
-} CalculatorEnvelope;
+};
 
-typedef struct calculators_struct
+struct calculators_struct
 {
     CalculatorsType calculators_type;
     int calculators_array_length;
-    typeof(CalculatorEnvelope) * calculators_array[];
-} Calculators;
+    struct calculator_struct * calculators_array;
+};
 
-typedef struct channel_bundle_struct
+typedef NS_ENUM(NSUInteger, ChannelBundleAssignment) { // TO-DO: Think of a better name
+    ChannelBundleAssignmentLeft,
+    ChannelBundleAssignmentRight
+};
+
+struct channel_bundle_struct
 {
-    Calculators * time_calculators;
-    Calculators * frequency_calculators;
-    Calculators * amplitude_calculators;
-} ChannelBundle;
+    ChannelBundleAssignment channel_bundle_assignment;
+    struct calculators_struct * time_calculators;
+    struct calculators_struct * frequency_calculators;
+    struct calculators_struct * amplitude_calculators;
+};
 
-typedef struct buffer_package_struct {
+struct buffer_package_struct
+{
     AVAudioFormat * audio_format;
     double duration;
-    ChannelBundle * channel_l_bundle;
-    ChannelBundle * channel_r_bundle;
-} BufferPackage;
+    int channel_bundles_array_length;
+    struct channel_bundle_struct * channel_bundles_array;
+};
 
 // [[[[[SCORE]]]]]
 
@@ -85,13 +92,13 @@ typedef void (^Texture)(AVAudioFormat * audio_format, DataRenderedCompletionBloc
 @property (nonatomic, readonly) double (^randomize)(double, double, double);
 @property (nonatomic, readonly) BOOL   (^validate)(typeof(Calculator));
 
-@property (nonatomic, readonly) typeof(Parameters) * (^parameters)(int parameters_array_length, double * parameters_array, __unsafe_unretained id flag);
-@property (nonatomic, readonly) typeof(CalculatorEnvelope) * (^calculator_envelope)(typeof(Parameters) * parameters, __unsafe_unretained typeof(Calculator) calculator);
-@property (nonatomic, readonly) typeof(Calculators) * (^calculators)(CalculatorsType calculators_type, int calculators_array_length, typeof(CalculatorEnvelope) * calculators_array[]);
-@property (nonatomic, readonly) ChannelBundle * (^channel_bundle)(typeof(Calculators) * time_calculators, typeof(Calculators) * frequency_calculators, typeof(Calculators) * amplitude_calculators);
-@property (nonatomic, readonly) BufferPackage * (^buffer_package)(AVAudioFormat * audio_format, double duration, ChannelBundle * channel_l_bundle, ChannelBundle * channel_r_bundle);
-@property (nonatomic, readonly) float * (^audio_samples)(AVAudioFrameCount samples_count, ChannelBundle * channel_bundle, float * samples_array, float * sample_ptrs);
-@property (nonatomic, readonly) AVAudioPCMBuffer * (^audio_buffer)(BufferPackage * buffer_package);
+@property (nonatomic, readonly) struct parameters_struct     * (^parameters)(int parameters_array_length, double * parameters_array, __unsafe_unretained id flag);
+@property (nonatomic, readonly) struct calculator_struct     * (^calculator)(struct parameters_struct * parameters, __unsafe_unretained typeof(Calculator) calculator);
+@property (nonatomic, readonly) struct calculators_struct    * (^calculators)(CalculatorsType calculators_type, int calculators_array_length, struct calculator_struct * calculators_array);
+@property (nonatomic, readonly) struct channel_bundle_struct * (^channel_bundle)(ChannelBundleAssignment channel_bundle_assignment, struct calculators_struct * time_calculators, struct calculators_struct * frequency_calculators, struct calculators_struct * amplitude_calculators);
+@property (nonatomic, readonly) struct buffer_package_struct * (^buffer_package)(AVAudioFormat * audio_format, double duration, int channel_bundles_array_length, struct channel_bundle_struct * channel_bundles_array);
+@property (nonatomic, readonly) float * (^audio_samples)(AVAudioFrameCount samples_count, struct channel_bundle_struct * channel_bundle, float * samples_array, float * sample_ptrs);
+@property (nonatomic, readonly) AVAudioPCMBuffer * (^audio_buffer)(struct buffer_package_struct * buffer_package);
 
 @property (nonatomic, readonly) typeof(Calculator) timeCalculator;
 @property (nonatomic, readonly) typeof(Calculator) frequencyCalculator;
@@ -100,11 +107,11 @@ typedef void (^Texture)(AVAudioFormat * audio_format, DataRenderedCompletionBloc
 
 @property (nonatomic, readonly) typeof(Texture) standardTexture;
 
-@property (nonatomic, readonly) void (^free_parameters)(typeof(Parameters) * parameters_struct);
-@property (nonatomic, readonly) void(^free_calculator_envelope)(typeof(CalculatorEnvelope) * calculator_envelope_struct);
-@property (nonatomic, readonly) void(^free_calculators)(typeof(Calculators) * calculator_arrays[]);
-@property (nonatomic, readonly) void(^free_channel_bundle)(ChannelBundle * channel_bundle);
-@property (nonatomic, readonly) void(^free_buffer_package)(BufferPackage * buffer_package);
+@property (nonatomic, readonly) void(^free_parameters)(struct parameters_struct *);
+@property (nonatomic, readonly) void(^free_calculator)(struct calculator_struct *);
+@property (nonatomic, readonly) void(^free_calculators)(struct calculators_struct *);
+@property (nonatomic, readonly) void(^free_channel_bundle)(struct channel_bundle_struct *);
+@property (nonatomic, readonly) void(^free_buffer_package)(struct buffer_package_struct *);
 
 @property (nonatomic, readonly) GKMersenneTwisterRandomSource * _Nullable randomizer;
 @property (nonatomic, readonly) GKGaussianDistribution * _Nullable distributor;
@@ -237,28 +244,28 @@ static ToneGenerator *sharedInstance = NULL;
 
 // [[[[[ENVELOPE IMPLEMENTATION]]]]]
 
-- (typeof(Parameters) * (^)(int, double *, __unsafe_unretained id))parameters
+- (struct parameters_struct * (^)(int, double *, __unsafe_unretained id))parameters
 {
-    return ^Parameters * (int parameters_array_length,
-                          double * parameters_array,
-                          __unsafe_unretained id flag)
+   return ^struct parameters_struct * (int parameters_array_length,
+                                     double * parameters_array,
+                                     __unsafe_unretained id flag)
     {
-        typeof(Parameters) * parameters_struct     = malloc(sizeof(Parameters));
-        parameters_struct->parameters_array_length = parameters_array_length;
-        parameters_struct->parameters_array        = malloc(sizeof(double) * parameters_array_length);
+        struct parameters_struct * parameters = malloc(sizeof(struct parameters_struct));
+        parameters->parameters_array_length = parameters_array_length;
+        parameters->parameters = malloc(sizeof(double) * parameters_array_length);
         for (int i = 0; i < parameters_array_length; i++)
         {
-            parameters_struct->parameters_array[i] = parameters_array[i];
+            parameters->parameters[i] = parameters_array[i];
         }
-        parameters_struct->flag                    = flag;
+        parameters->flag = flag;
         
-        return parameters_struct;
+        return parameters;
     };
 }
 
 - (Calculator)timeCalculator
 {
-    return ^double(double time, typeof(Parameters) * parameters)
+    return ^double(double time, struct parameters_struct * parameters)
     {
         return time;
     };
@@ -267,7 +274,7 @@ static ToneGenerator *sharedInstance = NULL;
 // 2.0, max_frequency, 1.0, 0.0, 1.0, 1.0, 0.0
 - (Calculator)frequencyCalculator
 {
-    return ^double(double time, typeof(Parameters) * parameters)
+    return ^double(double time, struct parameters_struct * parameters)
     {
         double duration = parameters->parameters_array[0];                       // duration
         double A        = parameters->parameters_array[2];                       // amplitude (sinf(time * M_PI))
@@ -585,6 +592,17 @@ float sincf(float x)
             ChannelBundle * channel_l_bundle;
             ChannelBundle * channel_r_bundle;
         } BufferPackage;
+           
+           CalculatorEnvelope *
+           
+        Calculators *time_calculators;
+        
+        typeof(ChannelBundle) * channelBundleL, * channelBundleR;
+        
+        BufferPackage * bufferPackage = tg.buffer_package(audioFormat,
+                                                          sum_duration_interval,
+                                                          channelBundleL,
+                                                          channelBundleR);
 
         typeof(Calculator) * time_calculators[1] = tg.calculators(CalculatorsTypeTime, tg.calculator_envelope(tg.parameters(0, nil, nil), tg.timeCalculator)); //tg.calculators(CalculatorsTypeTime, tg.calculator( {tg.calculatorEnvelope(tg.parameters(0, nil, nil), tg.timeCalculator)});
         
