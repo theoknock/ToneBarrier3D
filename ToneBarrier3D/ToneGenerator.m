@@ -47,7 +47,7 @@ typedef double (^Calculator)(double time,
 
 struct calculator_struct
 {
-    struct parameters_struct parameters;
+    struct parameters_struct * parameters;
     __unsafe_unretained typeof(Calculator) calculator;
 };
 
@@ -79,6 +79,12 @@ struct buffer_package_struct
     struct channel_bundle_struct * channel_bundles_array;
 };
 
+struct score_struct
+{
+    int buffer_packages_array_length;
+    struct buffer_package_struct * buffer_packages_array;
+};
+
 // [[[[[SCORE]]]]]
 
 typedef void (^DataPlayedBackCompletionBlock)(__unsafe_unretained id flag);
@@ -97,6 +103,7 @@ typedef void (^Texture)(AVAudioFormat * audio_format, DataRenderedCompletionBloc
 @property (nonatomic, readonly) struct calculators_struct    * (^calculators)(CalculatorsType calculators_type, int calculators_array_length, struct calculator_struct * calculators_array);
 @property (nonatomic, readonly) struct channel_bundle_struct * (^channel_bundle)(ChannelBundleAssignment channel_bundle_assignment, struct calculators_struct * time_calculators, struct calculators_struct * frequency_calculators, struct calculators_struct * amplitude_calculators);
 @property (nonatomic, readonly) struct buffer_package_struct * (^buffer_package)(AVAudioFormat * audio_format, double duration, int channel_bundles_array_length, struct channel_bundle_struct * channel_bundles_array);
+@property (nonatomic, readonly) struct score_struct          * (^score)(int buffer_packages_array_length, struct buffer_package_struct * buffer_packages_array);
 @property (nonatomic, readonly) float * (^audio_samples)(AVAudioFrameCount samples_count, struct channel_bundle_struct * channel_bundle, float * samples_array, float * sample_ptrs);
 @property (nonatomic, readonly) AVAudioPCMBuffer * (^audio_buffer)(struct buffer_package_struct * buffer_package);
 
@@ -112,6 +119,7 @@ typedef void (^Texture)(AVAudioFormat * audio_format, DataRenderedCompletionBloc
 @property (nonatomic, readonly) void(^free_calculators)(struct calculators_struct *);
 @property (nonatomic, readonly) void(^free_channel_bundle)(struct channel_bundle_struct *);
 @property (nonatomic, readonly) void(^free_buffer_package)(struct buffer_package_struct *);
+@property (nonatomic, readonly) void(^free_score)(struct score_struct *);
 
 @property (nonatomic, readonly) GKMersenneTwisterRandomSource * _Nullable randomizer;
 @property (nonatomic, readonly) GKGaussianDistribution * _Nullable distributor;
@@ -247,15 +255,15 @@ static ToneGenerator *sharedInstance = NULL;
 - (struct parameters_struct * (^)(int, double *, __unsafe_unretained id))parameters
 {
    return ^struct parameters_struct * (int parameters_array_length,
-                                     double * parameters_array,
-                                     __unsafe_unretained id flag)
+                                       double * parameters_array,
+                                       __unsafe_unretained id flag)
     {
         struct parameters_struct * parameters = malloc(sizeof(struct parameters_struct));
         parameters->parameters_array_length = parameters_array_length;
-        parameters->parameters = malloc(sizeof(double) * parameters_array_length);
+        parameters->parameters_array = malloc(sizeof(double) * parameters_array_length);
         for (int i = 0; i < parameters_array_length; i++)
         {
-            parameters->parameters[i] = parameters_array[i];
+            parameters->parameters_array[i] = parameters_array[i];
         }
         parameters->flag = flag;
         
@@ -296,7 +304,7 @@ static ToneGenerator *sharedInstance = NULL;
 
 - (Calculator)frequencyCalculatorPolytone
 {
-    return ^double(double time, typeof(Parameters) * parameters)
+    return ^double(double time, struct parameters_struct * parameters)
     {
         double duration = parameters->parameters_array[0];
         double sinusoids_sum = 0;
@@ -314,7 +322,7 @@ static ToneGenerator *sharedInstance = NULL;
 
 - (Calculator)frequencyCalculatorDoppler
 {
-    return ^double(double time, typeof(Parameters) * parameters)
+    return ^double(double time, struct parameters_struct * parameters)
     {
         BOOL shorten_wavelength = (BOOL)[(NSNumber *)parameters->flag boolValue];
         double duration = parameters->parameters_array[0];
@@ -336,7 +344,7 @@ static ToneGenerator *sharedInstance = NULL;
 
 - (Calculator)amplitudeCalculator
 {
-    return ^double(double time, typeof(Parameters) * parameters)
+    return ^double(double time, struct parameters_struct * parameters)
     {
         double mid   = parameters->parameters_array[0];
         double trill = parameters->parameters_array[1];
@@ -360,12 +368,12 @@ float sincf(float x)
     return sincf_x;
 }
 
-- (typeof(CalculatorEnvelope) * (^)(typeof(Parameters) *, __unsafe_unretained typeof(Calculator)))calculator_envelope
+- (struct calculator_struct * (^)(struct parameters_struct *, __unsafe_unretained typeof(Calculator)))calculator_envelope
 {
-    return ^typeof(CalculatorEnvelope) * (typeof(Parameters) * parameters,
-                                __unsafe_unretained typeof(Calculator) calculator)
+    return ^struct calculator_struct * (struct parameters_struct * parameters,
+                                        __unsafe_unretained typeof(Calculator) calculator)
     {
-        typeof(CalculatorEnvelope) * envelope_struct  = malloc(sizeof(CalculatorEnvelope));
+        struct calculator_struct * envelope_struct  = malloc(sizeof(struct calculator_struct) + sizeof(parameters));
         envelope_struct->parameters = parameters;
         envelope_struct->calculator = calculator;
         
@@ -373,13 +381,13 @@ float sincf(float x)
     };
 }
 
-- (typeof(Calculators) * (^)(CalculatorsType, int, typeof(CalculatorEnvelope) * []))calculators
+- (struct calculators_struct * (^)(CalculatorsType, int, struct calculator_struct *))calculators
 {
-    return ^typeof(Calculators) *(CalculatorsType calculators_type, int calculators_array_length, typeof(CalculatorEnvelope) * calculators_array[])
+    return ^struct calculators_struct * (CalculatorsType calculators_type, int calculators_array_length, struct calculator_struct * calculators_array)
     {
-        typeof(Calculators) * calculators_struct  = malloc(sizeof(Calculators) + (sizeof(CalculatorEnvelope) * calculators_array_length));
+        struct calculators_struct * calculators_struct  = malloc(sizeof(struct calculators_struct) + (sizeof(struct calculator_struct) * calculators_array_length));
         calculators_struct->calculators_type = calculators_type;
-        calculators_struct->calculators_array[calculators_array_length] = malloc((sizeof(CalculatorEnvelope) * calculators_array_length));
+        calculators_struct->calculators_array = malloc((sizeof(struct calculator_struct) * calculators_array_length));
         for (int i = 0; i < calculators_array_length; i++)
         {
             calculators_struct->calculators_array[i] = calculators_array[i];
@@ -389,13 +397,13 @@ float sincf(float x)
     };
 }
 
-- (ChannelBundle * (^)(Calculators *, Calculators *, Calculators *))channelBundle
+- (struct channel_bundle_struct * (^)(struct calculators_struct *, struct calculators_struct *, struct calculators_struct *))channelBundle
 {
-    return ^ChannelBundle *(Calculators * time_calculators,
-                            Calculators * frequency_calculators,
-                            Calculators * amplitude_calculators)
+    return ^struct channel_bundle_struct * (struct calculators_struct * time_calculators,
+                                            struct calculators_struct * frequency_calculators,
+                                            struct calculators_struct * amplitude_calculators)
     {
-        ChannelBundle *channel_bundle_struct = malloc(sizeof(ChannelBundle) + sizeof(time_calculators) + sizeof(frequency_calculators) + sizeof(amplitude_calculators));
+        struct channel_bundle_struct * channel_bundle_struct = malloc(sizeof(struct channel_bundle_struct) + sizeof(time_calculators) + sizeof(frequency_calculators) + sizeof(amplitude_calculators));
         channel_bundle_struct->time_calculators = time_calculators;
         channel_bundle_struct->frequency_calculators = frequency_calculators;
         channel_bundle_struct->amplitude_calculators = amplitude_calculators;
@@ -404,19 +412,31 @@ float sincf(float x)
     };
 }
 
-// TO-DO: Move duration multiplication operation to a separate block and perform operation here (NOT anywhere else) 2   q   
-- (BufferPackage * (^)(AVAudioFormat *, double duration, ChannelBundle *, ChannelBundle *))bufferPackage
+struct buffer_package_struct
 {
-    return ^BufferPackage *(AVAudioFormat * audio_format,
+    AVAudioFormat * audio_format;
+    double duration;
+    int channel_bundles_array_length;
+    struct channel_bundle_struct * channel_bundles_array;
+};
+
+// TO-DO: Move duration multiplication operation to a separate block and perform operation here (NOT anywhere else)
+- (struct buffer_package_struct * (^)(AVAudioFormat *, double duration, int channel_bundles_array_length, struct channel_bundle_struct *))bufferPackage
+{
+    return ^struct buffer_package_struct *(AVAudioFormat * audio_format,
                             double duration,
-                            ChannelBundle * channel_l_bundle,
-                            ChannelBundle * channel_r_bundle)
+                            int channel_bundles_array_length,
+                            struct channel_bundle_struct * channel_bundles_array)
     {
-        BufferPackage *buffer_package_struct    = malloc(sizeof(BufferPackage) + sizeof(channel_l_bundle) + sizeof(channel_r_bundle));
+        struct buffer_package_struct * buffer_package_struct = malloc(sizeof(struct buffer_package_struct) + (sizeof(channel_bundles_array) + sizeof(channel_bundles_array_length)));
         buffer_package_struct->audio_format     = audio_format;
         buffer_package_struct->duration         = duration;
-        buffer_package_struct->channel_l_bundle = channel_l_bundle;
-        buffer_package_struct->channel_r_bundle = channel_r_bundle;
+        buffer_package_struct->channel_bundles_array_length = channel_bundles_array_length;
+        buffer_package_struct->channel_bundles_array = malloc((sizeof(struct channel_bundle_struct) * channel_bundles_array_length));
+        for (int i = 0; i < channel_bundles_array_length; i++)
+        {
+            buffer_package_struct->channel_bundles_array[i] = channel_bundles_array[i];
+        }
         
         return buffer_package_struct;
     };
