@@ -29,6 +29,9 @@
 		B978E4C824719A22008EF9C2 /* ToneBarrierScoreXMLSchema-1.0alpha in Resources */ = {isa = PBXBuildFile; fileRef = B978E4C724719A22008EF9C2 /* ToneBarrierScoreXMLSchema-1.0alpha */; };
 		B978E4C924719A53008EF9C2 /* ToneBarrierScoreXMLSchema-1.0alpha in Resources */ = {isa = PBXBuildFile; fileRef = B978E4C724719A22008EF9C2 /* ToneBarrierScoreXMLSchema-1.0alpha */; };
 		B978E4CA24719A54008EF9C2 /* ToneBarrierScoreXMLSchema-1.0alpha in Resources */ = {isa = PBXBuildFile; fileRef = B978E4C724719A22008EF9C2 /* ToneBarrierScoreXMLSchema-1.0alpha */; };
+		B978E4CC24719DAD008EF9C2 /* ToneBarrierScoreStandard-1.0alpha in Resources */ = {isa = PBXBuildFile; fileRef = B978E4CB24719DAD008EF9C2 /* ToneBarrierScoreStandard-1.0alpha */; };
+		B978E4CD24719DAD008EF9C2 /* ToneBarrierScoreStandard-1.0alpha in Resources */ = {isa = PBXBuildFile; fileRef = B978E4CB24719DAD008EF9C2 /* ToneBarrierScoreStandard-1.0alpha */; };
+		B978E4CE24719DAD008EF9C2 /* ToneBarrierScoreStandard-1.0alpha in Resources */ = {isa = PBXBuildFile; fileRef = B978E4CB24719DAD008EF9C2 /* ToneBarrierScoreStandard-1.0alpha */; };
 		B9AA64E623F19AE100C1DC10 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B9AA64E523F19AE100C1DC10 /* AudioToolbox.framework */; };
 /* End PBXBuildFile section */
 
@@ -108,6 +111,7 @@
 		B93D77BC23E61CCB0099DF63 /* ToneGenerator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ToneGenerator.m; sourceTree = "<group>"; wrapsLines = 0; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		B9510E2823F6FC0A00BFAFC1 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 		B978E4C724719A22008EF9C2 /* ToneBarrierScoreXMLSchema-1.0alpha */ = {isa = PBXFileReference; explicitFileType = text.xml; path = "ToneBarrierScoreXMLSchema-1.0alpha"; sourceTree = "<group>"; wrapsLines = 0; };
+		B978E4CB24719DAD008EF9C2 /* ToneBarrierScoreStandard-1.0alpha */ = {isa = PBXFileReference; lastKnownFileType = text; path = "ToneBarrierScoreStandard-1.0alpha"; sourceTree = "<group>"; };
 		B9AA64E323F19AE100C1DC10 /* ToneBarrier3D.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ToneBarrier3D.entitlements; sourceTree = "<group>"; };
 		B9AA64E523F19AE100C1DC10 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		B9D7B8F4242C5C9400E7C7E6 /* MusicTheoryLibrary.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; name = MusicTheoryLibrary.h; path = "ToneBarrier3D Shared Source/MusicTheoryLibrary.h"; sourceTree = "<group>"; };
@@ -174,6 +178,7 @@
 				8A12D28D23E107180088463B /* Info.plist */,
 				8A12D28E23E107180088463B /* main.m */,
 				B978E4C724719A22008EF9C2 /* ToneBarrierScoreXMLSchema-1.0alpha */,
+				B978E4CB24719DAD008EF9C2 /* ToneBarrierScoreStandard-1.0alpha */,
 			);
 			path = ToneBarrier3D;
 			sourceTree = "<group>";
@@ -319,6 +324,7 @@
 				8A12D28C23E107180088463B /* LaunchScreen.storyboard in Resources */,
 				B978E4C824719A22008EF9C2 /* ToneBarrierScoreXMLSchema-1.0alpha in Resources */,
 				8A12D28923E107180088463B /* Assets.xcassets in Resources */,
+				B978E4CC24719DAD008EF9C2 /* ToneBarrierScoreStandard-1.0alpha in Resources */,
 				8A04FEB924315E6A0053C266 /* Code snippets in Resources */,
 				8A12D28723E107090088463B /* Main.storyboard in Resources */,
 			);
@@ -331,6 +337,7 @@
 				8A12D29B23E1071C0088463B /* Assets.xcassets in Resources */,
 				B978E4C924719A53008EF9C2 /* ToneBarrierScoreXMLSchema-1.0alpha in Resources */,
 				8A12D29923E107190088463B /* Interface.storyboard in Resources */,
+				B978E4CD24719DAD008EF9C2 /* ToneBarrierScoreStandard-1.0alpha in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -338,6 +345,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B978E4CE24719DAD008EF9C2 /* ToneBarrierScoreStandard-1.0alpha in Resources */,
 				8A12D2B323E1071D0088463B /* Assets.xcassets in Resources */,
 				B978E4CA24719A54008EF9C2 /* ToneBarrierScoreXMLSchema-1.0alpha in Resources */,
 			);
