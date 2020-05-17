@@ -1,59 +1,59 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" xml:lang="EN" version="1.0">
-    <xs:element name="score">
-        <xs:complexType>
-            <xs:sequence minOccurs="1" maxOccurs="1" id="bufferpackages">
-                <xs:element name="bufferpackage" minOccurs="1" maxOccurs="unbounded">
-                    <xs:complexType>
-                        <xs:sequence minOccurs="1" maxOccurs="1" id="channelbundles">
-                            <xs:element name="channelbundle" minOccurs="1" maxOccurs="unbounded">
-                                <xs:complexType>
-                                    <xs:sequence minOccurs="3" maxOccurs="3">
-                                        <xs:element name="calculators" minOccurs="1" maxOccurs="unbounded">
-                                            <xs:complexType>
-                                                <xs:sequence minOccurs="1" maxOccurs="unbounded">
-                                                    <xs:element name="calculator" minOccurs="1" maxOccurs="unbounded">
-                                                        <xs:complexType>
-                                                            <xs:sequence minOccurs="1" maxOccurs="1">
-                                                                <xs:element name="calculation" minOccurs="1" maxOccurs="1"/>
-                                                                <xs:sequence>
-                                                                    <xs:element name="parameters" minOccurs="1" maxOccurs="1">
-                                                                        <xs:complexType>
-                                                                            <xs:sequence minOccurs="1" maxOccurs="1">
-                                                                                <xs:element name="parameter" minOccurs="1" maxOccurs="unbounded" type="xs:double"/>
-                                                                            </xs:sequence>
-                                                                        </xs:complexType>
-                                                                    </xs:element>
-                                                                </xs:sequence>
-                                                            </xs:sequence>
-                                                        </xs:complexType>
-                                                    </xs:element>
-                                                    <xs:element name="CalculatorsFormulaVariable" type="CalculatorsFormulaVariable"/>
-                                                </xs:sequence>
-                                            </xs:complexType>
-                                        </xs:element>
-                                    </xs:sequence>
-                                    <xs:attribute name="channelassignment" use="required" type="xs:unsignedInt"/>
-                                </xs:complexType>
-                            </xs:element>
-                        </xs:sequence>
-                        <xs:attributeGroup ref="AudioFormat"/>
-                    </xs:complexType>
-                </xs:element>
-            </xs:sequence>
-            <xs:attribute name="title" use="required" type="xs:string"/>
-            <xs:attribute name="toneduration" use="required" type="xs:unsignedInt"/>
-        </xs:complexType>
-    </xs:element>
-    <xs:attributeGroup name="AudioFormat">
-        <xs:attribute name="samplerate" use="required" type="xs:double"/>
-        <xs:attribute name="channelcount" use="required" type="xs:unsignedInt"/>
-    </xs:attributeGroup>
-    <xs:simpleType name="CalculatorsFormulaVariable">
-        <xs:restriction base="xs:normalizedString">
-            <xs:enumeration value="Time"/>
-            <xs:enumeration value="Frequency"/>
-            <xs:enumeration value="Amplitude"/>
-        </xs:restriction>
-    </xs:simpleType>
-</xs:schema>
+<tb:schema xmlns:tb="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" xml:lang="EN" version="1.0">
+    <tb:element name="score">
+        <tb:complexType>
+            <tb:sequence minOccurs="1" maxOccurs="1" id="bufferpackages">
+                <tb:element name="bufferpackage" minOccurs="1" maxOccurs="unbounded">
+                    <tb:complexType>
+                        <tb:sequence minOccurs="1" maxOccurs="1" id="channelbundles">
+                            <tb:element name="channelbundle" minOccurs="1" maxOccurs="unbounded">
+                                <tb:complexType>
+                                    <tb:sequence minOccurs="3" maxOccurs="3">
+                                        <tb:element name="calculators" minOccurs="1" maxOccurs="unbounded">
+                                            <tb:complexType>
+                                                <tb:sequence minOccurs="1" maxOccurs="unbounded">
+                                                    <tb:element name="calculator" minOccurs="1" maxOccurs="unbounded">
+                                                        <tb:complexType>
+                                                            <tb:sequence minOccurs="1" maxOccurs="1">
+                                                                <tb:element name="calculation" minOccurs="1" maxOccurs="1"/>
+                                                                <tb:sequence>
+                                                                    <tb:element name="parameters" minOccurs="1" maxOccurs="1">
+                                                                        <tb:complexType>
+                                                                            <tb:sequence minOccurs="1" maxOccurs="1">
+                                                                                <tb:element name="parameter" minOccurs="1" maxOccurs="unbounded" type="tb:double"/>
+                                                                            </tb:sequence>
+                                                                        </tb:complexType>
+                                                                    </tb:element>
+                                                                </tb:sequence>
+                                                            </tb:sequence>
+                                                        </tb:complexType>
+                                                    </tb:element>
+                                                    <tb:element name="CalculatorsFormulaVariable" type="CalculatorsFormulaVariable"/>
+                                                </tb:sequence>
+                                            </tb:complexType>
+                                        </tb:element>
+                                    </tb:sequence>
+                                    <tb:attribute name="channelassignment" use="required" type="tb:unsignedInt"/>
+                                </tb:complexType>
+                            </tb:element>
+                        </tb:sequence>
+                        <tb:attributeGroup ref="AudioFormat"/>
+                    </tb:complexType>
+                </tb:element>
+            </tb:sequence>
+            <tb:attribute name="title" use="required" type="tb:string"/>
+            <tb:attribute name="toneduration" use="required" type="tb:unsignedInt"/>
+        </tb:complexType>
+    </tb:element>
+    <tb:attributeGroup name="AudioFormat">
+        <tb:attribute name="samplerate" use="required" type="tb:double"/>
+        <tb:attribute name="channelcount" use="required" type="tb:unsignedInt"/>
+    </tb:attributeGroup>
+    <tb:simpleType name="CalculatorsFormulaVariable">
+        <tb:restriction base="tb:normalizedString">
+            <tb:enumeration value="Time"/>
+            <tb:enumeration value="Frequency"/>
+            <tb:enumeration value="Amplitude"/>
+        </tb:restriction>
+    </tb:simpleType>
+</tb:schema>
