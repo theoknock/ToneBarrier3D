@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" xml:lang="EN" version="1.0">
+    <xs:element name="score">
+        <xs:complexType>
+            <xs:sequence minOccurs="1" maxOccurs="1" id="bufferpackages">
+                <xs:element name="bufferpackage" minOccurs="1" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence minOccurs="1" maxOccurs="1" id="channelbundles">
+                            <xs:element name="channelbundle" minOccurs="1" maxOccurs="unbounded">
+                                <xs:complexType>
+                                    <xs:sequence minOccurs="3" maxOccurs="3">
+                                        <xs:element name="calculators" minOccurs="1" maxOccurs="unbounded">
+                                            <xs:complexType>
+                                                <xs:sequence minOccurs="1" maxOccurs="unbounded">
+                                                    <xs:element name="calculator" minOccurs="1" maxOccurs="unbounded">
+                                                        <xs:complexType>
+                                                            <xs:sequence minOccurs="1" maxOccurs="1">
+                                                                <xs:element name="calculation" minOccurs="1" maxOccurs="1"/>
+                                                                <xs:sequence>
+                                                                    <xs:element name="parameters" minOccurs="1" maxOccurs="1">
+                                                                        <xs:complexType>
+                                                                            <xs:sequence minOccurs="1" maxOccurs="1">
+                                                                                <xs:element name="parameter" minOccurs="1" maxOccurs="unbounded" type="xs:double"/>
+                                                                            </xs:sequence>
+                                                                        </xs:complexType>
+                                                                    </xs:element>
+                                                                </xs:sequence>
+                                                            </xs:sequence>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="CalculatorsFormulaVariable" type="CalculatorsFormulaVariable"/>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute name="channelassignment" use="required" type="xs:unsignedInt"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                        <xs:attributeGroup ref="AudioFormat"/>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute name="title" use="required" type="xs:string"/>
+            <xs:attribute name="toneduration" use="required" type="xs:unsignedInt"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:attributeGroup name="AudioFormat">
+        <xs:attribute name="samplerate" use="required" type="xs:double"/>
+        <xs:attribute name="channelcount" use="required" type="xs:unsignedInt"/>
+    </xs:attributeGroup>
+    <xs:simpleType name="CalculatorsFormulaVariable">
+        <xs:restriction base="xs:normalizedString">
+            <xs:enumeration value="Time"/>
+            <xs:enumeration value="Frequency"/>
+            <xs:enumeration value="Amplitude"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>

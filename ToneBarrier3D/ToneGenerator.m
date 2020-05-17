@@ -58,7 +58,7 @@ struct calculators_struct
     struct calculator_struct * calculators_array;
 };
 
-typedef NS_ENUM(NSUInteger, ChannelBundleAssignment) { // TO-DO: Think of a better name
+typedef NS_ENUM(NSUInteger, ChannelBundleAssignment) {
     ChannelBundleAssignmentLeft,
     ChannelBundleAssignmentRight
 };
@@ -566,6 +566,11 @@ float sincf(float x)
 //{
 //
 //}
+
+// TO-DO: Create a block that returns an array of frequency values, specifically, a randomly generated root frequency, plus its harmonic equivalent(s)
+//        and which accepts as parameters:
+//        1) an instance of GKRandomDistribution
+//        2) a block that creates one or more harmonic complements based on the root frequency passed to it as a parameter
 
 - (void(^)(GKGaussianDistribution * _Nullable, AVAudioFormat *, DataRenderedCompletionBlock))standardTexture
 {
