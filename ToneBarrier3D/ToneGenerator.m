@@ -28,7 +28,10 @@
 #define max_duration_interval 0.45
 #define min_duration_interval 0.20
 
-// Interface
+
+// Pattern for each struct/union in the tone barrier score model:
+// “...a typedef for a struct, a block that takes in named elements and fills the struct, and a function that takes in a single struct as input...”
+// (Excerpt From: Ben Klemens. “21st Century C.” Apple Books. https://books.apple.com/us/book/21st-century-c/id950072553)
 
 typedef NS_ENUM(NSUInteger, CalculatorsType) {
     CalculatorsTypeTime,
@@ -36,59 +39,59 @@ typedef NS_ENUM(NSUInteger, CalculatorsType) {
     CalculatorsTypeAmplitude
 };
 
-typedef double Parameter;
 typedef void * Argument;
 
-typedef union parameters
+typedef union arguments
 {
-    int num_parameters;
-    Parameter * parameters;
+    int num_arguments;
 //    __unsafe_unretained id flag; // Keeping this previous parameter declaration to remind me that an untyped (uncast) parameter needs to be marked as possibly unsafe and unretained by the supplier of its value
     Argument * arguments;
-} Parameters;
+} Arguments;
+
+// The double value returned by this block should always be between 0 and 1;
+// Consider a non-optional validation check by requiring a min and max value produced by third-party suppliers of calculations as parameters
 
 typedef double (^Calculation)(double time,
-                              Parameters * parameters);
+                              Arguments * arguments);
 
 typedef union calculator
 {
-    Parameters * parameters;
+    Argument * arguments;
     __unsafe_unretained typeof(Calculation) calculation;
 } Calculator;
 
-typedef union calculators
+typedef union calculator_stack
 {
     CalculatorsType calculators_type;
     int num_calculators;
     Calculator * calculators;
-} Calculators;
+} CalculatorStack;
 
-typedef NS_ENUM(NSUInteger, ChannelBundleAssignment) {
-    ChannelBundleAssignmentLeft,
-    ChannelBundleAssignmentRight
+typedef NS_ENUM(NSUInteger, ChannelAssignment) {
+    ChannelAssignmentLeft,
+    ChannelAssignmentRight
 };
 
 typedef union channel_bundle
 {
-    ChannelBundleAssignment channel_bundle_assignment;
-    union calculators_union * time_calculators;
-    union calculators_union * frequency_calculators;
-    union calculators_union * amplitude_calculators;
+    ChannelAssignment channel_bundle_assignment;
+    CalculatorStack * time_calculators;
+    CalculatorStack * frequency_calculators;
+    CalculatorStack * amplitude_calculators;
 } ChannelBundle;
 
 typedef union buffer_package
 {
 //    AVAudioFormat * audio_format;
     double sample_rate;
-    uint32_t channel_count;
-    double duration;
-    int channel_bundles_array_length;
-    union channel_bundle_union * channel_bundles_array;
+    uint32_t num_channels;
+    ChannelBundle * channel_bundles;
 }  BufferPackage;
 
 typedef union score
 {
     char * title;
+    double tone_duration;
     int num_buffer_packages;
     BufferPackage * buffer_packages;
 } Score;
