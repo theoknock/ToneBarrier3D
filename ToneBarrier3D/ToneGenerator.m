@@ -14,6 +14,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #import <GameplayKit/GameplayKit.h>
 
@@ -35,55 +36,62 @@ typedef NS_ENUM(NSUInteger, CalculatorsType) {
     CalculatorsTypeAmplitude
 };
 
-struct parameters_struct
+typedef double Parameter;
+typedef void * Argument;
+
+typedef union parameters
 {
-    int parameters_array_length;
-    double * parameters_array;
-    __unsafe_unretained id flag;
-};
+    int num_parameters;
+    Parameter * parameters;
+//    __unsafe_unretained id flag; // Keeping this previous parameter declaration to remind me that an untyped (uncast) parameter needs to be marked as possibly unsafe and unretained by the supplier of its value
+    Argument * arguments;
+} Parameters;
 
-typedef double (^Calculator)(double time,
-                             struct parameters_struct * parameters);
+typedef double (^Calculation)(double time,
+                              Parameters * parameters);
 
-struct calculator_struct
+typedef union calculator
 {
-    struct parameters_struct * parameters;
-    __unsafe_unretained typeof(Calculator) calculator;
-};
+    Parameters * parameters;
+    __unsafe_unretained typeof(Calculation) calculation;
+} Calculator;
 
-struct calculators_struct
+typedef union calculators
 {
     CalculatorsType calculators_type;
-    int calculators_array_length;
-    struct calculator_struct * calculators_array;
-};
+    int num_calculators;
+    Calculator * calculators;
+} Calculators;
 
 typedef NS_ENUM(NSUInteger, ChannelBundleAssignment) {
     ChannelBundleAssignmentLeft,
     ChannelBundleAssignmentRight
 };
 
-struct channel_bundle_struct
+typedef union channel_bundle
 {
     ChannelBundleAssignment channel_bundle_assignment;
-    struct calculators_struct * time_calculators;
-    struct calculators_struct * frequency_calculators;
-    struct calculators_struct * amplitude_calculators;
-};
+    union calculators_union * time_calculators;
+    union calculators_union * frequency_calculators;
+    union calculators_union * amplitude_calculators;
+} ChannelBundle;
 
-struct buffer_package_struct
+typedef union buffer_package
 {
-    AVAudioFormat * audio_format;
+//    AVAudioFormat * audio_format;
+    double sample_rate;
+    uint32_t channel_count;
     double duration;
     int channel_bundles_array_length;
-    struct channel_bundle_struct * channel_bundles_array;
-};
+    union channel_bundle_union * channel_bundles_array;
+}  BufferPackage;
 
-struct score_struct
+typedef union score
 {
-    int buffer_packages_array_length;
-    struct buffer_package_struct * buffer_packages_array;
-};
+    char * title;
+    int num_buffer_packages;
+    BufferPackage * buffer_packages;
+} Score;
 
 typedef void (^DataPlayedBackCompletionBlock)(__unsafe_unretained id flag);
 typedef void (^DataRenderedCompletionBlock)(GKGaussianDistribution * _Nullable distributor, AVAudioPCMBuffer * buffer, DataPlayedBackCompletionBlock dataPlayedBackCompletionBlock);
@@ -96,14 +104,14 @@ typedef void (^Texture)(GKGaussianDistribution * _Nullable distributor, AVAudioF
 @property (nonatomic, readonly) double (^randomize)(double, double, double);
 @property (nonatomic, readonly) BOOL   (^validate)(typeof(Calculator));
 
-@property (nonatomic, readonly) struct parameters_struct     * (^parameters)(int parameters_array_length, double * parameters_array, __unsafe_unretained id flag);
-@property (nonatomic, readonly) struct calculator_struct     * (^calculator)(struct parameters_struct * parameters, __unsafe_unretained typeof(Calculator) calculator);
-@property (nonatomic, readonly) struct calculators_struct    * (^calculators)(CalculatorsType calculators_type, int calculators_array_length, struct calculator_struct * calculators_array);
-@property (nonatomic, readonly) struct channel_bundle_struct * (^channel_bundle)(ChannelBundleAssignment channel_bundle_assignment, struct calculators_struct * time_calculators, struct calculators_struct * frequency_calculators, struct calculators_struct * amplitude_calculators);
-@property (nonatomic, readonly) struct buffer_package_struct * (^buffer_package)(AVAudioFormat * audio_format, double duration, int channel_bundles_array_length, struct channel_bundle_struct * channel_bundles_array);
-@property (nonatomic, readonly) struct score_struct          * (^score)(int buffer_packages_array_length, struct buffer_package_struct * buffer_packages_array);
-@property (nonatomic, readonly) float * (^audio_samples)(AVAudioFrameCount samples_count, struct channel_bundle_struct * channel_bundle, float * samples_array, float * sample_ptrs);
-@property (nonatomic, readonly) AVAudioPCMBuffer * (^audio_buffer)(struct buffer_package_struct * buffer_package);
+@property (nonatomic, readonly) union parameters_union     * (^parameters)(int parameters_array_length, double * parameters_array, __unsafe_unretained id flag);
+@property (nonatomic, readonly) union calculator_union     * (^calculator)(union parameters_union * parameters, __unsafe_unretained typeof(Calculator) calculator);
+@property (nonatomic, readonly) union calculators_union    * (^calculators)(CalculatorsType calculators_type, int calculators_array_length, union calculator_union * calculators_array);
+@property (nonatomic, readonly) union channel_bundle_union * (^channel_bundle)(ChannelBundleAssignment channel_bundle_assignment, union calculators_union * time_calculators, union calculators_union * frequency_calculators, union calculators_union * amplitude_calculators);
+@property (nonatomic, readonly) union buffer_package_union * (^buffer_package)(AVAudioFormat * audio_format, double duration, int channel_bundles_array_length, union channel_bundle_union * channel_bundles_array);
+@property (nonatomic, readonly) Score * (^score)(char * title, int buffer_package_unions_array_length, buffer_package_union * buffer_package_unions);
+@property (nonatomic, readonly) float * (^audio_samples)(AVAudioFrameCount samples_count, union channel_bundle_union * channel_bundle, float * samples_array, float * sample_ptrs);
+@property (nonatomic, readonly) AVAudioPCMBuffer * (^audio_buffer)(union buffer_package_union * buffer_package);
 
 @property (nonatomic, readonly) typeof(Calculator) timeCalculator;
 @property (nonatomic, readonly) typeof(Calculator) frequencyCalculator;
@@ -112,12 +120,12 @@ typedef void (^Texture)(GKGaussianDistribution * _Nullable distributor, AVAudioF
 
 @property (nonatomic, readonly) typeof(Texture) standardTexture;
 
-@property (nonatomic, readonly) void(^free_parameters)(struct parameters_struct *);
-@property (nonatomic, readonly) void(^free_calculator)(struct calculator_struct *);
-@property (nonatomic, readonly) void(^free_calculators)(struct calculators_struct *);
-@property (nonatomic, readonly) void(^free_channel_bundle)(struct channel_bundle_struct *);
-@property (nonatomic, readonly) void(^free_buffer_package)(struct buffer_package_struct *);
-@property (nonatomic, readonly) void(^free_score)(struct score_struct *);
+@property (nonatomic, readonly) void(^free_parameters)(union parameters_union *);
+@property (nonatomic, readonly) void(^free_calculator)(union calculator_union *);
+@property (nonatomic, readonly) void(^free_calculators)(union calculators_union *);
+@property (nonatomic, readonly) void(^free_channel_bundle)(union channel_bundle_union *);
+@property (nonatomic, readonly) void(^free_buffer_package)(union buffer_package_union *);
+@property (nonatomic, readonly) void(^free_score)(union score_union *);
 
 @property (nonatomic, readonly) GKMersenneTwisterRandomSource * _Nullable randomizer;
 @property (nonatomic, readonly) GKGaussianDistribution * _Nullable distributor;
@@ -250,13 +258,13 @@ static ToneGenerator *sharedInstance = NULL;
 
 // [[[[[ENVELOPE IMPLEMENTATION]]]]]
 
-- (struct parameters_struct * (^)(int, double *, __unsafe_unretained id))parameters
+- (union parameters_union * (^)(int, double *, __unsafe_unretained id))parameters
 {
-   return ^struct parameters_struct * (int parameters_array_length,
+   return ^union parameters_union * (int parameters_array_length,
                                        double * parameters_array,
                                        __unsafe_unretained id flag)
     {
-        struct parameters_struct * parameters = malloc(sizeof(struct parameters_struct));
+        union parameters_union * parameters = malloc(sizeof(union parameters_union));
         parameters->parameters_array_length = parameters_array_length;
         parameters->parameters_array = malloc(sizeof(double) * parameters_array_length);
         for (int i = 0; i < parameters_array_length; i++)
@@ -271,7 +279,7 @@ static ToneGenerator *sharedInstance = NULL;
 
 - (Calculator)timeCalculator
 {
-    return ^double(double time, struct parameters_struct * parameters)
+    return ^double(double time, union parameters_union * parameters)
     {
         return time;
     };
@@ -280,7 +288,7 @@ static ToneGenerator *sharedInstance = NULL;
 // 2.0, max_frequency, 1.0, 0.0, 1.0, 1.0, 0.0
 - (Calculator)frequencyCalculator
 {
-    return ^double(double time, struct parameters_struct * parameters)
+    return ^double(double time, union parameters_union * parameters)
     {
         double duration = parameters->parameters_array[0];                       // duration
         double A        = parameters->parameters_array[2];                       // amplitude (sinf(time * M_PI))
@@ -302,7 +310,7 @@ static ToneGenerator *sharedInstance = NULL;
 
 - (Calculator)frequencyCalculatorPolytone
 {
-    return ^double(double time, struct parameters_struct * parameters)
+    return ^double(double time, union parameters_union * parameters)
     {
         double duration = parameters->parameters_array[0];
         double sinusoids_sum = 0;
@@ -320,7 +328,7 @@ static ToneGenerator *sharedInstance = NULL;
 
 - (Calculator)frequencyCalculatorDoppler
 {
-    return ^double(double time, struct parameters_struct * parameters)
+    return ^double(double time, union parameters_union * parameters)
     {
         BOOL shorten_wavelength = (BOOL)[(NSNumber *)parameters->flag boolValue];
         double duration = parameters->parameters_array[0];
@@ -342,7 +350,7 @@ static ToneGenerator *sharedInstance = NULL;
 
 - (Calculator)amplitudeCalculator
 {
-    return ^double(double time, struct parameters_struct * parameters)
+    return ^double(double time, union parameters_union * parameters)
     {
         double mid   = parameters->parameters_array[0];
         double trill = parameters->parameters_array[1];
@@ -366,141 +374,160 @@ float sincf(float x)
     return sincf_x;
 }
 
-- (struct calculator_struct * (^)(struct parameters_struct *, __unsafe_unretained typeof(Calculator)))calculator_envelope
+- (union calculator_union * (^)(union parameters_union *, __unsafe_unretained typeof(Calculator)))calculator_envelope
 {
-    return ^struct calculator_struct * (struct parameters_struct * parameters,
+    return ^union calculator_union * (union parameters_union * parameters,
                                         __unsafe_unretained typeof(Calculator) calculator)
     {
-        struct calculator_struct * envelope_struct  = malloc(sizeof(struct calculator_struct) + sizeof(parameters));
-        envelope_struct->parameters = parameters;
-        envelope_struct->calculator = calculator;
+        union calculator_union * envelope_union  = malloc(sizeof(union calculator_union) + sizeof(parameters));
+        envelope_union->parameters = parameters;
+        envelope_union->calculator = calculator;
         
-        return envelope_struct;
+        return envelope_union;
     };
 }
 
-- (struct calculators_struct * (^)(CalculatorsType, int, struct calculator_struct *))calculators
+- (union calculators_union * (^)(CalculatorsType, int, union calculator_union *))calculators
 {
-    return ^struct calculators_struct * (CalculatorsType calculators_type, int calculators_array_length, struct calculator_struct * calculators_array)
+    return ^union calculators_union * (CalculatorsType calculators_type, int calculators_array_length, union calculator_union * calculators_array)
     {
-        struct calculators_struct * calculators_struct  = malloc(sizeof(struct calculators_struct) + (sizeof(struct calculator_struct) * calculators_array_length));
-        calculators_struct->calculators_type = calculators_type;
-        calculators_struct->calculators_array = malloc((sizeof(struct calculator_struct) * calculators_array_length));
+        union calculators_union * calculators_union  = malloc(sizeof(union calculators_union) + (sizeof(union calculator_union) * calculators_array_length));
+        calculators_union->calculators_type = calculators_type;
+        calculators_union->calculators_array = malloc((sizeof(union calculator_union) * calculators_array_length));
         for (int i = 0; i < calculators_array_length; i++)
         {
-            calculators_struct->calculators_array[i] = calculators_array[i];
+            calculators_union->calculators_array[i] = calculators_array[i];
         }
 
-        return calculators_struct;
+        return calculators_union;
     };
 }
 
-- (struct channel_bundle_struct * (^)(struct calculators_struct *, struct calculators_struct *, struct calculators_struct *))channelBundle
+- (union channel_bundle_union * (^)(union calculators_union *, union calculators_union *, union calculators_union *))channelBundle
 {
-    return ^struct channel_bundle_struct * (struct calculators_struct * time_calculators,
-                                            struct calculators_struct * frequency_calculators,
-                                            struct calculators_struct * amplitude_calculators)
+    return ^union channel_bundle_union * (union calculators_union * time_calculators,
+                                            union calculators_union * frequency_calculators,
+                                            union calculators_union * amplitude_calculators)
     {
-        struct channel_bundle_struct * channel_bundle_struct = malloc(sizeof(struct channel_bundle_struct) + sizeof(time_calculators) + sizeof(frequency_calculators) + sizeof(amplitude_calculators));
-        channel_bundle_struct->time_calculators = time_calculators;
-        channel_bundle_struct->frequency_calculators = frequency_calculators;
-        channel_bundle_struct->amplitude_calculators = amplitude_calculators;
+        union channel_bundle_union * channel_bundle_union = malloc(sizeof(union channel_bundle_union) + sizeof(time_calculators) + sizeof(frequency_calculators) + sizeof(amplitude_calculators));
+        channel_bundle_union->time_calculators = time_calculators;
+        channel_bundle_union->frequency_calculators = frequency_calculators;
+        channel_bundle_union->amplitude_calculators = amplitude_calculators;
         
-        return channel_bundle_struct;
+        return channel_bundle_union;
     };
 }
 
 // TO-DO: Move duration multiplication operation to a separate block and perform operation here (NOT anywhere else)
-- (struct buffer_package_struct * (^)(AVAudioFormat *, double duration, int channel_bundles_array_length, struct channel_bundle_struct *))bufferPackage
+- (union buffer_package_union * (^)(AVAudioFormat *, double duration, int channel_bundles_array_length, union channel_bundle_union *))bufferPackage
 {
-    return ^struct buffer_package_struct *(AVAudioFormat * audio_format,
+    return ^union buffer_package_union *(AVAudioFormat * audio_format,
                             double duration,
                             int channel_bundles_array_length,
-                            struct channel_bundle_struct * channel_bundles_array)
+                            union channel_bundle_union * channel_bundles_array)
     {
-        struct buffer_package_struct * buffer_package_struct = malloc(sizeof(struct buffer_package_struct) + (sizeof(channel_bundles_array) + sizeof(channel_bundles_array_length)));
-        buffer_package_struct->audio_format     = audio_format;
-        buffer_package_struct->duration         = duration;
-        buffer_package_struct->channel_bundles_array_length = channel_bundles_array_length;
-        buffer_package_struct->channel_bundles_array = malloc((sizeof(struct channel_bundle_struct) * channel_bundles_array_length));
+        union buffer_package_union * buffer_package = malloc(sizeof(union buffer_package_union) + (sizeof(channel_bundles_array) + sizeof(channel_bundles_array_length)));
+        buffer_package->audio_format     = audio_format;
+        buffer_package->duration         = duration;
+        buffer_package->channel_bundles_array_length = channel_bundles_array_length;
+        buffer_package->channel_bundles_array = malloc((sizeof(union channel_bundle_union) * channel_bundles_array_length));
         for (int i = 0; i < channel_bundles_array_length; i++)
         {
-            buffer_package_struct->channel_bundles_array[i] = channel_bundles_array[i];
+            buffer_package->channel_bundles_array[i] = channel_bundles_array[i];
         }
         
-        return buffer_package_struct;
+        return buffer_package;
     };
 }
 
-- (void (^)(struct parameters_struct *))free_parameters
+// Actual array
+- (Score *(^)(char *, int, buffer_package_union *))score
 {
-    return ^void(struct parameters_struct * parameters_struct)
+    return ^Score *(char * title, int buffer_package_unions_array_length, buffer_package_union * buffer_package_unions)
     {
-        free((void *)parameters_struct->parameters_array);
-        parameters_struct->flag = nil;
-        free((void *)parameters_struct);
+        Score * score = malloc(sizeof(union score_union));
+        score->buffer_package_unions_array_length = buffer_package_unions_array_length;
+        score->buffer_package_unions = calloc(buffer_package_unions_array_length, sizeof(union buffer_package_union));
+        score->buffer_package_unions = buffer_package_unions;
+        score->title = malloc(sizeof(title));
+        score->title = strcpy(score->title, title);
+//        score_union->buffer_packages_array_length = buffer_package_union_array_length;
+//        memmove(score_union->buffer_packages_array, buffer_packages_array, sizeof(buffer_package_union_array_length * sizeof(union buffer_package_union));
+//
+        
+        return score;
     };
 }
 
-- (void (^)(struct calculator_struct *))free_calculator
+- (void (^)(union parameters_union *))free_parameters
 {
-    return ^void(struct calculator_struct * calculator_struct)
+    return ^void(union parameters_union * parameters_union)
+    {
+        free((void *)parameters_union->parameters_array);
+        parameters_union->flag = nil;
+        free((void *)parameters_union);
+    };
+}
+
+- (void (^)(union calculator_union *))free_calculator
+{
+    return ^void(union calculator_union * calculator_union)
     {
         // TO-DO: Loop number of CalculatorEnvelopes in Calculators array and then free each CalculatorEnvelope
-        ToneGenerator.sharedInstance.free_parameters(calculator_struct->parameters);
-        calculator_struct->calculator= nil;
-        free((void *)calculator_struct);
+        ToneGenerator.sharedInstance.free_parameters(calculator_union->parameters);
+        calculator_union->calculator= nil;
+        free((void *)calculator_union);
     };
 }
 
-- (void (^)(struct calculators_struct *))free_calculators
+- (void (^)(union calculators_union *))free_calculators
 {
-    return ^void(struct calculators_struct * calculators_array)
+    return ^void(union calculators_union * calculators_array)
     {
         for (int i = 0; i < 3; i++)
         {
-            struct calculators_struct * calculator_struct = &calculators_array[i];
+            union calculators_union * calculator_union = &calculators_array[i];
             
-            for (int j = 0; j < calculator_struct->calculators_array_length; j++)
+            for (int j = 0; j < calculator_union->calculators_array_length; j++)
             {
-                ToneGenerator.sharedInstance.free_calculator(&calculator_struct->calculators_array[j]);
+                ToneGenerator.sharedInstance.free_calculator(&calculator_union->calculators_array[j]);
             }
         }
     };
 }
 
-- (void (^)(struct channel_bundle_struct *))free_channel_bundle
+- (void (^)(union channel_bundle_union *))free_channel_bundle
 {
-    return ^void(struct channel_bundle_struct * channel_bundle_struct)
+    return ^void(union channel_bundle_union * channel_bundle_union)
     {
-        ToneGenerator.sharedInstance.free_calculators(channel_bundle_struct->time_calculators);
-        ToneGenerator.sharedInstance.free_calculators(channel_bundle_struct->frequency_calculators);
-        ToneGenerator.sharedInstance.free_calculators(channel_bundle_struct->amplitude_calculators);
+        ToneGenerator.sharedInstance.free_calculators(channel_bundle_union->time_calculators);
+        ToneGenerator.sharedInstance.free_calculators(channel_bundle_union->frequency_calculators);
+        ToneGenerator.sharedInstance.free_calculators(channel_bundle_union->amplitude_calculators);
         
-        free((void *)channel_bundle_struct);
+        free((void *)channel_bundle_union);
     };
 }
 
-- (void (^)(struct buffer_package_struct *))free_buffer_package
+- (void (^)(union buffer_package_union *))free_buffer_package
 {
-    return ^void(struct buffer_package_struct * buffer_package_struct)
+    return ^void(union buffer_package_union * buffer_package_union)
     {
-        buffer_package_struct->audio_format = nil;
+        buffer_package_union->audio_format = nil;
         
         for (int i = 0; i < 3; i++)
         {
-            struct channel_bundle_struct * channel_bundle_struct = &buffer_package_struct->channel_bundles_array[i];
-            ToneGenerator.sharedInstance.free_channel_bundle(channel_bundle_struct);
+            union channel_bundle_union * channel_bundle_union = &buffer_package_union->channel_bundles_array[i];
+            ToneGenerator.sharedInstance.free_channel_bundle(channel_bundle_union);
         }
         
-        free((void *)buffer_package_struct);
+        free((void *)buffer_package_union);
     };
 }
 
-- (float * (^)(AVAudioFrameCount, struct channel_bundle_struct *, float *, float *))channelDataCalculator
+- (float * (^)(AVAudioFrameCount, union channel_bundle_union *, float *, float *))channelDataCalculator
 {
     return ^float *(AVAudioFrameCount samples_count,
-                    struct channel_bundle_struct * channel_bundle_struct,
+                    union channel_bundle_union * channel_bundle_union,
                     float * floatChannelDataPtrsArray,
                     float * floatChannelDataPtrs)
     {
@@ -508,23 +535,23 @@ float sincf(float x)
         for (int index = 0; index < samples_count; index++)
         {
             double time = ToneGenerator.sharedInstance.normalize(0.0, 1.0, index, 0.0, samples_count - 1.0);
-            for (int time_calculator_index = 0; time_calculator_index < channel_bundle_struct->time_calculators->calculators_array_length; time_calculator_index++)
+            for (int time_calculator_index = 0; time_calculator_index < channel_bundle_union->time_calculators->calculators_array_length; time_calculator_index++)
             {
-                struct calculator_struct * time_calculator_envelope = &channel_bundle_struct->time_calculators->calculators_array[time_calculator_index];
+                union calculator_union * time_calculator_envelope = &channel_bundle_union->time_calculators->calculators_array[time_calculator_index];
                 time = time_calculator_envelope->calculator(time, time_calculator_envelope->parameters);
             }
             
             double frequency = max_frequency;
-            for (int frequency_calculator_index = 0; frequency_calculator_index < channel_bundle_struct->frequency_calculators->calculators_array_length; frequency_calculator_index++)
+            for (int frequency_calculator_index = 0; frequency_calculator_index < channel_bundle_union->frequency_calculators->calculators_array_length; frequency_calculator_index++)
             {
-                struct calculator_struct * frequency_calculator_envelope = &channel_bundle_struct->frequency_calculators->calculators_array[frequency_calculator_index];
+                union calculator_union * frequency_calculator_envelope = &channel_bundle_union->frequency_calculators->calculators_array[frequency_calculator_index];
                 frequency = frequency_calculator_envelope->calculator(time, frequency_calculator_envelope->parameters);
             }
             
             double amplitude = 1.0;
-            for (int amplitude_calculator_index = 0; amplitude_calculator_index < channel_bundle_struct->amplitude_calculators->calculators_array_length; amplitude_calculator_index++)
+            for (int amplitude_calculator_index = 0; amplitude_calculator_index < channel_bundle_union->amplitude_calculators->calculators_array_length; amplitude_calculator_index++)
             {
-                struct calculator_struct * amplitude_calculator_envelope = &channel_bundle_struct->amplitude_calculators->calculators_array[amplitude_calculator_index];
+                union calculator_union * amplitude_calculator_envelope = &channel_bundle_union->amplitude_calculators->calculators_array[amplitude_calculator_index];
                 amplitude = amplitude_calculator_envelope->calculator(time, amplitude_calculator_envelope->parameters);
             }
             
@@ -536,32 +563,32 @@ float sincf(float x)
     };
 }
 
-- (AVAudioPCMBuffer *(^)(struct buffer_package_struct *))bufferDataCalculator
+- (AVAudioPCMBuffer *(^)(union buffer_package_union *))bufferDataCalculator
 {
-    return ^AVAudioPCMBuffer *(struct buffer_package_struct * buffer_package_struct)
+    return ^AVAudioPCMBuffer *(union buffer_package_union * buffer_package_union)
     {
-        double sampleRate            = [buffer_package_struct->audio_format sampleRate];
-        AVAudioFrameCount frameCount = (sampleRate * sum_duration_interval) * buffer_package_struct->duration;
-        AVAudioPCMBuffer *pcmBuffer  = [[AVAudioPCMBuffer alloc] initWithPCMFormat:buffer_package_struct->audio_format frameCapacity:frameCount];
-        pcmBuffer.frameLength        = sampleRate * buffer_package_struct->duration;
+        double sampleRate            = [buffer_package_union->audio_format sampleRate];
+        AVAudioFrameCount frameCount = (sampleRate * sum_duration_interval) * buffer_package_union->duration;
+        AVAudioPCMBuffer *pcmBuffer  = [[AVAudioPCMBuffer alloc] initWithPCMFormat:buffer_package_union->audio_format frameCapacity:frameCount];
+        pcmBuffer.frameLength        = sampleRate * buffer_package_union->duration;
         float * channelL, * channelR;
         
         // TO-DO: Create a for loop to iterate the channel bundle array; but...
         //        for now, get the first two (the left and right channels) in the array only
         channelL = ToneGenerator.sharedInstance.channelDataCalculator(pcmBuffer.frameLength,
-                                                                      &buffer_package_struct->channel_bundles_array[0],
+                                                                      &buffer_package_union->channel_bundles_array[0],
                                                                       channelL,
                                                                       pcmBuffer.floatChannelData[0]);
         channelR = ToneGenerator.sharedInstance.channelDataCalculator(pcmBuffer.frameLength,
-                                                                      &buffer_package_struct->channel_bundles_array[1],
+                                                                      &buffer_package_union->channel_bundles_array[1],
                                                                       channelR,
-                                                                      ([buffer_package_struct->audio_format channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil);
+                                                                      ([buffer_package_union->audio_format channelCount] == 2) ? pcmBuffer.floatChannelData[1] : nil);
         
         return pcmBuffer;
     };
 }
 
-//// Random Frequencies (returns two Frequency structs
+//// Random Frequencies (returns two Frequency unions
 //- (double *(^)(int length))randomFrequencies
 //{
 //
@@ -582,55 +609,55 @@ float sincf(float x)
         double frequencies_params[] = {sum_duration_interval, frequency_root, frequency_root * (4.0/5.0), (frequency_root * (4.0/5.0)) / (4.0/5.0)}; // frequencyCalculatorPolytone
         double amplitude_params[]   = {2.0, 8.0, 2.0};
         
-        struct parameters_struct * time_parameters_struct = tg.parameters(0, nil, nil);
+        union parameters_union * time_parameters_union = tg.parameters(0, nil, nil);
         
-        struct calculator_struct * time_calculator = tg.calculator(time_parameters_struct, tg.timeCalculator);
+        union calculator_union * time_calculator = tg.calculator(time_parameters_union, tg.timeCalculator);
         
-        struct calculator_struct time_calculators_array[] = malloc(sizeof(time_calculator));
+        union calculator_union time_calculators_array[] = malloc(sizeof(time_calculator));
         \
         {time_calculator};
-        struct calculator_struct * time_calculators_array_ptr = &time_calculators_array;
+        union calculator_union * time_calculators_array_ptr = &time_calculators_array;
         
-        struct calculators_struct * time_calculators = tg.calculators(CalculatorsTypeTime,
+        union calculators_union * time_calculators = tg.calculators(CalculatorsTypeTime,
                                                                       1,
                                                                       time_calculators_array);
         
         
-        struct parameters_struct * frequency_parameters_struct = tg.parameters(4, frequencies_params, nil);
+        union parameters_union * frequency_parameters_union = tg.parameters(4, frequencies_params, nil);
         
-        struct calculator_struct * frequency_calculator = tg.calculator(frequency_parameters_struct, tg.frequencyCalculatorPolytone);
+        union calculator_union * frequency_calculator = tg.calculator(frequency_parameters_union, tg.frequencyCalculatorPolytone);
         
-        struct calculator_struct * frequency_calculators_array[1] = {frequency_calculator};
+        union calculator_union * frequency_calculators_array[1] = {frequency_calculator};
         
-        struct calculators_struct * frequency_calculators = tg.calculators(CalculatorsTypeFrequency,
+        union calculators_union * frequency_calculators = tg.calculators(CalculatorsTypeFrequency,
                                                                            1,
                                                                            frequency_calculators_array);
         
         
-        struct parameters_struct * amplitude_parameters_struct = tg.parameters(3, amplitude_params, nil);
+        union parameters_union * amplitude_parameters_union = tg.parameters(3, amplitude_params, nil);
         
-        struct calculator_struct * amplitude_calculator = tg.calculator(amplitude_parameters_struct, tg.amplitudeCalculator);
+        union calculator_union * amplitude_calculator = tg.calculator(amplitude_parameters_union, tg.amplitudeCalculator);
         
-        struct calculator_struct * amplitude_calculators_array = {amplitude_calculator};
+        union calculator_union * amplitude_calculators_array = {amplitude_calculator};
         
-        struct calculators_struct * amplitude_calculators = tg.calculators(CalculatorsTypeAmplitude,
+        union calculators_union * amplitude_calculators = tg.calculators(CalculatorsTypeAmplitude,
                                                                            1,
                                                                            amplitude_calculators_array);
         
         
-        struct channel_bundle_struct *channel_bundle_struct_left = tg.channel_bundle(ChannelBundleAssignmentLeft,
+        union channel_bundle_union *channel_bundle_union_left = tg.channel_bundle(ChannelBundleAssignmentLeft,
                                                                                      time_calculators,
                                                                                      frequency_calculators,
                                                                                      amplitude_calculators);
         
-        struct channel_bundle_struct *channel_bundle_struct_right = tg.channel_bundle(ChannelBundleAssignmentRight,
+        union channel_bundle_union *channel_bundle_union_right = tg.channel_bundle(ChannelBundleAssignmentRight,
                                                                                       time_calculators,
                                                                                       frequency_calculators,
                                                                                       amplitude_calculators);
         
-        struct channel_bundle_struct * channel_bundles_array[2] = {channel_bundle_struct_left, channel_bundle_struct_right};
+        union channel_bundle_union * channel_bundles_array[2] = {channel_bundle_union_left, channel_bundle_union_right};
         
-        struct buffer_package_struct * buffer_package_struct = tg.buffer_package(audioFormat,
+        union buffer_package_union * buffer_package_union = tg.buffer_package(audioFormat,
                                                                                  sum_duration_interval,
                                                                                  2,
                                                                                  
