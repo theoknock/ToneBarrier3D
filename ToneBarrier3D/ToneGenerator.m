@@ -83,44 +83,55 @@ int keyval_matches(keyval const * in, char const * key)
 // “...a typedef for a struct, a block that takes in named elements and fills the struct, and a function that takes in a single struct as input...”
 // (Excerpt From: Ben Klemens. “21st Century C.” Apple Books. https://books.apple.com/us/book/21st-century-c/id950072553)
 
-typedef void * Argument;
+typedef void * CalculationArgument;
 
-typedef struct arguments
+typedef struct calculation_arguments
 {
-    uint32_t num_arguments;
-    Argument * arguments;
-} Arguments;
+    uint32_t num_calculation_arguments;
+    CalculationArgument * calculation_arguments;
+} CalculationArguments;
 
-typedef NS_OPTIONS(NSUInteger, CalculationVariables) {
-    CalculationVariablesTime      = 1 << 0,
-    CalculationVariablesFrequency = 1 << 1,
-    CalculationVariablesAmplitude = 1 << 2,
+typedef double CalculationVariableValue;
+
+typedef NS_OPTIONS(NSUInteger, CalculationVariableValue)
+{
+    CalculationVariableValueTime      = 1 << 0,
+    CalculationVariableValueFrequency = 1 << 1,
+    CalculationVariableValueAmplitude = 1 << 2,
 };
 
-typedef long double (* Calculation) (CalculationVariables * calculation_variables,
-                                     Arguments * argument);
-
-typedef struct calculator
+typedef struct calculation_variable
 {
-    CalculationVariables * calculation_variables;
-    Argument * arguments;
-    Calculation calculation;
-} Calculator;
+    [CalculationVa ]
+} CalculationVariable;
 
-typedef enum : int {
-    CalculatorTypeTime,
-    CalculatorTypeFrequency,
-    CalculatorTypeAmplitude
-} CalculatorType;
+typedef long double (* Calculator) (CalculationVariable * calculation_variables,
+                                    CalculationArguments * calculation_arguments);
 
-typedef struct calculator_stack
+typedef enum calculation_type : int
 {
-    CalculatorType calculators_type;
-    uint32_t num_calculators;
-    Calculator * calculators;
-} CalculatorStack;
+    CalculationTypeTime,
+    CalculationTypeFrequency,
+    CalculationTypeAmplitude
+} CalculationType;
 
-typedef NS_ENUM(NSUInteger, ChannelAssignment) {
+typedef struct calculation
+{
+    CalculationType calculation_type;
+    CalculationVariables calculation_variables;
+    CalculationArgument * calculation_arguments;
+    Calculator calculator;
+} Calculation;
+
+typedef struct calculations
+{
+    Calculation * time_calculation;
+    Calculation * frequency_calculation;
+    Calculation * amplitude_calculation;
+} Calculations;
+
+typedef NS_ENUM(NSUInteger, ChannelAssignment)
+{
     ChannelAssignmentLeft,
     ChannelAssignmentRight
 };
@@ -128,9 +139,7 @@ typedef NS_ENUM(NSUInteger, ChannelAssignment) {
 typedef struct channel_bundle
 {
     ChannelAssignment channel_bundle_assignment;
-    CalculatorStack * time_calculators;
-    CalculatorStack * frequency_calculators;
-    CalculatorStack * amplitude_calculators;
+    
 } ChannelBundle;
 
 typedef struct buffer_package
