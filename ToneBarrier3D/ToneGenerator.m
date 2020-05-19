@@ -91,19 +91,20 @@ typedef struct calculation_arguments
     CalculationArgument * calculation_arguments;
 } CalculationArguments;
 
-typedef double CalculationVariableValue;
+typedef double CalculationVariable;
 
-typedef NS_OPTIONS(NSUInteger, CalculationVariableValue)
+typedef NS_OPTIONS(NSUInteger, CalculationVariableType)
 {
-    CalculationVariableValueTime      = 1 << 0,
-    CalculationVariableValueFrequency = 1 << 1,
-    CalculationVariableValueAmplitude = 1 << 2,
+    CalculationVariableTypeTime      = 1 << 0,
+    CalculationVariableTypeFrequency = 1 << 1,
+    CalculationVariableTypeAmplitude = 1 << 2,
 };
 
-typedef struct calculation_variable
+typedef struct calculation_variables
 {
-    [CalculationVa ]
-} CalculationVariable;
+    CalculationVariableType calculation_variable_type;
+    CalculationVariable calculation_variable;
+} CalculationVariables;
 
 typedef long double (* Calculator) (CalculationVariable * calculation_variables,
                                     CalculationArguments * calculation_arguments);
