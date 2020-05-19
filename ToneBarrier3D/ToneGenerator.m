@@ -41,7 +41,7 @@ typedef NS_ENUM(NSUInteger, CalculatorsType) {
 
 typedef void * Argument;
 
-typedef union arguments
+typedef struct arguments
 {
     int num_arguments;
 //    __unsafe_unretained id flag; // Keeping this previous parameter declaration to remind me that an untyped (uncast) parameter needs to be marked as possibly unsafe and unretained by the supplier of its value
@@ -54,13 +54,13 @@ typedef union arguments
 typedef double (^Calculation)(double time,
                               Arguments * arguments);
 
-typedef union calculator
+typedef struct calculator
 {
     Argument * arguments;
     __unsafe_unretained typeof(Calculation) calculation;
 } Calculator;
 
-typedef union calculator_stack
+typedef struct calculator_stack
 {
     CalculatorsType calculators_type;
     int num_calculators;
@@ -72,7 +72,7 @@ typedef NS_ENUM(NSUInteger, ChannelAssignment) {
     ChannelAssignmentRight
 };
 
-typedef union channel_bundle
+typedef struct channel_bundle
 {
     ChannelAssignment channel_bundle_assignment;
     CalculatorStack * time_calculators;
@@ -80,7 +80,7 @@ typedef union channel_bundle
     CalculatorStack * amplitude_calculators;
 } ChannelBundle;
 
-typedef union buffer_package
+typedef struct buffer_package
 {
 //    AVAudioFormat * audio_format;
     double sample_rate;
@@ -88,7 +88,7 @@ typedef union buffer_package
     ChannelBundle * channel_bundles;
 }  BufferPackage;
 
-typedef union score
+typedef struct score
 {
     char * title;
     double tone_duration;
