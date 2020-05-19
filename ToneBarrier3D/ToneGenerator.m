@@ -6,6 +6,11 @@
 //  Copyright © 2020 James Bush. All rights reserved.
 //
 
+// Chords-to-frequencies
+// https://pages.mtu.edu/%7Esuits/notefreqs.html
+// The interplay between harmonic and dissonant chords is a key to an effective tone barrier; a series of consonant chords followed by a dissonant chord(s) triggers instinctual listening (the goal of a tone barrier), even in the sleeper
+// Making it simple to produce chords that are in harmony as well as discordant chords makes testing and implementation of the ideal interplay easier
+
 // TO-DO: Create moving sound (velocity) to stimulate instinctive sound localizaton; cues for sound source localization: time- and level-differences (or intensity-difference) between both ears
 //
 
@@ -484,6 +489,7 @@ float sincf(float x)
         union calculators_union * calculators_union  = malloc(sizeof(union calculators_union) + (sizeof(union calculator_union) * calculators_array_length));
         calculators_union->calculators_type = calculators_type;
         calculators_union->calculators_array = malloc((sizeof(union calculator_union) * calculators_array_length));
+        
         for (int i = 0; i < calculators_array_length; i++)
         {
             calculators_union->calculators_array[i] = calculators_array[i];
