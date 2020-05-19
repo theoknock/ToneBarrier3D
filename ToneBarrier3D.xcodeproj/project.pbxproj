@@ -24,6 +24,8 @@
 		8A12D2AE23E1071C0088463B /* NotificationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8A12D2AD23E1071C0088463B /* NotificationController.m */; };
 		8A12D2B123E1071C0088463B /* ComplicationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8A12D2B023E1071C0088463B /* ComplicationController.m */; };
 		8A12D2B323E1071D0088463B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8A12D2B223E1071D0088463B /* Assets.xcassets */; };
+		8A2D8B9F24739D1A004719C2 /* keyval.c in Sources */ = {isa = PBXBuildFile; fileRef = 8A2D8B9E24739D1A004719C2 /* keyval.c */; };
+		8A2D8BA224739E51004719C2 /* dict.c in Sources */ = {isa = PBXBuildFile; fileRef = 8A2D8BA124739E51004719C2 /* dict.c */; };
 		B93D77BD23E61CCB0099DF63 /* ToneGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = B93D77BC23E61CCB0099DF63 /* ToneGenerator.m */; };
 		B9510E2923F6FC0A00BFAFC1 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B9510E2823F6FC0A00BFAFC1 /* MediaPlayer.framework */; };
 		B978E4C824719A22008EF9C2 /* ToneBarrierScoreXMLSchema-1.0alpha in Resources */ = {isa = PBXBuildFile; fileRef = B978E4C724719A22008EF9C2 /* ToneBarrierScoreXMLSchema-1.0alpha */; };
@@ -107,6 +109,10 @@
 		8A12D2B223E1071D0088463B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8A12D2B423E1071E0088463B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8A12D2B523E1071E0088463B /* PushNotificationPayload.apns */ = {isa = PBXFileReference; lastKnownFileType = text; path = PushNotificationPayload.apns; sourceTree = "<group>"; };
+		8A2D8B9D24739D1A004719C2 /* keyval.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = keyval.h; path = score_model_objects/keyval.h; sourceTree = "<group>"; };
+		8A2D8B9E24739D1A004719C2 /* keyval.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = keyval.c; path = score_model_objects/keyval.c; sourceTree = "<group>"; };
+		8A2D8BA024739E51004719C2 /* dict.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = dict.h; path = score_model_objects/dict.h; sourceTree = "<group>"; };
+		8A2D8BA124739E51004719C2 /* dict.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = dict.c; path = score_model_objects/dict.c; sourceTree = "<group>"; };
 		B93D77BB23E61CCB0099DF63 /* ToneGenerator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ToneGenerator.h; sourceTree = "<group>"; };
 		B93D77BC23E61CCB0099DF63 /* ToneGenerator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ToneGenerator.m; sourceTree = "<group>"; wrapsLines = 0; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		B9510E2823F6FC0A00BFAFC1 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
@@ -173,6 +179,10 @@
 				8A12D28523E107090088463B /* Main.storyboard */,
 				B93D77BB23E61CCB0099DF63 /* ToneGenerator.h */,
 				B93D77BC23E61CCB0099DF63 /* ToneGenerator.m */,
+				8A2D8B9D24739D1A004719C2 /* keyval.h */,
+				8A2D8B9E24739D1A004719C2 /* keyval.c */,
+				8A2D8BA024739E51004719C2 /* dict.h */,
+				8A2D8BA124739E51004719C2 /* dict.c */,
 				8A12D28823E107180088463B /* Assets.xcassets */,
 				8A12D28A23E107180088463B /* LaunchScreen.storyboard */,
 				8A12D28D23E107180088463B /* Info.plist */,
@@ -360,7 +370,9 @@
 			files = (
 				8A12D28423E107090088463B /* ViewController.m in Sources */,
 				B93D77BD23E61CCB0099DF63 /* ToneGenerator.m in Sources */,
+				8A2D8BA224739E51004719C2 /* dict.c in Sources */,
 				8A12D27E23E107090088463B /* AppDelegate.m in Sources */,
+				8A2D8B9F24739D1A004719C2 /* keyval.c in Sources */,
 				8A12D28F23E107180088463B /* main.m in Sources */,
 				8A12D28123E107090088463B /* SceneDelegate.m in Sources */,
 			);

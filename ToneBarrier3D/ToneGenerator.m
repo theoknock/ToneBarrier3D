@@ -28,42 +28,95 @@
 #define max_duration_interval 0.45
 #define min_duration_interval 0.20
 
+//
+// OOP-C
+//
+
+// .h
+
+typedef struct keyval
+{
+    char * key;
+    void * value;
+    struct keyval * (* keyval_copy)(struct keyval const * in);
+    void (* keyval_free)(struct keyval * in);
+    int (* keyval_matches)(struct keyval const * in, char const * key);
+} keyval;
+
+keyval * keyval_new(char * key, void * value);
+
+// .c
+
+keyval * keyval_new(char * key, void * value)
+{
+    keyval * out = malloc(sizeof(keyval));
+    * out = (keyval) {.key = key, .value=value};
+    
+    return out;
+}
+
+/** Copy a key/value pair. The new pair has pointers to
+  the values in the old pair, not copies of their data.  */
+keyval * keyval_copy(keyval const * in)
+{
+    keyval * out = malloc(sizeof(keyval));
+    * out = * in;
+    
+    return out;
+}
+
+void keyval_free(keyval * in){ free(in); }
+
+int keyval_matches(keyval const * in, char const * key)
+{
+    return !strcasecmp(in->key, key);
+}
+
+//
+//
+//
+
+// “a few central data structures, each with a set of functions that act on those central data structures.” Excerpt From: Ben Klemens. “21st Century C.” Apple Books. https://books.apple.com/us/book/21st-century-c/id950072553
+// “a struct plus a set of functions that operate on that struct.” Excerpt From: Ben Klemens. “21st Century C.” Apple Books. https://books.apple.com/us/book/21st-century-c/id950072553
 
 // Pattern for each struct/union in the tone barrier score model:
 // “...a typedef for a struct, a block that takes in named elements and fills the struct, and a function that takes in a single struct as input...”
 // (Excerpt From: Ben Klemens. “21st Century C.” Apple Books. https://books.apple.com/us/book/21st-century-c/id950072553)
 
-typedef NS_ENUM(NSUInteger, CalculatorsType) {
-    CalculatorsTypeTime,
-    CalculatorsTypeFrequency,
-    CalculatorsTypeAmplitude
-};
-
 typedef void * Argument;
 
 typedef struct arguments
 {
-    int num_arguments;
-//    __unsafe_unretained id flag; // Keeping this previous parameter declaration to remind me that an untyped (uncast) parameter needs to be marked as possibly unsafe and unretained by the supplier of its value
+    uint32_t num_arguments;
     Argument * arguments;
 } Arguments;
 
-// The double value returned by this block should always be between 0 and 1;
-// Consider a non-optional validation check by requiring a min and max value produced by third-party suppliers of calculations as parameters
+typedef NS_OPTIONS(NSUInteger, CalculationVariables) {
+    CalculationVariablesTime      = 1 << 0,
+    CalculationVariablesFrequency = 1 << 1,
+    CalculationVariablesAmplitude = 1 << 2,
+};
 
-typedef double (^Calculation)(double time,
-                              Arguments * arguments);
+typedef long double (* Calculation) (CalculationVariables * calculation_variables,
+                                     Arguments * argument);
 
 typedef struct calculator
 {
+    CalculationVariables * calculation_variables;
     Argument * arguments;
-    __unsafe_unretained typeof(Calculation) calculation;
+    Calculation calculation;
 } Calculator;
+
+typedef enum : int {
+    CalculatorTypeTime,
+    CalculatorTypeFrequency,
+    CalculatorTypeAmplitude
+} CalculatorType;
 
 typedef struct calculator_stack
 {
-    CalculatorsType calculators_type;
-    int num_calculators;
+    CalculatorType calculators_type;
+    uint32_t num_calculators;
     Calculator * calculators;
 } CalculatorStack;
 
@@ -82,17 +135,40 @@ typedef struct channel_bundle
 
 typedef struct buffer_package
 {
-//    AVAudioFormat * audio_format;
-    double sample_rate;
+    long double sample_rate;
     uint32_t num_channels;
     ChannelBundle * channel_bundles;
 }  BufferPackage;
 
+typedef enum : int
+{
+    RandomizerReturnTypeInt,
+    RandomizerReturnTypeIntWithCeil,
+    RandomizerReturnTypeUniform,
+    RandomizerReturnTypeBool
+} RandomizerReturnType;
+
+typedef struct randomizer_gaussian_distributor
+{
+    RandomizerReturnType randomizer_return_type;
+    long double mean;
+    long double deviation;
+    long double floor;
+    long double ceiling;
+} RandomizerGaussianDistributor;
+
+typedef RandomizerGaussianDistributor * Randomizers;
+
+typedef struct tones
+{
+    long double duration;
+    RandomizerGaussianDistributor * randomizer_gaussian_distributors;
+} Tones;
+
 typedef struct score
 {
     char * title;
-    double tone_duration;
-    int num_buffer_packages;
+    uint32_t num_buffer_packages;
     BufferPackage * buffer_packages;
 } Score;
 
@@ -123,6 +199,7 @@ typedef void (^Texture)(GKGaussianDistribution * _Nullable distributor, AVAudioF
 
 @property (nonatomic, readonly) typeof(Texture) standardTexture;
 
+// Use the suggestion in "Vectorize a Function" (21st Century C) for freeing pointers
 @property (nonatomic, readonly) void(^free_parameters)(union parameters_union *);
 @property (nonatomic, readonly) void(^free_calculator)(union calculator_union *);
 @property (nonatomic, readonly) void(^free_calculators)(union calculators_union *);
