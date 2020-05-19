@@ -88,30 +88,22 @@ int keyval_matches(keyval const * in, char const * key)
 // “...a typedef for a struct, a block that takes in named elements and fills the struct, and a function that takes in a single struct as input...”
 // (Excerpt From: Ben Klemens. “21st Century C.” Apple Books. https://books.apple.com/us/book/21st-century-c/id950072553)
 
-typedef void * CalculationArgument;
+typedef void * CalculationCoefficients;
+
+typedef NS_OPTIONS(NSUInteger, CalculationVariables)
+{
+    CalculationVariableTime      = 1 << 0,
+    CalculationVariableFrequency = 1 << 1,
+    CalculationVariableAmplitude = 1 << 2,
+};
 
 typedef struct calculation_arguments
 {
-    uint32_t num_calculation_arguments;
-    CalculationArgument * calculation_arguments;
+    CalculationCoefficients calculation_coefficients;
+    CalculationVariables calculation_variables;
 } CalculationArguments;
 
-typedef double CalculationVariable;
-
-typedef NS_OPTIONS(NSUInteger, CalculationVariableType)
-{
-    CalculationVariableTypeTime      = 1 << 0,
-    CalculationVariableTypeFrequency = 1 << 1,
-    CalculationVariableTypeAmplitude = 1 << 2,
-};
-
-typedef struct calculation_variables
-{
-    CalculationVariableType calculation_variable_type;
-    CalculationVariable calculation_variable;
-} CalculationVariables;
-
-typedef long double (* Calculator) (CalculationVariable * calculation_variables,
+typedef long double (* Calculator) (double time,
                                     CalculationArguments * calculation_arguments);
 
 typedef enum calculation_type : int
@@ -123,66 +115,82 @@ typedef enum calculation_type : int
 
 typedef struct calculation
 {
-    CalculationType calculation_type;
-    CalculationVariables calculation_variables;
-    CalculationArgument * calculation_arguments;
+    CalculationArguments * calculation_arguments;
     Calculator calculator;
 } Calculation;
 
-typedef struct calculations
+typedef struct calculation_stack
 {
-    Calculation * time_calculation;
-    Calculation * frequency_calculation;
-    Calculation * amplitude_calculation;
-} Calculations;
+    Calculation * time_calculations;
+    Calculation * frequency_calculations;
+    Calculation * amplitude_calculations;
+} CalculationStack;
 
-typedef NS_ENUM(NSUInteger, ChannelAssignment)
-{
+typedef enum channel_assignment : NSUInteger {
     ChannelAssignmentLeft,
     ChannelAssignmentRight
-};
+} ChannelAssignment;
 
 typedef struct channel_bundle
 {
-    ChannelAssignment channel_bundle_assignment;
-    
+    ChannelAssignment channel_assignment;
+    CalculationStack * calculation_stack;
 } ChannelBundle;
 
 typedef struct buffer_package
 {
-    long double sample_rate;
-    uint32_t num_channels;
+    long double duration;
+    uint32_t num_channel_bundles;
     ChannelBundle * channel_bundles;
 }  BufferPackage;
 
-typedef enum : int
-{
-    RandomizerReturnTypeInt,
-    RandomizerReturnTypeIntWithCeil,
-    RandomizerReturnTypeUniform,
-    RandomizerReturnTypeBool
-} RandomizerReturnType;
+//typedef enum randomizer_return_type : int
+//{
+//    RandomizerReturnTypeInt,
+//    RandomizerReturnTypeIntWithCeil,
+//    RandomizerReturnTypeUniform,
+//    RandomizerReturnTypeBool
+//} RandomizerReturnType;
+//
+//typedef struct randomizer_gaussian_distributor
+//{
+//    RandomizerReturnType randomizer_return_type;
+//    long double mean;
+//    long double deviation;
+//    long double floor;
+//    long double ceiling;
+//} RandomizerGaussianDistributor;
+//
+//typedef RandomizerGaussianDistributor * Randomizers;
 
-typedef struct randomizer_gaussian_distributor
-{
-    RandomizerReturnType randomizer_return_type;
-    long double mean;
-    long double deviation;
-    long double floor;
-    long double ceiling;
-} RandomizerGaussianDistributor;
+//typedef struct tones
+//{
+//    long double duration;
+//    RandomizerGaussianDistributor * randomizer_gaussian_distributors;
+//} Tones;
 
-typedef RandomizerGaussianDistributor * Randomizers;
-
-typedef struct tones
+typedef struct audio_format
 {
-    long double duration;
-    RandomizerGaussianDistributor * randomizer_gaussian_distributors;
-} Tones;
+    long double sample_rate;
+    uint32_t num_channels;
+} AudioFormat;
+
+typedef enum audio_route: NSUInteger {
+    AudioRouteDefault,
+    AudioRouteHeadphones,
+    AudioRouteSpeaker,
+} AudioRoute;
+
+typedef struct audio_specs
+{
+    AudioFormat audio_format;
+    AudioRoute audio_route;
+} AudioSpecs;
 
 typedef struct score
 {
     char * title;
+    AudioSpecs audio_specs;
     uint32_t num_buffer_packages;
     BufferPackage * buffer_packages;
 } Score;

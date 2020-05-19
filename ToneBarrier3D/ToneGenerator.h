@@ -10,13 +10,6 @@
 #import <AVFoundation/AVFoundation.h>
 #import <UIKit/UIKit.h>
 
-typedef NS_ENUM(NSUInteger, AudioRoute) {
-    AudioRouteHeadphones,
-    AudioRouteSpeaker,
-    AudioRouteAlarm,
-    AudioRouteNone
-};
-
 #define RANDOM_NUMF(MIN, MAX) MIN+arc4random_uniform(MAX-MIN+1)
 
 typedef NS_ENUM(NSUInteger, TonalHarmony) {
