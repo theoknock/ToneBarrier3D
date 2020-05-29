@@ -50,8 +50,6 @@ typedef struct keyval
 
 keyval * keyval_new(char * key, void * value);
 
-// .c
-
 keyval * keyval_new(char * key, void * value)
 {
     keyval * out = malloc(sizeof(keyval));
@@ -99,11 +97,36 @@ typedef NS_OPTIONS(NSUInteger, CalculationVariables)
 
 typedef struct calculation_arguments
 {
-    CalculationCoefficients calculation_coefficients;
+    CalculationCoefficients * calculation_coefficients;
     CalculationVariables calculation_variables;
+    void (* calculation_coefficients_free)(CalculationCoefficients * in);
 } CalculationArguments;
 
-typedef long double (* Calculator) (double time,
+//CalculationArguments * calculation_arguments_new(CalculationCoefficients * calculation_coefficients,
+//                                                 CalculationVariables calculation_variables,
+//                                                 void (* calculation_coefficients_free)(CalculationCoefficients * in));
+
+void calculation_coefficients_free(CalculationCoefficients * in)
+{
+    free(in);
+}
+
+CalculationArguments * calculation_arguments_new(CalculationCoefficients * calculation_coefficients,
+                                                 CalculationVariables calculation_variables,
+                                                 void (* calculation_coefficients_free)(CalculationCoefficients * in))
+{
+    CalculationArguments * out = malloc(sizeof(calculation_coefficients) + sizeof(unsigned int) + sizeof(calculation_coefficients_free));
+    * out = (CalculationArguments) {.calculation_coefficients = calculation_coefficients,
+                                    .calculation_variables = calculation_variables,
+                                    .calculation_coefficients_free = calculation_coefficients_free};
+    
+    return out;
+}
+
+// REDO BELOW //
+
+typedef long double (* Calculator) (double * calculation_variables,
+                                    unsigned int num_calculation_variables,
                                     CalculationArguments * calculation_arguments);
 
 typedef enum calculation_type : int
@@ -115,15 +138,15 @@ typedef enum calculation_type : int
 
 typedef struct calculation
 {
-    CalculationArguments * calculation_arguments;
-    Calculator calculator;
+    CalculationType calculation_type;
+    Calculator * calculators;
 } Calculation;
 
 typedef struct calculation_stack
 {
-    Calculation * time_calculations;
-    Calculation * frequency_calculations;
-    Calculation * amplitude_calculations;
+    Calculations *time_calculations;
+    Calculations *frequency_calculations;
+    Calculations *amplitude_calculations;
 } CalculationStack;
 
 typedef enum channel_assignment : NSUInteger {
